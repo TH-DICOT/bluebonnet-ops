@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>HR Task Time Tracker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap');
+
+:root {
+  --bg: #050F23;
+  --card: rgba(13,27,55,0.8);
+  --border: rgba(55,138,221,0.08);
+  --text: #EAF0FB;
+  --muted: #8FA0C4;
+  --dim: #5A6A8F;
+  --green: #1D9E75;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  display: flex;
+}
+
+/* ---------- Sidebar ---------- */
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: rgba(5,15,35,0.6);
+  border-right: 1px solid var(--border);
+  padding: 28px 16px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.brand { font-family: 'DM Serif Display', serif; font-size: 20px; padding: 0 8px 24px; }
+.brand .eyebrow { font-family: 'DM Sans', sans-serif; font-size: 10px; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; margin-top: 4px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 8px; color: var(--muted); font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 4px; border-left: 3px solid transparent; }
+.nav-item:hover { background: rgba(99,188,188,0.06); color: var(--text); }
+.nav-item.active { background: rgba(99,188,188,0.1); color: #63bcbc; border-left-color: #63bcbc; }
+.nav-chev { margin-left: auto; font-size: 11px; }
+
+.nav-sublist { display: none; padding-left: 10px; margin-bottom: 6px; }
+.nav-sublist.open { display: block; }
+.nav-subitem { padding: 8px 12px; font-size: 12.5px; color: var(--muted); cursor: pointer; border-radius: 6px; margin-bottom: 2px; }
+.nav-subitem:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+.nav-subitem.active { background: rgba(255,255,255,0.06); color: var(--text); font-weight: 700; }
+
+.sidebar-spacer { flex: 1; }
+.hidden-badge {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  color: var(--dim);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.55;
+  margin: 8px;
+  user-select: none;
+}
+.hidden-badge:hover { opacity: 0.9; }
+
+/* ---------- Main ---------- */
+main { flex: 1; padding: 40px 48px 80px; max-width: 1200px; }
+.view { display: none; }
+.view.active { display: block; }
+header { margin-bottom: 24px; }
+h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; }
+.page-eyebrow { font-size: 12px; letter-spacing: 1.5px; color: var(--muted); margin-top: 6px; text-transform: uppercase; }
+.section-label { font-size: 12px; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; font-weight: 600; margin: 8px 0 12px; }
+
+/* ---------- Top tiles (employees + categories) ---------- */
+.top-tiles { display: flex; gap: 20px; align-items: flex-start; margin-bottom: 28px; }
+.tile-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05); }
+.emp-tile { flex: 0 0 260px; }
+.cat-tile { flex: 1; }
+
+/* ---------- Employee picker ---------- */
+.emp-row { display: flex; flex-direction: column; gap: 8px; }
+.emp-btn {
+  padding: 12px 22px;
+  border-radius: 8px;
+  border: 1.5px solid var(--emp-color, var(--border));
+  background: transparent;
+  color: var(--emp-color, var(--muted));
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+}
+
+/* ---------- Entry layout ---------- */
+.entry-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.entry-layout { display: flex; flex-direction: column; gap: 24px; }
+
+.cat-readout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.cat-readout .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.cat-readout strong { color: var(--text); font-weight: 700; }
+.task-col label { display: block; font-size: 11px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+.task-or { font-size: 11px; color: var(--dim); text-align: center; margin: 10px 0; }
+
+.task-input-row { display: flex; gap: 10px; }
+.task-col input, .task-col select {
+  width: 100%;
+  background: rgba(5,15,35,0.6);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 16px 18px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 17px;
+}
+.task-col input:focus, .task-col select:focus { outline: none; border-color: #63bcbc; }
+.star-btn {
+  flex-shrink: 0;
+  width: 54px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(5,15,35,0.6);
+  color: var(--dim);
+  font-size: 22px;
+  cursor: pointer;
+}
+.star-btn[data-active="true"] { color: #FFC93C; border-color: #FFC93C; }
+
+.fav-list { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; }
+.fav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-left: 3px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-size: 12.5px;
+  color: var(--muted);
+  cursor: pointer;
+  background: rgba(255,255,255,0.02);
+}
+.fav-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+.fav-task { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fav-remove { color: var(--dim); font-size: 15px; cursor: pointer; padding: 0 4px; }
+.fav-remove:hover { color: #D95C84; }
+
+.cat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+.cat-item {
+  display: flex;
+  align-items: center;
+  text-align: left;
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: none;
+  border-left: 3px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.cat-item[data-active="true"] { color: var(--text); font-weight: 700; }
+
+.field-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+.field label { display: block; font-size: 11px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 7px; }
+.field select, .field input {
+  width: 100%;
+  background: rgba(5,15,35,0.6);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 12px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+}
+.field select:focus, .field input:focus { outline: none; border-color: #63bcbc; }
+
+.submit-btn {
+  width: 100%;
+  background: #63bcbc;
+  color: var(--bg);
+  border: none;
+  border-radius: 8px;
+  padding: 15px 22px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  margin-top: 4px;
+}
+.submit-btn:hover { filter: brightness(1.1); }
+.submit-btn:disabled { opacity: 0.5; cursor: default; }
+
+.duration-preview { font-size: 13px; color: var(--muted); text-align: center; margin-top: 14px; }
+.duration-preview strong { color: #63bcbc; }
+.form-msg { font-size: 13px; margin-top: 10px; min-height: 16px; text-align: center; }
+.form-msg.ok { color: var(--green); }
+.form-msg.err { color: #D95C84; }
+
+.today-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--dim);
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+.today-row .who { font-weight: 700; width: 130px; flex-shrink: 0; }
+.today-row .task { color: var(--text); flex: 1; }
+.today-row .cat { color: var(--muted); width: 160px; flex-shrink: 0; }
+.today-row .time { color: var(--muted); flex-shrink: 0; }
+.today-row .dur { font-weight: 700; flex-shrink: 0; width: 60px; text-align: right; }
+
+/* ---------- Overview view ---------- */
+.stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.stat-row-3 { grid-template-columns: repeat(3, 1fr); }
+.stat-card { background: var(--card); border: 1px solid var(--border); border-top: 3px solid #E6E6E6; border-radius: 8px; padding: 18px 20px; box-shadow: 0 6px 18px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05); }
+.stat-card:nth-child(2) { border-top-color: #B9B9B9; }
+.stat-card:nth-child(3) { border-top-color: #8C8C8C; }
+.stat-card:nth-child(4) { border-top-color: #606060; }
+.stat-label { font-size: 11px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+.stat-value { font-size: 30px; font-weight: 700; }
+.stat-value sub { font-size: 14px; color: var(--muted); font-weight: 500; }
+
+.cat-cols { columns: 3; column-gap: 16px; margin-top: 8px; }
+.cat-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; break-inside: avoid; margin-bottom: 16px; text-align: left; box-shadow: 0 6px 18px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05); }
+.cat-name { font-size: 13px; letter-spacing: 0.2px; font-weight: 700; margin-bottom: 8px; }
+.cat-hours { font-size: 22px; font-weight: 700; margin-bottom: 2px; }
+.cat-sub { font-size: 12px; color: var(--muted); }
+.cat-count { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+.breakdown-row { background: var(--card); border: 1px solid var(--border); border-left: 3px solid var(--dim); border-radius: 6px; margin-bottom: 10px; overflow: hidden; }
+.breakdown-head { display: flex; align-items: center; gap: 16px; padding: 14px 18px; cursor: pointer; }
+.breakdown-head .name { font-size: 13px; letter-spacing: 0.5px; text-transform: uppercase; font-weight: 700; width: 200px; flex-shrink: 0; text-align: left; }
+.breakdown-head .hrs { font-size: 18px; font-weight: 700; }
+.breakdown-head .hrs small { font-size: 12px; color: var(--muted); font-weight: 500; }
+.breakdown-head .count { color: var(--muted); font-size: 13px; }
+.breakdown-head .chev { margin-left: auto; color: var(--dim); transition: transform 0.15s; }
+.breakdown-row[data-open="true"] .chev { transform: rotate(180deg); }
+.breakdown-body { display: none; border-top: 1px solid var(--border); padding: 4px 18px 14px; }
+.breakdown-row[data-open="true"] .breakdown-body { display: block; }
+
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+th { text-align: left; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--dim); padding: 6px 8px; border-bottom: 1px solid var(--border); }
+td { font-size: 13px; padding: 8px 8px; border-bottom: 1px solid var(--border); color: var(--text); }
+td.muted { color: var(--muted); }
+.reassign-select {
+  background: rgba(5,15,35,0.6);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-size: 12px;
+  padding: 5px 6px;
+}
+.empty-state { text-align: center; color: var(--dim); padding: 24px; font-size: 13px; }
+
+/* ---------- Category detail view ---------- */
+.cat-detail-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 620px; margin-bottom: 8px; }
+
+/* ---------- Employee detail agenda (day/time) ---------- */
+.day-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.day-head {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.day-head .day-total { margin-left: auto; color: var(--muted); font-weight: 500; font-size: 12px; }
+.day-task-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.day-task-row:last-child { border-bottom: none; }
+.day-task-row .time-block { width: 110px; flex-shrink: 0; color: var(--muted); font-variant-numeric: tabular-nums; }
+.day-task-row .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.day-task-row .task-name { flex: 1; }
+.day-task-row .cat-tag { color: var(--muted); font-size: 12px; width: 150px; flex-shrink: 0; }
+.day-task-row .dur-tag { font-weight: 700; width: 60px; text-align: right; flex-shrink: 0; }
+
+/* ---------- Boss view ---------- */
+.boss-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; max-width: 460px; margin-bottom: 8px; }
+
+/* ---------- Password overlay ---------- */
+.pw-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(2,6,18,0.75);
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.pw-modal {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px;
+  width: 280px;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+}
+.pw-close {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  color: var(--dim);
+  font-size: 18px;
+  cursor: pointer;
+  line-height: 1;
+}
+.pw-close:hover { color: var(--text); }
+.pw-title { font-family: 'DM Serif Display', serif; font-size: 18px; margin-bottom: 16px; }
+.pw-modal input {
+  width: 100%;
+  background: rgba(5,15,35,0.6);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 10px 12px;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+.pw-modal input:focus { outline: none; border-color: #63bcbc; }
+.pw-modal button {
+  width: 100%;
+  background: #63bcbc;
+  color: var(--bg);
+  border: none;
+  border-radius: 6px;
+  padding: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pw-error { color: #D95C84; font-size: 12px; margin-top: 10px; min-height: 14px; }
+
+/* ---------- Site-wide gate ---------- */
+.site-gate {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+.site-gate-modal {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 36px 32px;
+  width: 300px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+.site-gate-title { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 4px; }
+.site-gate-sub { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
+.site-gate-name-row { display: flex; gap: 10px; }
+.site-gate-name-row input { flex: 1; }
+.site-gate-modal input {
+  width: 100%;
+  background: rgba(5,15,35,0.6);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 12px 14px;
+  font-size: 14px;
+  margin-bottom: 14px;
+}
+.site-gate-modal input:focus { outline: none; border-color: #63bcbc; }
+.site-gate-modal button {
+  width: 100%;
+  background: #63bcbc;
+  color: var(--bg);
+  border: none;
+  border-radius: 6px;
+  padding: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.site-gate-error { color: #D95C84; font-size: 12px; margin-top: 12px; min-height: 14px; }
+</style>
+</head>
+<body>
+
+<!-- Site-wide gate — shown before anything else loads -->
+<div class="site-gate" id="siteGate">
+  <div class="site-gate-modal">
+    <div class="site-gate-title">HR Task Tracker</div>
+    <div class="site-gate-sub">Talent Team Access</div>
+    <div class="site-gate-name-row">
+      <input type="text" id="siteGateFirst" placeholder="First Name" autocomplete="off" />
+      <input type="text" id="siteGateLast" placeholder="Last Name" autocomplete="off" />
+    </div>
+    <button id="siteGateSubmit">Enter</button>
+    <div class="site-gate-error" id="siteGateError"></div>
+  </div>
+</div>
+
+<div id="appRoot" style="display:none;">
+<div class="sidebar">
+  <div class="brand">HR Task Tracker<div class="eyebrow">DICOT · Talent Team</div></div>
+  <div class="nav-item active" data-view="log">Log Task</div>
+  <div class="nav-item" data-view="overview">Overview</div>
+  <div class="nav-item" id="categoriesToggle">Categories <span class="nav-chev" id="catChev">▾</span></div>
+  <div class="nav-sublist" id="categoriesSublist"></div>
+  <div class="nav-item" id="employeesToggle">Employees <span class="nav-chev" id="empChev">▾</span></div>
+  <div class="nav-sublist" id="employeesSublist"></div>
+
+  <div class="sidebar-spacer"></div>
+  <div class="hidden-badge" id="bossBadge" title="">HR</div>
+</div>
+
+<main>
+
+  <!-- LOG TASK VIEW -->
+  <div class="view active" id="view-log">
+    <header>
+      <h1>Log a Task</h1>
+      <div class="page-eyebrow">Time Entry</div>
+    </header>
+
+    <div class="top-tiles">
+      <div class="tile-card emp-tile">
+        <div class="section-label" style="margin-top:0;">Who's Logging This</div>
+        <div class="emp-row" id="empPicker"></div>
+        <div class="section-label" style="margin-top:20px;">Favorites</div>
+        <div class="fav-list" id="favList"></div>
+      </div>
+      <div class="tile-card cat-tile">
+        <div class="section-label" style="margin-top:0;">Category</div>
+        <div class="cat-grid" id="catPicker"></div>
+      </div>
+    </div>
+
+    <div class="entry-card">
+      <div class="entry-layout">
+
+        <div class="cat-readout" id="catReadout"></div>
+
+        <div class="task-col">
+          <label>Task</label>
+          <div class="task-input-row">
+            <select id="fTaskSelect" class="task-select"></select>
+            <button type="button" class="star-btn" id="starBtn" title="Save as favorite">☆</button>
+          </div>
+          <div class="task-or">or type your own</div>
+          <input type="text" id="fTaskFree" class="task-free" placeholder="Type a task..." />
+        </div>
+
+        <div class="right-col">
+          <div class="field-row">
+            <div class="field">
+              <label>Date</label>
+              <input type="date" id="fDate" />
+            </div>
+            <div class="field">
+              <label>Start</label>
+              <input type="time" id="fStart" step="300" />
+            </div>
+            <div class="field">
+              <label>End</label>
+              <input type="time" id="fEnd" step="300" />
+            </div>
+          </div>
+
+          <button class="submit-btn" id="submitBtn">Log It</button>
+          <div class="duration-preview" id="durationPreview"></div>
+          <div class="form-msg" id="formMsg"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="section-label" style="margin-top:32px;">Logged Today</div>
+    <div id="todayList"></div>
+  </div>
+
+  <!-- OVERVIEW VIEW -->
+  <div class="view" id="view-overview">
+    <header>
+      <h1>Overview</h1>
+      <div class="page-eyebrow">All Logged Time · Current Period</div>
+    </header>
+
+    <div class="stat-row stat-row-3">
+      <div class="stat-card">
+        <div class="stat-label">Total Hours</div>
+        <div class="stat-value" id="statTotalHours">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Tasks Logged</div>
+        <div class="stat-value" id="statTotalTasks">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Avg Time / Task</div>
+        <div class="stat-value" id="statAvgTime">—</div>
+      </div>
+    </div>
+
+    <div class="section-label">By Employee</div>
+    <div class="cat-cols" id="empCards"></div>
+
+    <div class="section-label">By Category</div>
+    <div class="cat-cols" id="catCards"></div>
+
+    <div class="section-label">Category Detail</div>
+    <div id="breakdownList"></div>
+  </div>
+
+  <!-- EMPLOYEE DETAIL VIEW (calendar-esque agenda, by day/time) -->
+  <div class="view" id="view-employee-detail">
+    <header>
+      <h1 id="empDetailTitle">Employee</h1>
+      <div class="page-eyebrow">Employee Detail · By Day</div>
+    </header>
+
+    <div class="cat-detail-stats">
+      <div class="stat-card">
+        <div class="stat-label">Total Hours</div>
+        <div class="stat-value" id="empDetailHours">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Tasks Logged</div>
+        <div class="stat-value" id="empDetailTasks">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Days Active</div>
+        <div class="stat-value" id="empDetailDays">—</div>
+      </div>
+    </div>
+
+    <div class="section-label">Schedule</div>
+    <div id="empDetailAgenda"></div>
+  </div>
+
+  <!-- CATEGORY DETAIL VIEW (shared template, populated per category) -->
+  <div class="view" id="view-category-detail">
+    <header>
+      <h1 id="catDetailTitle">Category</h1>
+      <div class="page-eyebrow">Category Detail</div>
+    </header>
+
+    <div class="cat-detail-stats">
+      <div class="stat-card">
+        <div class="stat-label">Total Hours</div>
+        <div class="stat-value" id="catDetailHours">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Tasks Logged</div>
+        <div class="stat-value" id="catDetailTasks">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">People</div>
+        <div class="stat-value" id="catDetailPeople">—</div>
+      </div>
+    </div>
+
+    <div class="section-label">Tasks</div>
+    <table>
+      <thead>
+        <tr><th>Date</th><th>Employee</th><th>Task</th><th>Time</th><th>Duration</th></tr>
+      </thead>
+      <tbody id="catDetailBody"></tbody>
+    </table>
+  </div>
+
+  <!-- BOSS VIEW (hidden, password gated, all categories) -->
+  <div class="view" id="view-boss">
+    <header>
+      <h1>Cost Detail</h1>
+      <div class="page-eyebrow">Boss View · All Categories</div>
+    </header>
+
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Hours</div>
+        <div class="stat-value" id="bossTotalHours">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Cost</div>
+        <div class="stat-value" id="bossTotalCost">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Tasks</div>
+        <div class="stat-value" id="bossTotalTasks">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">People Logging</div>
+        <div class="stat-value" id="bossPeople">—</div>
+      </div>
+    </div>
+
+    <div class="section-label">By Category</div>
+    <div class="cat-cols" id="bossCatCards"></div>
+
+    <div class="section-label">Category Detail</div>
+    <div id="bossBreakdownList"></div>
+  </div>
+
+</main>
+
+<!-- Password overlay for the hidden Boss view -->
+<div class="pw-overlay" id="pwOverlay">
+  <div class="pw-modal">
+    <div class="pw-close" id="pwClose">&times;</div>
+    <div class="pw-title">Maintenance Access</div>
+    <input type="password" id="pwInput" placeholder="Password" />
+    <button id="pwSubmit">Enter</button>
+    <div class="pw-error" id="pwError"></div>
+  </div>
+</div>
+
+</div><!-- /appRoot -->
+
+<script>
+const SITE_SESSION_DAYS = 180; // how long a device stays unlocked before it asks again
+
+function isSiteAuthed() {
+  const expiry = Number(localStorage.getItem("hrSiteAuthExpiry") || 0);
+  return Date.now() < expiry;
+}
+function setSiteAuthed() {
+  const expiry = Date.now() + SITE_SESSION_DAYS * 24 * 60 * 60 * 1000;
+  localStorage.setItem("hrSiteAuthExpiry", String(expiry));
+}
+function unlockApp() {
+  document.getElementById("siteGate").style.display = "none";
+  document.getElementById("appRoot").style.display = "flex";
+  init();
+}
+function checkSitePassword() {
+  const first = document.getElementById("siteGateFirst").value.trim().toLowerCase();
+  const last = document.getElementById("siteGateLast").value.trim().toLowerCase();
+  const full = `${first} ${last}`.replace(/\s+/g, " ").trim();
+  const valid = EMPLOYEES.some(e => e.name.toLowerCase() === full);
+  if (valid) {
+    setSiteAuthed();
+    unlockApp();
+  } else {
+    document.getElementById("siteGateError").textContent = "Name not recognized.";
+  }
+}
+
+/* =========================================================
+   CONFIG
+   ========================================================= */
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyUZJY5ZCPF82fa7slgGYjRDoZVghXR9QJHusj9NM8ouyulRbj-PGIdIGq5qIeRcSoxYw/exec";
+
+const EMPLOYEES = [
+  { name: "Carol Fountain",     hex: "#7B68EE" }, // purple
+  { name: "Giselle Cartagena",  hex: "#E8833A" }, // orange
+  { name: "Irene Sanchez",      hex: "#C9A24D" }, // desert yellow
+  { name: "Larry Thomas",       hex: "#63bcbc" }, // DICOT teal
+  { name: "Tyler Hare",         hex: "#D95C84" }, // DICOT pink
+];
+
+// Alphabetical order — colors walk an evenly spaced 30° hue arc
+const CATEGORIES = [
+  { key: "Benefits",                hex: "#D45454" },
+  { key: "Compliance",              hex: "#D49454" },
+  { key: "Culture",                 hex: "#D4D454" },
+  { key: "DICOT Operations",        hex: "#94D454" },
+  { key: "Employee Relations",      hex: "#54D454" },
+  { key: "Engagement",              hex: "#81DA9C" },
+  { key: "HR Operations",           hex: "#54D4D4" },
+  { key: "HRIT",                    hex: "#5494D4" },
+  { key: "Onboarding",              hex: "#5454D4" },
+  { key: "Payroll",                 hex: "#9454D4" },
+  { key: "Performance Management",  hex: "#D454D4" },
+  { key: "Recruiting",              hex: "#D45494" },
+];
+
+// PLACEHOLDER hourly rates — $20/hr for everyone until you provide real numbers.
+// NOTE ON SECURITY: this file has no server-side auth. The password check below
+// only hides this view from casual clicking; the password and these rates are
+// still readable by anyone who views this file's source. Don't treat this as
+// real protection for sensitive pay data.
+const EMPLOYEE_RATES = {
+  "Carol Fountain": 20,
+  "Giselle Cartagena": 20,
+  "Irene Sanchez": 20,
+  "Larry Thomas": 20,
+  "Tyler Hare": 20,
+};
+// Starter list of common tasks per category — edit freely, these are just placeholders
+const BUILTIN_TASKS = {
+  "Benefits":               ["Process enrollment", "Open enrollment", "FMLA case management"],
+  "Compliance":             ["I-9 re-verification", "License check", "Policy update/distribution"],
+  "Culture":                ["Tenure Celebration"],
+  "DICOT Operations":       ["Leadership meeting", "Reporting", "Cross-department coordination", "Vendor/ordering support"],
+  "Employee Relations":     ["Employee relations meeting", "Investigate complaint", "Termination Processing", "Disciplinary documentation"],
+  "Engagement":             ["WorkProud", "Digital Marketing", "Clinic Visits", "Engagement Meetings"],
+  "HR Operations":          ["Employee file maintenance", "All hands HR meeting", "Reporting", "Records audit"],
+  "HRIT":                   ["HRIS data entry", "System troubleshooting", "Access provisioning", "System update/testing"],
+  "Onboarding":             ["New hire paperwork", "Orientation", "I-9 verification"],
+  "Payroll":                ["Payroll processing", "Payroll correction", "Timecard review", "Payroll inquiry"],
+  "Performance Management": ["Performance review", "PIP documentation", "Goal setting session", "Performance calibration meeting"],
+  "Recruiting":             ["Requisitions", "Offers", "Hiring", "Screening and Sourcing", "Interviews", "Coordination", "Agency Conversations"],
+};
+
+const BOSS_PASSWORDS = ["LT", "TH"]; // Larry Thomas or Tyler Hare — either works
+const BOSS_SESSION_MINUTES = 120; // how long access stays unlocked before it asks again
+
+let entries = [];
+let selectedEmployee = EMPLOYEES[0].name;
+let selectedCategory = CATEGORIES[0].key;
+
+function empColor(name) {
+  const e = EMPLOYEES.find(e => e.name === name);
+  return e ? e.hex : "#8FA0C4";
+}
+function catColor(key) {
+  const c = CATEGORIES.find(c => c.key === key);
+  return c ? c.hex : "#8FA0C4";
+}
+function hexToRgb(hex) {
+  const clean = hex.replace("#", "");
+  const bigint = parseInt(clean, 16);
+  return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255];
+}
+function relLuminance(hex) {
+  const [r, g, b] = hexToRgb(hex).map(v => v / 255);
+  const lin = v => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+}
+function contrastText(hex) {
+  return relLuminance(hex) > 0.4 ? "#050F23" : "#EAF0FB";
+}
+function updateEntryCardColor() {
+  const color = empColor(selectedEmployee);
+  document.querySelector(".entry-card").style.borderColor = color;
+  const btn = document.getElementById("submitBtn");
+  btn.style.background = color;
+  btn.style.color = contrastText(color);
+}
+
+function switchView(viewId, navItemEl) {
+  document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
+  document.querySelectorAll(".nav-subitem").forEach(i => i.classList.remove("active"));
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  if (navItemEl) navItemEl.classList.add("active");
+  document.getElementById(viewId).classList.add("active");
+}
+
+function init() {
+  document.querySelectorAll(".nav-item[data-view]").forEach(item => {
+    item.addEventListener("click", () => switchView("view-" + item.dataset.view, item));
+  });
+
+  document.getElementById("categoriesToggle").addEventListener("click", () => {
+    const sub = document.getElementById("categoriesSublist");
+    sub.classList.toggle("open");
+    document.getElementById("catChev").textContent = sub.classList.contains("open") ? "▴" : "▾";
+  });
+
+  const sublist = document.getElementById("categoriesSublist");
+  CATEGORIES.forEach(cat => {
+    const item = document.createElement("div");
+    item.className = "nav-subitem";
+    item.textContent = cat.key;
+    item.style.borderLeft = `3px solid ${cat.hex}`;
+    item.addEventListener("click", () => {
+      switchView("view-category-detail", item);
+      renderCategoryDetail(cat.key);
+    });
+    sublist.appendChild(item);
+  });
+
+  document.getElementById("employeesToggle").addEventListener("click", () => {
+    const sub = document.getElementById("employeesSublist");
+    sub.classList.toggle("open");
+    document.getElementById("empChev").textContent = sub.classList.contains("open") ? "▴" : "▾";
+  });
+
+  const empSublist = document.getElementById("employeesSublist");
+  EMPLOYEES.forEach(emp => {
+    const item = document.createElement("div");
+    item.className = "nav-subitem";
+    item.textContent = emp.name;
+    item.style.borderLeft = `3px solid ${emp.hex}`;
+    item.addEventListener("click", () => {
+      switchView("view-employee-detail", item);
+      renderEmployeeDetail(emp.name);
+    });
+    empSublist.appendChild(item);
+  });
+
+  // Hidden maintenance badge
+  document.getElementById("bossBadge").addEventListener("click", () => {
+    if (isBossAuthed()) {
+      switchView("view-boss", null);
+      renderBossView();
+      return;
+    }
+    document.getElementById("pwOverlay").style.display = "flex";
+    document.getElementById("pwInput").value = "";
+    document.getElementById("pwError").textContent = "";
+    document.getElementById("pwInput").focus();
+  });
+  document.getElementById("pwSubmit").addEventListener("click", checkPassword);
+  document.getElementById("pwInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") checkPassword();
+  });
+  document.getElementById("pwClose").addEventListener("click", closePwOverlay);
+  document.getElementById("pwOverlay").addEventListener("click", e => {
+    if (e.target.id === "pwOverlay") closePwOverlay();
+  });
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") closePwOverlay();
+  });
+
+  document.getElementById("fDate").valueAsDate = new Date();
+
+  const empRow = document.getElementById("empPicker");
+  EMPLOYEES.forEach(emp => {
+    const btn = document.createElement("button");
+    btn.className = "emp-btn";
+    btn.textContent = emp.name;
+    btn.dataset.name = emp.name;
+    btn.style.setProperty("--emp-color", emp.hex);
+    btn.addEventListener("click", () => {
+      selectedEmployee = emp.name;
+      renderEmpPicker();
+    });
+    empRow.appendChild(btn);
+  });
+  renderEmpPicker();
+
+  const catGrid = document.getElementById("catPicker");
+  CATEGORIES.forEach(cat => {
+    const btn = document.createElement("button");
+    btn.className = "cat-item";
+    btn.dataset.key = cat.key;
+    btn.style.borderLeftColor = cat.hex;
+    btn.textContent = cat.key;
+    btn.addEventListener("click", () => {
+      selectedCategory = cat.key;
+      renderCatPicker();
+    });
+    catGrid.appendChild(btn);
+  });
+  renderCatPicker();
+
+  document.getElementById("fStart").addEventListener("input", updateDurationPreview);
+  document.getElementById("fEnd").addEventListener("input", updateDurationPreview);
+  document.getElementById("fTaskSelect").addEventListener("change", updateStarState);
+  document.getElementById("fTaskFree").addEventListener("input", updateStarState);
+  document.getElementById("starBtn").addEventListener("click", toggleFavorite);
+  document.getElementById("submitBtn").addEventListener("click", submitEntry);
+
+  renderFavorites();
+  updateStarState();
+  loadEntries();
+}
+
+/* =========================================================
+   FAVORITES — stored per-employee in this browser only.
+   (Not synced across computers — each person's favorites
+   live on the machine they saved them on.)
+   ========================================================= */
+function getAllFavorites() {
+  try { return JSON.parse(localStorage.getItem("hrTaskFavorites") || "{}"); }
+  catch (e) { return {}; }
+}
+function getFavorites(employee) {
+  return getAllFavorites()[employee] || [];
+}
+function setFavorites(employee, favs) {
+  const all = getAllFavorites();
+  all[employee] = favs;
+  localStorage.setItem("hrTaskFavorites", JSON.stringify(all));
+}
+function isFavorited() {
+  const task = getTaskValue();
+  if (!task) return false;
+  return getFavorites(selectedEmployee).some(f => f.category === selectedCategory && f.task === task);
+}
+function updateStarState() {
+  const btn = document.getElementById("starBtn");
+  const active = isFavorited();
+  btn.dataset.active = active;
+  btn.textContent = active ? "★" : "☆";
+}
+function toggleFavorite() {
+  const task = getTaskValue();
+  if (!task) return;
+  const favs = getFavorites(selectedEmployee);
+  const idx = favs.findIndex(f => f.category === selectedCategory && f.task === task);
+  if (idx >= 0) favs.splice(idx, 1);
+  else favs.push({ category: selectedCategory, task });
+  setFavorites(selectedEmployee, favs);
+  updateStarState();
+  renderFavorites();
+}
+function renderFavorites() {
+  const favs = getFavorites(selectedEmployee);
+  const list = document.getElementById("favList");
+
+  if (!favs.length) {
+    list.innerHTML = `<div class="empty-state" style="padding:6px 0;">No favorites yet — star a task to save it here.</div>`;
+    return;
+  }
+
+  list.innerHTML = favs.map((f, i) => `
+    <div class="fav-item" style="border-left-color:${catColor(f.category)}" data-index="${i}">
+      <span class="fav-task">${f.task}</span>
+      <span class="fav-remove" data-remove="${i}">&times;</span>
+    </div>
+  `).join("");
+
+  list.querySelectorAll(".fav-item").forEach(el => {
+    el.addEventListener("click", e => {
+      if (e.target.dataset.remove !== undefined) return;
+      const f = favs[Number(el.dataset.index)];
+      selectedCategory = f.category;
+      renderCatPicker();
+      setTaskValue(f.category, f.task);
+    });
+  });
+  list.querySelectorAll(".fav-remove").forEach(el => {
+    el.addEventListener("click", e => {
+      e.stopPropagation();
+      const idx = Number(el.dataset.remove);
+      favs.splice(idx, 1);
+      setFavorites(selectedEmployee, favs);
+      renderFavorites();
+    });
+  });
+}
+
+function isBossAuthed() {
+  const expiry = Number(localStorage.getItem("hrBossAuthExpiry") || 0);
+  return Date.now() < expiry;
+}
+function setBossAuthed() {
+  const expiry = Date.now() + BOSS_SESSION_MINUTES * 60 * 1000;
+  localStorage.setItem("hrBossAuthExpiry", String(expiry));
+}
+
+function closePwOverlay() {
+  document.getElementById("pwOverlay").style.display = "none";
+}
+
+function checkPassword() {
+  const val = document.getElementById("pwInput").value;
+  if (BOSS_PASSWORDS.includes(val)) {
+    setBossAuthed();
+    closePwOverlay();
+    switchView("view-boss", null);
+    renderBossView();
+  } else {
+    document.getElementById("pwError").textContent = "Incorrect password.";
+  }
+}
+
+function renderEmpPicker() {
+  document.querySelectorAll(".emp-btn").forEach(btn => {
+    const active = btn.dataset.name === selectedEmployee;
+    btn.dataset.active = active;
+    const color = empColor(btn.dataset.name);
+    if (active) {
+      btn.style.background = color;
+      btn.style.color = contrastText(color);
+    } else {
+      btn.style.background = "transparent";
+      btn.style.color = color;
+    }
+  });
+  updateEntryCardColor();
+  renderFavorites();
+  updateStarState();
+}
+
+function renderCatPicker() {
+  document.querySelectorAll(".cat-item").forEach(btn => {
+    const active = btn.dataset.key === selectedCategory;
+    btn.dataset.active = active;
+    const hex = catColor(btn.dataset.key);
+    btn.style.borderLeftWidth = active ? "6px" : "3px";
+    btn.style.background = active ? hex + "30" : "transparent";
+  });
+  updateTaskSuggestions();
+  updateStarState();
+  updateCatReadout();
+}
+
+function updateCatReadout() {
+  const hex = catColor(selectedCategory);
+  document.getElementById("catReadout").innerHTML =
+    `<span class="dot" style="background:${hex}"></span>Category: <strong>${selectedCategory}</strong>`;
+}
+
+function getTaskValue() {
+  const freeVal = document.getElementById("fTaskFree").value.trim();
+  if (freeVal) return freeVal;
+  return document.getElementById("fTaskSelect").value;
+}
+
+function setTaskValue(category, task) {
+  const options = getTaskOptions(category);
+  const select = document.getElementById("fTaskSelect");
+  const free = document.getElementById("fTaskFree");
+  if (options.includes(task)) {
+    select.value = task;
+    free.value = "";
+  } else {
+    free.value = task;
+    select.value = "";
+  }
+  updateStarState();
+}
+
+function getTaskOptions(category) {
+  const builtins = BUILTIN_TASKS[category] || [];
+  const past = entries.filter(e => e.Category === category && e.Task).map(e => e.Task);
+  return [...new Set([...builtins, ...past])];
+}
+
+function updateTaskSuggestions() {
+  const options = getTaskOptions(selectedCategory);
+  const select = document.getElementById("fTaskSelect");
+  const prevValue = select.value;
+  const optionTags = options.map(t => `<option value="${t.replace(/"/g, "&quot;")}">${t}</option>`).join("");
+  select.innerHTML = options.length
+    ? `<option value="">— choose from list —</option>${optionTags}`
+    : `<option value="">No preset tasks yet for this category</option>`;
+  if (options.includes(prevValue)) select.value = prevValue;
+}
+
+function calcDurationMinutes(start, end) {
+  if (!start || !end) return null;
+  const [sh, sm] = start.split(":").map(Number);
+  const [eh, em] = end.split(":").map(Number);
+  let mins = (eh * 60 + em) - (sh * 60 + sm);
+  if (mins < 0) mins += 24 * 60;
+  return mins;
+}
+
+function formatMinutes(mins) {
+  if (mins == null) return "—";
+  const h = Math.floor(mins / 60);
+  const m = Math.round(mins % 60);
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
+
+function updateDurationPreview() {
+  const start = document.getElementById("fStart").value;
+  const end = document.getElementById("fEnd").value;
+  const mins = calcDurationMinutes(start, end);
+  const el = document.getElementById("durationPreview");
+  el.innerHTML = mins != null ? `Duration: <strong>${formatMinutes(mins)}</strong>` : "";
+}
+
+async function loadEntries() {
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    entries = [];
+    renderAll();
+    return;
+  }
+  try {
+    const res = await fetch(APPS_SCRIPT_URL);
+    entries = await res.json();
+    renderAll();
+  } catch (err) {
+    renderAll();
+  }
+}
+
+async function submitEntry() {
+  const employee = selectedEmployee;
+  const date = document.getElementById("fDate").value;
+  const task = getTaskValue();
+  const start = document.getElementById("fStart").value;
+  const end = document.getElementById("fEnd").value;
+  const msg = document.getElementById("formMsg");
+
+  if (!task || !start || !end) {
+    msg.textContent = "Fill in task, start time, and end time.";
+    msg.className = "form-msg err";
+    return;
+  }
+
+  const durationMinutes = calcDurationMinutes(start, end);
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const payload = { id, employee, date, category: selectedCategory, task, startTime: start, endTime: end, durationMinutes };
+
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true;
+  btn.textContent = "Saving...";
+
+  try {
+    if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+      entries.push({ ID: id, Date: date, Employee: employee, Category: selectedCategory, Task: task, StartTime: start, EndTime: end, DurationMinutes: durationMinutes });
+      renderAll();
+      msg.textContent = "Logged (demo mode — connect backend to save for real).";
+      msg.className = "form-msg ok";
+    } else {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload),
+      });
+      msg.textContent = "Logged.";
+      msg.className = "form-msg ok";
+      await loadEntries();
+    }
+    document.getElementById("fTaskSelect").value = "";
+    document.getElementById("fTaskFree").value = "";
+    document.getElementById("fStart").value = "";
+    document.getElementById("fEnd").value = "";
+    updateDurationPreview();
+    updateStarState();
+  } catch (err) {
+    msg.textContent = "Something went wrong. Try again.";
+    msg.className = "form-msg err";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Log It";
+  }
+}
+
+function renderAll() {
+  renderToday();
+  renderOverview();
+  updateTaskSuggestions();
+}
+
+function renderToday() {
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const list = document.getElementById("todayList");
+  const todays = entries.filter(e => e.Date === todayStr);
+
+  if (!todays.length) {
+    list.innerHTML = `<div class="empty-state">Nothing logged yet today.</div>`;
+    return;
+  }
+
+  list.innerHTML = todays.map(e => `
+    <div class="today-row" style="border-left-color:${empColor(e.Employee)}">
+      <div class="who" style="color:${empColor(e.Employee)}">${e.Employee || ""}</div>
+      <div class="task">${e.Task || ""}</div>
+      <div class="cat">${e.Category || ""}</div>
+      <div class="time">${e.StartTime || ""}–${e.EndTime || ""}</div>
+      <div class="dur">${formatMinutes(Number(e.DurationMinutes || 0))}</div>
+    </div>
+  `).join("");
+}
+
+function renderOverview() {
+  const totalMinutes = entries.reduce((sum, e) => sum + Number(e.DurationMinutes || 0), 0);
+  const totalTasks = entries.length;
+  const avgMinutes = totalTasks ? totalMinutes / totalTasks : 0;
+
+  document.getElementById("statTotalHours").innerHTML = `${(totalMinutes/60).toFixed(1)}<sub>hrs</sub>`;
+  document.getElementById("statTotalTasks").textContent = totalTasks;
+  document.getElementById("statAvgTime").textContent = formatMinutes(avgMinutes);
+
+  const empCards = document.getElementById("empCards");
+  empCards.innerHTML = "";
+  EMPLOYEES.forEach(emp => {
+    const empEntries = entries.filter(e => e.Employee === emp.name);
+    const mins = empEntries.reduce((s, e) => s + Number(e.DurationMinutes || 0), 0);
+    const card = document.createElement("div");
+    card.className = "cat-card";
+    card.style.borderTop = `3px solid ${emp.hex}`;
+    card.innerHTML = `
+      <div class="cat-name" style="color:${emp.hex}">${emp.name}</div>
+      <div class="cat-hours">${(mins/60).toFixed(1)}<span class="cat-sub"> hrs</span></div>
+      <div class="cat-count">${empEntries.length} task${empEntries.length===1?"":"s"}</div>
+    `;
+    empCards.appendChild(card);
+  });
+
+  const catCards = document.getElementById("catCards");
+  catCards.innerHTML = "";
+  CATEGORIES.forEach(cat => {
+    const catEntries = entries.filter(e => e.Category === cat.key);
+    const mins = catEntries.reduce((s, e) => s + Number(e.DurationMinutes || 0), 0);
+    const card = document.createElement("div");
+    card.className = "cat-card";
+    card.style.borderTop = `3px solid ${cat.hex}`;
+    card.innerHTML = `
+      <div class="cat-name" style="color:${cat.hex}">${cat.key}</div>
+      <div class="cat-hours">${(mins/60).toFixed(1)}<span class="cat-sub"> hrs</span></div>
+      <div class="cat-count">${catEntries.length} task${catEntries.length===1?"":"s"}</div>
+    `;
+    catCards.appendChild(card);
+  });
+
+  const list = document.getElementById("breakdownList");
+  list.innerHTML = "";
+
+  if (!entries.length) {
+    list.innerHTML = `<div class="empty-state">No tasks logged yet. Use "Log Task" to add the first one.</div>`;
+    return;
+  }
+
+  CATEGORIES.forEach(cat => {
+    const catEntries = entries.filter(e => e.Category === cat.key);
+    if (!catEntries.length) return;
+
+    const mins = catEntries.reduce((s, e) => s + Number(e.DurationMinutes || 0), 0);
+
+    const row = document.createElement("div");
+    row.className = "breakdown-row";
+    row.style.borderLeftColor = cat.hex;
+    row.dataset.open = "false";
+
+    row.innerHTML = `
+      <div class="breakdown-head">
+        <div class="name" style="color:${cat.hex}">${cat.key}</div>
+        <div class="hrs">${(mins/60).toFixed(1)} <small>hrs</small></div>
+        <div class="count">${catEntries.length} task${catEntries.length===1?"":"s"}</div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="breakdown-body">
+        <table>
+          <thead>
+            <tr><th>Date</th><th>Employee</th><th>Task</th><th>Time</th><th>Duration</th></tr>
+          </thead>
+          <tbody>
+            ${catEntries.map(e => `
+              <tr>
+                <td class="muted">${e.Date || ""}</td>
+                <td style="color:${empColor(e.Employee)}">${e.Employee || ""}</td>
+                <td>${e.Task || ""}</td>
+                <td class="muted">${e.StartTime || ""}–${e.EndTime || ""}</td>
+                <td>${formatMinutes(Number(e.DurationMinutes || 0))}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    row.querySelector(".breakdown-head").addEventListener("click", () => {
+      row.dataset.open = row.dataset.open === "true" ? "false" : "true";
+    });
+
+    list.appendChild(row);
+  });
+}
+
+function renderCategoryDetail(key) {
+  const catEntries = entries.filter(e => e.Category === key);
+  const mins = catEntries.reduce((s, e) => s + Number(e.DurationMinutes || 0), 0);
+  const peopleSet = new Set(catEntries.map(e => e.Employee));
+
+  document.getElementById("catDetailTitle").textContent = key;
+  document.getElementById("catDetailTitle").style.color = catColor(key);
+  document.getElementById("catDetailHours").innerHTML = `${(mins/60).toFixed(1)}<sub>hrs</sub>`;
+  document.getElementById("catDetailTasks").textContent = catEntries.length;
+  document.getElementById("catDetailPeople").textContent = peopleSet.size;
+
+  const body = document.getElementById("catDetailBody");
+  if (!catEntries.length) {
+    body.innerHTML = `<tr><td colspan="5" class="empty-state">No tasks logged in this category yet.</td></tr>`;
+    return;
+  }
+  body.innerHTML = catEntries.map(e => `
+    <tr>
+      <td class="muted">${e.Date || ""}</td>
+      <td style="color:${empColor(e.Employee)}">${e.Employee || ""}</td>
+      <td>${e.Task || ""}</td>
+      <td class="muted">${e.StartTime || ""}–${e.EndTime || ""}</td>
+      <td>${formatMinutes(Number(e.DurationMinutes || 0))}</td>
+    </tr>
+  `).join("");
+}
+
+function renderEmployeeDetail(name) {
+  const empEntries = entries.filter(e => e.Employee === name);
+  const mins = empEntries.reduce((s, e) => s + Number(e.DurationMinutes || 0), 0);
+  const dateSet = new Set(empEntries.map(e => e.Date));
+  const color = empColor(name);
+
+  document.getElementById("empDetailTitle").textContent = name;
+  document.getElementById("empDetailTitle").style.color = color;
+  document.getElementById("empDetailHours").innerHTML = `${(mins/60).toFixed(1)}<sub>hrs</sub>`;
+  document.getElementById("empDetailTasks").textContent = empEntries.length;
+  document.getElementById("empDetailDays").textContent = dateSet.size;
+
+  const agenda = document.getElementById("empDetailAgenda");
+
+  if (!empEntries.length) {
+    agenda.innerHTML = `<div class="empty-state">No tasks logged for ${name} yet.</div>`;
+    return;
+  }
+
+  // Group by date, most recent day first; within a day, sort by start time
+  const byDate = {};
+  empEntries.forEach(e => {
+    const d = e.Date || "Unknown date";
+    if (!byDate[d]) byDate[d] = [];
+    byDate[d].push(e);
+  });
+
+  const dates = Object.keys(byDate).sort((a, b) => (a < b ? 1 : a > b ? -1 : 0));
+
+  agenda.innerHTML = dates.map(date => {
+    const dayEntries = byDate[date].slice().sort((a, b) => (a.StartTime || "").localeCompare(b.StartTime || ""));
+    const dayMins = dayEntries.reduce((s, e) => s + Number(e.DurationMinutes || 0), 0);
+    const prettyDate = new Date(date + "T00:00:00").toLocaleDateString(undefined, {
+      weekday: "long", month: "short", day: "numeric",
+    });
+
+    return `
+      <div class="day-card">
+        <div class="day-head">
+          ${prettyDate}
+          <span class="day-total">${(dayMins/60).toFixed(1)} hrs · ${dayEntries.length} task${dayEntries.length===1?"":"s"}</span>
+        </div>
+        ${dayEntries.map(e => `
+          <div class="day-task-row">
+            <div class="time-block">${e.StartTime || ""}–${e.EndTime || ""}</div>
+            <span class="dot" style="background:${catColor(e.Category)}"></span>
+            <div class="task-name">${e.Task || ""}</div>
+            <div class="cat-tag">${e.Category || ""}</div>
+            <div class="dur-tag">${formatMinutes(Number(e.DurationMinutes || 0))}</div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  }).join("");
+}
+
+function renderBossView() {
+  const totalMinutes = entries.reduce((s, e) => s + Number(e.DurationMinutes || 0), 0);
+  const totalCost = entries.reduce((s, e) => {
+    const rate = EMPLOYEE_RATES[e.Employee] || 0;
+    return s + (Number(e.DurationMinutes || 0) / 60) * rate;
+  }, 0);
+  const totalTasks = entries.length;
+  const peopleSet = new Set(entries.map(e => e.Employee));
+
+  document.getElementById("bossTotalHours").innerHTML = `${(totalMinutes/60).toFixed(1)}<sub>hrs</sub>`;
+  document.getElementById("bossTotalCost").textContent = `$${totalCost.toFixed(2)}`;
+  document.getElementById("bossTotalTasks").textContent = totalTasks;
+  document.getElementById("bossPeople").textContent = peopleSet.size;
+
+  const catCards = document.getElementById("bossCatCards");
+  catCards.innerHTML = "";
+  CATEGORIES.forEach(cat => {
+    const catEntries = entries.filter(e => e.Category === cat.key);
+    const mins = catEntries.reduce((s, e) => s + Number(e.DurationMinutes || 0), 0);
+    const cost = catEntries.reduce((s, e) => {
+      const rate = EMPLOYEE_RATES[e.Employee] || 0;
+      return s + (Number(e.DurationMinutes || 0) / 60) * rate;
+    }, 0);
+    const card = document.createElement("div");
+    card.className = "cat-card";
+    card.style.borderTop = `3px solid ${cat.hex}`;
+    card.innerHTML = `
+      <div class="cat-name" style="color:${cat.hex}">${cat.key}</div>
+      <div class="cat-hours">${(mins/60).toFixed(1)}<span class="cat-sub"> hrs</span></div>
+      <div class="cat-count">$${cost.toFixed(2)} · ${catEntries.length} task${catEntries.length===1?"":"s"}</div>
+    `;
+    catCards.appendChild(card);
+  });
+
+  const list = document.getElementById("bossBreakdownList");
+  list.innerHTML = "";
+
+  if (!entries.length) {
+    list.innerHTML = `<div class="empty-state">No tasks logged yet.</div>`;
+    return;
+  }
+
+  CATEGORIES.forEach(cat => {
+    const catEntries = entries.filter(e => e.Category === cat.key);
+    if (!catEntries.length) return;
+
+    const mins = catEntries.reduce((s, e) => s + Number(e.DurationMinutes || 0), 0);
+    const cost = catEntries.reduce((s, e) => {
+      const rate = EMPLOYEE_RATES[e.Employee] || 0;
+      return s + (Number(e.DurationMinutes || 0) / 60) * rate;
+    }, 0);
+
+    const row = document.createElement("div");
+    row.className = "breakdown-row";
+    row.style.borderLeftColor = cat.hex;
+    row.dataset.open = "false";
+
+    row.innerHTML = `
+      <div class="breakdown-head">
+        <div class="name" style="color:${cat.hex}">${cat.key}</div>
+        <div class="hrs">${(mins/60).toFixed(1)} <small>hrs</small></div>
+        <div class="count">$${cost.toFixed(2)} · ${catEntries.length} task${catEntries.length===1?"":"s"}</div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="breakdown-body">
+        <table>
+          <thead>
+            <tr><th>Date</th><th>Employee</th><th>Task</th><th>Duration</th><th>Rate</th><th>Cost</th><th>Reassign</th></tr>
+          </thead>
+          <tbody>
+            ${catEntries.map(e => {
+              const rate = EMPLOYEE_RATES[e.Employee] || 0;
+              const hours = Number(e.DurationMinutes || 0) / 60;
+              const c = hours * rate;
+              return `
+                <tr>
+                  <td class="muted">${e.Date || ""}</td>
+                  <td style="color:${empColor(e.Employee)}">${e.Employee || ""}</td>
+                  <td>${e.Task || ""}</td>
+                  <td>${formatMinutes(Number(e.DurationMinutes || 0))}</td>
+                  <td class="muted">$${rate.toFixed(2)}/hr</td>
+                  <td>$${c.toFixed(2)}</td>
+                  <td>
+                    <select class="reassign-select" data-id="${e.ID || ""}">
+                      ${CATEGORIES.map(oc => `<option value="${oc.key}" ${oc.key === e.Category ? "selected" : ""}>${oc.key}</option>`).join("")}
+                    </select>
+                  </td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    row.querySelector(".breakdown-head").addEventListener("click", () => {
+      row.dataset.open = row.dataset.open === "true" ? "false" : "true";
+    });
+    row.querySelectorAll(".reassign-select").forEach(sel => {
+      sel.addEventListener("click", e => e.stopPropagation());
+      sel.addEventListener("change", () => reassignTask(sel.dataset.id, sel.value));
+    });
+
+    list.appendChild(row);
+  });
+}
+
+async function reassignTask(id, newCategory) {
+  const entry = entries.find(e => e.ID === id);
+  if (entry) entry.Category = newCategory;
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "updateCategory", id, newCategory }),
+      });
+    } catch (err) {
+      // local state already updated; sheet update will retry on next load if this failed
+    }
+  }
+
+  renderBossView();
+  renderOverview();
+}
+
+if (isSiteAuthed()) {
+  unlockApp();
+} else {
+  document.getElementById("siteGateSubmit").addEventListener("click", checkSitePassword);
+  document.getElementById("siteGateLast").addEventListener("keydown", e => {
+    if (e.key === "Enter") checkSitePassword();
+  });
+  document.getElementById("siteGateFirst").addEventListener("keydown", e => {
+    if (e.key === "Enter") checkSitePassword();
+  });
+  document.getElementById("siteGateFirst").focus();
+}
+</script>
+</body>
+</html>
