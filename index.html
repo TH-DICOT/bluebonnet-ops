@@ -212,6 +212,42 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
 .cat-item[data-active="true"] { color: var(--text); font-weight: 700; }
 
 .field-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+.time-picker-row { display: flex; align-items: center; gap: 8px; }
+.time-select-small {
+  flex: 1;
+  background: rgba(5,15,35,0.6);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 14px 10px;
+  font-size: 16px;
+  text-align: center;
+}
+.time-select-small:focus { outline: none; border-color: #63bcbc; }
+.time-colon { color: var(--muted); font-weight: 700; font-size: 18px; }
+.now-btn {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid #63bcbc;
+  color: #63bcbc;
+  border-radius: 8px;
+  padding: 13px 16px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+.now-btn:hover { background: rgba(99,188,188,0.1); }
+.manual-time-link {
+  font-size: 13px;
+  color: var(--dim);
+  text-decoration: underline;
+  cursor: pointer;
+  margin-top: 8px;
+  display: inline-block;
+}
+.manual-time-link:hover { color: var(--muted); }
+.manual-time-input { margin-top: 8px; }
+.field { margin-bottom: 20px; }
 .field label { display: block; font-size: 13px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 7px; }
 .field select, .field input {
   width: 100%;
@@ -224,16 +260,28 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
   font-size: 15px;
 }
 .field select:focus, .field input:focus { outline: none; border-color: #63bcbc; }
-.field-icon-row { position: relative; display: flex; align-items: center; }
-.field-icon { position: absolute; left: 14px; font-size: 16px; pointer-events: none; z-index: 1; }
-.field-icon-row input, .field-icon-row select { padding-left: 42px; }
-.field-icon-row input[type="date"] { color-scheme: dark; }
-.field-icon-row input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
+.date-label-row { display: flex; align-items: baseline; gap: 10px; margin-bottom: 7px; }
+.date-label-row label { margin-bottom: 0; }
+.date-weekday { font-size: 14px; color: var(--text); font-weight: 700; }
+.date-input-big { color-scheme: dark; }
+.date-input-big::-webkit-calendar-picker-indicator {
   cursor: pointer;
-  width: 18px;
-  height: 18px;
+  width: 24px;
+  height: 24px;
 }
+.date-readout { font-size: 15px; color: var(--text); font-weight: 600; margin-top: 8px; }
+.date-quick-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.quick-date-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.quick-date-btn:hover { border-color: #63bcbc; color: #63bcbc; }
 
 .submit-btn {
   width: 100%;
@@ -530,28 +578,40 @@ td.muted { color: var(--muted); }
         </div>
 
         <div class="right-col">
-          <div class="field-row">
-            <div class="field">
+          <div class="field">
+            <div class="date-label-row">
               <label>Date</label>
-              <div class="field-icon-row">
-                <span class="field-icon">📅</span>
-                <input type="date" id="fDate" />
-              </div>
+              <span class="date-weekday" id="dateReadout"></span>
             </div>
-            <div class="field">
-              <label>Start</label>
-              <div class="field-icon-row">
-                <span class="field-icon">🕐</span>
-                <select id="fStart" class="time-select"></select>
-              </div>
+            <input type="date" id="fDate" class="date-input-big" />
+            <div class="date-quick-row">
+              <button type="button" class="quick-date-btn" id="todayBtn">Today</button>
+              <button type="button" class="quick-date-btn" id="yesterdayBtn">Yesterday</button>
             </div>
-            <div class="field">
-              <label>End</label>
-              <div class="field-icon-row">
-                <span class="field-icon">🕐</span>
-                <select id="fEnd" class="time-select"></select>
-              </div>
+          </div>
+
+          <div class="field">
+            <label>Start</label>
+            <div class="time-picker-row">
+              <select id="fStartHour" class="time-select-small"></select>
+              <span class="time-colon">:</span>
+              <select id="fStartMin" class="time-select-small"></select>
+              <button type="button" class="now-btn" data-target="fStart">Now</button>
             </div>
+            <div class="manual-time-link" id="fStartManualToggle">or type a specific time</div>
+            <input type="time" id="fStartManual" class="manual-time-input" step="300" style="display:none;" />
+          </div>
+
+          <div class="field">
+            <label>End</label>
+            <div class="time-picker-row">
+              <select id="fEndHour" class="time-select-small"></select>
+              <span class="time-colon">:</span>
+              <select id="fEndMin" class="time-select-small"></select>
+              <button type="button" class="now-btn" data-target="fEnd">Now</button>
+            </div>
+            <div class="manual-time-link" id="fEndManualToggle">or type a specific time</div>
+            <input type="time" id="fEndManual" class="manual-time-input" step="300" style="display:none;" />
           </div>
 
           <button class="submit-btn" id="submitBtn">Log It</button>
@@ -903,8 +963,9 @@ function init() {
   });
 
   document.getElementById("fDate").valueAsDate = new Date();
-  populateTimeSelect("fStart");
-  populateTimeSelect("fEnd");
+  populateHourMinuteSelects("fStart");
+  populateHourMinuteSelects("fEnd");
+  updateDayOfWeek();
 
   const empRow = document.getElementById("empPicker");
   EMPLOYEES.forEach(emp => {
@@ -936,8 +997,37 @@ function init() {
   });
   renderCatPicker();
 
-  document.getElementById("fStart").addEventListener("change", updateDurationPreview);
-  document.getElementById("fEnd").addEventListener("change", updateDurationPreview);
+  document.getElementById("todayBtn").addEventListener("click", () => {
+    document.getElementById("fDate").valueAsDate = new Date();
+    updateDayOfWeek();
+  });
+  document.getElementById("yesterdayBtn").addEventListener("click", () => {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    while (d.getDay() === 0 || d.getDay() === 6) {
+      d.setDate(d.getDate() - 1); // roll back past the weekend to the last business day
+    }
+    document.getElementById("fDate").valueAsDate = d;
+    updateDayOfWeek();
+  });
+  document.getElementById("fDate").addEventListener("change", updateDayOfWeek);
+  document.getElementById("fStartHour").addEventListener("change", updateDurationPreview);
+  document.getElementById("fStartMin").addEventListener("change", updateDurationPreview);
+  document.getElementById("fEndHour").addEventListener("change", updateDurationPreview);
+  document.getElementById("fEndMin").addEventListener("change", updateDurationPreview);
+  document.getElementById("fStartManual").addEventListener("input", updateDurationPreview);
+  document.getElementById("fEndManual").addEventListener("input", updateDurationPreview);
+  document.querySelectorAll(".now-btn").forEach(btn => {
+    btn.addEventListener("click", () => setNow(btn.dataset.target));
+  });
+  document.getElementById("fStartManualToggle").addEventListener("click", () => {
+    const el = document.getElementById("fStartManual");
+    el.style.display = el.style.display === "none" ? "block" : "none";
+  });
+  document.getElementById("fEndManualToggle").addEventListener("click", () => {
+    const el = document.getElementById("fEndManual");
+    el.style.display = el.style.display === "none" ? "block" : "none";
+  });
   document.getElementById("fTaskSelect").addEventListener("change", updateStarState);
   document.getElementById("fTaskFree").addEventListener("input", updateStarState);
   document.getElementById("starBtn").addEventListener("click", toggleFavorite);
@@ -1106,10 +1196,44 @@ function setTaskValue(category, task) {
   updateStarState();
 }
 
+function businessDaysSince(dateStr) {
+  if (!dateStr) return Infinity;
+  const start = new Date(dateStr + "T00:00:00");
+  const end = new Date();
+  end.setHours(0, 0, 0, 0);
+  if (isNaN(start.getTime())) return Infinity;
+  let count = 0;
+  const cur = new Date(start);
+  while (cur < end) {
+    cur.setDate(cur.getDate() + 1);
+    const day = cur.getDay();
+    if (day !== 0 && day !== 6) count++;
+  }
+  return count;
+}
+
 function getTaskOptions(category) {
   const builtins = BUILTIN_TASKS[category] || [];
-  const past = entries.filter(e => e.Category === category && e.Task).map(e => e.Task);
-  return [...new Set([...builtins, ...past])];
+  const catEntries = entries.filter(e => e.Category === category && e.Task);
+
+  // Tally how many times each free-typed task has been used, and when it was last used
+  const stats = {};
+  catEntries.forEach(e => {
+    const t = e.Task;
+    if (!stats[t]) stats[t] = { count: 0, lastDate: e.Date };
+    stats[t].count++;
+    if (e.Date && (!stats[t].lastDate || e.Date > stats[t].lastDate)) stats[t].lastDate = e.Date;
+  });
+
+  // A task "graduates" onto the list once used 5+ times, and falls back off
+  // if it hasn't been used in the last 10 business days
+  const learned = Object.keys(stats).filter(t => {
+    if (builtins.includes(t)) return false;
+    if (stats[t].count < 5) return false;
+    return businessDaysSince(stats[t].lastDate) <= 10;
+  });
+
+  return [...builtins, ...learned];
 }
 
 function updateTaskSuggestions() {
@@ -1123,19 +1247,72 @@ function updateTaskSuggestions() {
   if (options.includes(prevValue)) select.value = prevValue;
 }
 
-function populateTimeSelect(id) {
-  const select = document.getElementById(id);
-  let html = `<option value="">— select time —</option>`;
-  for (let mins = 0; mins < 24 * 60; mins += 5) {
-    const h24 = Math.floor(mins / 60);
-    const m = mins % 60;
-    const value = `${String(h24).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-    const period = h24 < 12 ? "AM" : "PM";
-    const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
-    const label = `${h12}:${String(m).padStart(2, "0")} ${period}`;
-    html += `<option value="${value}">${label}</option>`;
+function updateDayOfWeek() {
+  const val = document.getElementById("fDate").value;
+  const el = document.getElementById("dateReadout");
+  if (!val) {
+    el.textContent = "";
+    return;
   }
-  select.innerHTML = html;
+  const d = new Date(val + "T00:00:00");
+  el.textContent = d.toLocaleDateString(undefined, { weekday: "long" });
+}
+
+function populateHourMinuteSelects(prefix) {
+  const hourSelect = document.getElementById(prefix + "Hour");
+  const minSelect = document.getElementById(prefix + "Min");
+
+  let hourHtml = `<option value="">Hour</option>`;
+  for (let h = 7; h <= 19; h++) {
+    const period = h < 12 ? "AM" : "PM";
+    const h12 = h % 12 === 0 ? 12 : h % 12;
+    hourHtml += `<option value="${String(h).padStart(2, "0")}">${h12} ${period}</option>`;
+  }
+  hourSelect.innerHTML = hourHtml;
+
+  let minHtml = `<option value="">Min</option>`;
+  for (let m = 0; m < 60; m += 5) {
+    minHtml += `<option value="${String(m).padStart(2, "0")}">:${String(m).padStart(2, "0")}</option>`;
+  }
+  minSelect.innerHTML = minHtml;
+}
+
+function getFieldTime(prefix) {
+  const manual = document.getElementById(prefix + "Manual").value;
+  if (manual) return manual;
+  const h = document.getElementById(prefix + "Hour").value;
+  const m = document.getElementById(prefix + "Min").value;
+  if (h && m) return `${h}:${m}`;
+  return "";
+}
+
+function clearFieldTime(prefix) {
+  document.getElementById(prefix + "Hour").value = "";
+  document.getElementById(prefix + "Min").value = "";
+  document.getElementById(prefix + "Manual").value = "";
+  document.getElementById(prefix + "Manual").style.display = "none";
+}
+
+function setNow(prefix) {
+  const now = new Date();
+  let totalMin = now.getHours() * 60 + now.getMinutes();
+  totalMin -= totalMin % 5; // round down to nearest 5
+  const h24 = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+
+  if (h24 >= 7 && h24 <= 19) {
+    document.getElementById(prefix + "Hour").value = String(h24).padStart(2, "0");
+    document.getElementById(prefix + "Min").value = String(m).padStart(2, "0");
+    document.getElementById(prefix + "Manual").value = "";
+    document.getElementById(prefix + "Manual").style.display = "none";
+  } else {
+    // Outside the normal 7am–7pm list — fall back to the manual field
+    document.getElementById(prefix + "Hour").value = "";
+    document.getElementById(prefix + "Min").value = "";
+    document.getElementById(prefix + "Manual").value = `${String(h24).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+    document.getElementById(prefix + "Manual").style.display = "block";
+  }
+  updateDurationPreview();
 }
 
 function calcDurationMinutes(start, end) {
@@ -1157,8 +1334,8 @@ function formatMinutes(mins) {
 }
 
 function updateDurationPreview() {
-  const start = document.getElementById("fStart").value;
-  const end = document.getElementById("fEnd").value;
+  const start = getFieldTime("fStart");
+  const end = getFieldTime("fEnd");
   const mins = calcDurationMinutes(start, end);
   const el = document.getElementById("durationPreview");
   el.innerHTML = mins != null ? `Duration: <strong>${formatMinutes(mins)}</strong>` : "";
@@ -1183,8 +1360,8 @@ async function submitEntry() {
   const employee = selectedEmployee;
   const date = document.getElementById("fDate").value;
   const task = getTaskValue();
-  const start = document.getElementById("fStart").value;
-  const end = document.getElementById("fEnd").value;
+  const start = getFieldTime("fStart");
+  const end = getFieldTime("fEnd");
   const msg = document.getElementById("formMsg");
 
   if (!task || !start || !end) {
@@ -1219,8 +1396,8 @@ async function submitEntry() {
     }
     document.getElementById("fTaskSelect").value = "";
     document.getElementById("fTaskFree").value = "";
-    document.getElementById("fStart").value = "";
-    document.getElementById("fEnd").value = "";
+    clearFieldTime("fStart");
+    clearFieldTime("fEnd");
     updateDurationPreview();
     updateStarState();
   } catch (err) {
