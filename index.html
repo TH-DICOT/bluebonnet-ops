@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,8 +14,8 @@
   --card: rgba(13,27,55,0.8);
   --border: rgba(55,138,221,0.08);
   --text: #EAF0FB;
-  --muted: #8FA0C4;
-  --dim: #5A6A8F;
+  --muted: #ADBEDD;
+  --dim: #7A8CB0;
   --green: #1D9E75;
 }
 
@@ -40,15 +41,15 @@ body {
   flex-direction: column;
 }
 .brand { font-family: 'DM Serif Display', serif; font-size: 20px; padding: 0 8px 24px; }
-.brand .eyebrow { font-family: 'DM Sans', sans-serif; font-size: 10px; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; margin-top: 4px; }
-.nav-item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 8px; color: var(--muted); font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 4px; border-left: 3px solid transparent; }
+.brand .eyebrow { font-family: 'DM Sans', sans-serif; font-size: 12px; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; margin-top: 4px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 8px; color: var(--muted); font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 4px; border-left: 3px solid transparent; }
 .nav-item:hover { background: rgba(99,188,188,0.06); color: var(--text); }
 .nav-item.active { background: rgba(99,188,188,0.1); color: #63bcbc; border-left-color: #63bcbc; }
 .nav-chev { margin-left: auto; font-size: 11px; }
 
 .nav-sublist { display: none; padding-left: 10px; margin-bottom: 6px; }
 .nav-sublist.open { display: block; }
-.nav-subitem { padding: 8px 12px; font-size: 12.5px; color: var(--muted); cursor: pointer; border-radius: 6px; margin-bottom: 2px; }
+.nav-subitem { padding: 8px 12px; font-size: 14.5px; color: var(--muted); cursor: pointer; border-radius: 6px; margin-bottom: 2px; }
 .nav-subitem:hover { background: rgba(255,255,255,0.04); color: var(--text); }
 .nav-subitem.active { background: rgba(255,255,255,0.06); color: var(--text); font-weight: 700; }
 
@@ -78,8 +79,20 @@ main { flex: 1; padding: 40px 48px 80px; max-width: 1200px; }
 .view.active { display: block; }
 header { margin-bottom: 24px; }
 h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; }
-.page-eyebrow { font-size: 12px; letter-spacing: 1.5px; color: var(--muted); margin-top: 6px; text-transform: uppercase; }
-.section-label { font-size: 12px; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; font-weight: 600; margin: 8px 0 12px; }
+.page-eyebrow { font-size: 14px; letter-spacing: 1.5px; color: var(--muted); margin-top: 6px; text-transform: uppercase; }
+.section-label { font-size: 14px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; font-weight: 600; margin: 8px 0 12px; }
+
+.instructions-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 20px;
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+.instructions-card strong { color: var(--text); }
 
 /* ---------- Top tiles (employees + categories) ---------- */
 .top-tiles { display: flex; gap: 20px; align-items: flex-start; margin-bottom: 28px; }
@@ -95,7 +108,7 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
   border: 1.5px solid var(--emp-color, var(--border));
   background: transparent;
   color: var(--emp-color, var(--muted));
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s;
@@ -110,18 +123,28 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
   padding: 28px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05);
 }
-.entry-layout { display: flex; flex-direction: column; gap: 24px; }
+.entry-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.right-col { padding-top: 24px; border-top: 1px solid var(--border); }
 
 .cat-readout {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
+  gap: 10px;
+  font-size: 18px;
   color: var(--muted);
+  margin-bottom: 20px;
 }
-.cat-readout .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-.cat-readout strong { color: var(--text); font-weight: 700; }
-.task-col label { display: block; font-size: 11px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+.cat-readout .dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.cat-readout .cat-badge {
+  font-weight: 700;
+  padding: 4px 14px;
+  border-radius: 20px;
+}
+.task-col label { display: block; font-size: 13px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
 .task-or { font-size: 11px; color: var(--dim); text-align: center; margin: 10px 0; }
 
 .task-input-row { display: flex; gap: 10px; }
@@ -156,7 +179,7 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
   border-left: 3px solid var(--border);
   border-radius: 4px;
   padding: 8px 10px;
-  font-size: 12.5px;
+  font-size: 14.5px;
   color: var(--muted);
   cursor: pointer;
   background: rgba(255,255,255,0.02);
@@ -181,7 +204,7 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
   border-left: 3px solid var(--border);
   background: transparent;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.12s;
@@ -189,7 +212,7 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
 .cat-item[data-active="true"] { color: var(--text); font-weight: 700; }
 
 .field-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 18px; }
-.field label { display: block; font-size: 11px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 7px; }
+.field label { display: block; font-size: 13px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 7px; }
 .field select, .field input {
   width: 100%;
   background: rgba(5,15,35,0.6);
@@ -201,6 +224,16 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
   font-size: 15px;
 }
 .field select:focus, .field input:focus { outline: none; border-color: #63bcbc; }
+.field-icon-row { position: relative; display: flex; align-items: center; }
+.field-icon { position: absolute; left: 14px; font-size: 16px; pointer-events: none; z-index: 1; }
+.field-icon-row input, .field-icon-row select { padding-left: 42px; }
+.field-icon-row input[type="date"] { color-scheme: dark; }
+.field-icon-row input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+}
 
 .submit-btn {
   width: 100%;
@@ -233,7 +266,7 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
   border-radius: 6px;
   padding: 12px 16px;
   margin-bottom: 8px;
-  font-size: 13px;
+  font-size: 15px;
 }
 .today-row .who { font-weight: 700; width: 130px; flex-shrink: 0; }
 .today-row .task { color: var(--text); flex: 1; }
@@ -248,13 +281,13 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
 .stat-card:nth-child(2) { border-top-color: #B9B9B9; }
 .stat-card:nth-child(3) { border-top-color: #8C8C8C; }
 .stat-card:nth-child(4) { border-top-color: #606060; }
-.stat-label { font-size: 11px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+.stat-label { font-size: 13px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
 .stat-value { font-size: 30px; font-weight: 700; }
 .stat-value sub { font-size: 14px; color: var(--muted); font-weight: 500; }
 
 .cat-cols { columns: 3; column-gap: 16px; margin-top: 8px; }
 .cat-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; break-inside: avoid; margin-bottom: 16px; text-align: left; box-shadow: 0 6px 18px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05); }
-.cat-name { font-size: 13px; letter-spacing: 0.2px; font-weight: 700; margin-bottom: 8px; }
+.cat-name { font-size: 15px; letter-spacing: 0.2px; font-weight: 700; margin-bottom: 8px; }
 .cat-hours { font-size: 22px; font-weight: 700; margin-bottom: 2px; }
 .cat-sub { font-size: 12px; color: var(--muted); }
 .cat-count { font-size: 12px; color: var(--muted); margin-top: 6px; }
@@ -271,8 +304,8 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
 .breakdown-row[data-open="true"] .breakdown-body { display: block; }
 
 table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-th { text-align: left; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--dim); padding: 6px 8px; border-bottom: 1px solid var(--border); }
-td { font-size: 13px; padding: 8px 8px; border-bottom: 1px solid var(--border); color: var(--text); }
+th { text-align: left; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: var(--dim); padding: 6px 8px; border-bottom: 1px solid var(--border); }
+td { font-size: 15px; padding: 8px 8px; border-bottom: 1px solid var(--border); color: var(--text); }
 td.muted { color: var(--muted); }
 .reassign-select {
   background: rgba(5,15,35,0.6);
@@ -313,7 +346,7 @@ td.muted { color: var(--muted); }
   gap: 14px;
   padding: 10px 18px;
   border-bottom: 1px solid var(--border);
-  font-size: 13px;
+  font-size: 15px;
 }
 .day-task-row:last-child { border-bottom: none; }
 .day-task-row .time-block { width: 110px; flex-shrink: 0; color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -465,6 +498,10 @@ td.muted { color: var(--muted); }
       <div class="page-eyebrow">Time Entry</div>
     </header>
 
+    <div class="instructions-card">
+      <strong>How to log a task:</strong> Click your name → pick a category → pick a task from the list (or type your own) → enter the start and end time → click <strong>Log It</strong>.
+    </div>
+
     <div class="top-tiles">
       <div class="tile-card emp-tile">
         <div class="section-label" style="margin-top:0;">Who's Logging This</div>
@@ -479,9 +516,8 @@ td.muted { color: var(--muted); }
     </div>
 
     <div class="entry-card">
+      <div class="cat-readout" id="catReadout"></div>
       <div class="entry-layout">
-
-        <div class="cat-readout" id="catReadout"></div>
 
         <div class="task-col">
           <label>Task</label>
@@ -497,15 +533,24 @@ td.muted { color: var(--muted); }
           <div class="field-row">
             <div class="field">
               <label>Date</label>
-              <input type="date" id="fDate" />
+              <div class="field-icon-row">
+                <span class="field-icon">📅</span>
+                <input type="date" id="fDate" />
+              </div>
             </div>
             <div class="field">
               <label>Start</label>
-              <input type="time" id="fStart" step="300" />
+              <div class="field-icon-row">
+                <span class="field-icon">🕐</span>
+                <select id="fStart" class="time-select"></select>
+              </div>
             </div>
             <div class="field">
               <label>End</label>
-              <input type="time" id="fEnd" step="300" />
+              <div class="field-icon-row">
+                <span class="field-icon">🕐</span>
+                <select id="fEnd" class="time-select"></select>
+              </div>
             </div>
           </div>
 
@@ -716,17 +761,19 @@ const CATEGORIES = [
   { key: "Recruiting",              hex: "#D45494" },
 ];
 
-// PLACEHOLDER hourly rates — $20/hr for everyone until you provide real numbers.
-// NOTE ON SECURITY: this file has no server-side auth. The password check below
-// only hides this view from casual clicking; the password and these rates are
-// still readable by anyone who views this file's source. Don't treat this as
-// real protection for sensitive pay data.
+// Hourly rates, derived from annual comp ÷ 2080 hrs — used only in Boss View
+// for cost-per-task calculations. Annual figures aren't stored anywhere in
+// this file, only the resulting hourly number.
+// NOTE ON SECURITY: this file has no server-side auth. The Maintenance Access
+// password only hides this view from casual clicking; these rate figures are
+// still readable by anyone who views this file's source. This is real pay-
+// adjacent data now, not a placeholder — treat the file accordingly.
 const EMPLOYEE_RATES = {
-  "Carol Fountain": 20,
-  "Giselle Cartagena": 20,
-  "Irene Sanchez": 20,
-  "Larry Thomas": 20,
-  "Tyler Hare": 20,
+  "Carol Fountain": 64.375,
+  "Giselle Cartagena": 28.8462,
+  "Irene Sanchez": 30.7692,
+  "Larry Thomas": 79.2308,
+  "Tyler Hare": 44.5673,
 };
 // Starter list of common tasks per category — edit freely, these are just placeholders
 const BUILTIN_TASKS = {
@@ -856,6 +903,8 @@ function init() {
   });
 
   document.getElementById("fDate").valueAsDate = new Date();
+  populateTimeSelect("fStart");
+  populateTimeSelect("fEnd");
 
   const empRow = document.getElementById("empPicker");
   EMPLOYEES.forEach(emp => {
@@ -887,8 +936,8 @@ function init() {
   });
   renderCatPicker();
 
-  document.getElementById("fStart").addEventListener("input", updateDurationPreview);
-  document.getElementById("fEnd").addEventListener("input", updateDurationPreview);
+  document.getElementById("fStart").addEventListener("change", updateDurationPreview);
+  document.getElementById("fEnd").addEventListener("change", updateDurationPreview);
   document.getElementById("fTaskSelect").addEventListener("change", updateStarState);
   document.getElementById("fTaskFree").addEventListener("input", updateStarState);
   document.getElementById("starBtn").addEventListener("click", toggleFavorite);
@@ -1032,8 +1081,9 @@ function renderCatPicker() {
 
 function updateCatReadout() {
   const hex = catColor(selectedCategory);
+  const textColor = contrastText(hex);
   document.getElementById("catReadout").innerHTML =
-    `<span class="dot" style="background:${hex}"></span>Category: <strong>${selectedCategory}</strong>`;
+    `<span class="dot" style="background:${hex}"></span>Category: <span class="cat-badge" style="background:${hex};color:${textColor}">${selectedCategory}</span>`;
 }
 
 function getTaskValue() {
@@ -1071,6 +1121,21 @@ function updateTaskSuggestions() {
     ? `<option value="">— choose from list —</option>${optionTags}`
     : `<option value="">No preset tasks yet for this category</option>`;
   if (options.includes(prevValue)) select.value = prevValue;
+}
+
+function populateTimeSelect(id) {
+  const select = document.getElementById(id);
+  let html = `<option value="">— select time —</option>`;
+  for (let mins = 0; mins < 24 * 60; mins += 5) {
+    const h24 = Math.floor(mins / 60);
+    const m = mins % 60;
+    const value = `${String(h24).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+    const period = h24 < 12 ? "AM" : "PM";
+    const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+    const label = `${h12}:${String(m).padStart(2, "0")} ${period}`;
+    html += `<option value="${value}">${label}</option>`;
+  }
+  select.innerHTML = html;
 }
 
 function calcDurationMinutes(start, end) {
