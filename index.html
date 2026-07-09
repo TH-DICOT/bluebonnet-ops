@@ -147,6 +147,99 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
 .task-col label { display: block; font-size: 13px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
 .task-or { font-size: 11px; color: var(--dim); text-align: center; margin: 10px 0; }
 
+.status-picker { display: flex; gap: 8px; }
+.status-btn {
+  flex: 1;
+  padding: 9px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.status-btn[data-status="Pending"][data-active="true"] { background: #C9A24D; color: #050F23; border-color: transparent; }
+.status-btn[data-status="Active"][data-active="true"] { background: #1D9E75; color: #050F23; border-color: transparent; }
+.status-btn[data-status="Completed"][data-active="true"] { background: #5A6A8F; color: #EAF0FB; border-color: transparent; }
+
+.notes-textarea {
+  width: 100%;
+  min-height: 70px;
+  resize: vertical;
+  background: rgba(5,15,35,0.6);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 12px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.notes-textarea:focus { outline: none; border-color: #63bcbc; }
+
+.hours-direct-input { width: 100%; margin-bottom: 16px; }
+
+/* ---------- Task cards (My Tasks / Everyone's Active) ---------- */
+.task-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.task-card-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  cursor: pointer;
+  flex-wrap: wrap;
+}
+.task-card-name { font-size: 15px; font-weight: 700; }
+.task-card-title { font-size: 15px; font-weight: 700; }
+.task-card-sep { color: var(--dim); margin: 0 6px; }
+.task-card-cat-name { color: var(--muted); font-weight: 500; }
+.task-card-cat { font-size: 12px; color: var(--muted); }
+.task-card-hrs { margin-left: auto; font-size: 15px; font-weight: 700; }
+.task-card-hrs small { font-size: 12px; color: var(--muted); font-weight: 500; }
+.task-card-status-tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 12px;
+  text-transform: uppercase;
+}
+.task-card-body { display: none; border-top: 1px solid var(--border); padding: 14px 18px; }
+.task-card[data-open="true"] .task-card-body { display: block; }
+.task-card-status-row { display: flex; gap: 8px; margin-bottom: 14px; }
+
+.pe-row-compact {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  background: var(--card);
+}
+.pe-summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 14px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.pe-summary-date { font-weight: 700; width: 50px; flex-shrink: 0; }
+.pe-summary-hours { color: var(--muted); }
+.pe-summary-emp { margin-left: auto; font-size: 13px; }
+.pe-chev { color: var(--dim); font-size: 11px; transition: transform 0.15s; }
+.pe-row-compact[data-open="true"] .pe-chev { transform: rotate(180deg); }
+.pe-detail { display: none; border-top: 1px solid var(--border); padding: 10px 14px; }
+.pe-row-compact[data-open="true"] .pe-detail { display: block; }
+.pe-detail-time { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.pe-edit-row { display: flex; align-items: center; gap: 8px; }
+
 .task-input-row { display: flex; gap: 10px; }
 .task-col input, .task-col select {
   width: 100%;
@@ -212,7 +305,7 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
 .cat-item[data-active="true"] { color: var(--text); font-weight: 700; }
 
 .field-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 18px; }
-.time-picker-row { display: flex; align-items: center; gap: 8px; }
+.time-picker-row, .date-picker-row { display: flex; align-items: center; gap: 8px; }
 .time-select-small {
   flex: 1;
   background: rgba(5,15,35,0.6);
@@ -237,16 +330,7 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
   cursor: pointer;
 }
 .now-btn:hover { background: rgba(99,188,188,0.1); }
-.manual-time-link {
-  font-size: 13px;
-  color: var(--dim);
-  text-decoration: underline;
-  cursor: pointer;
-  margin-top: 8px;
-  display: inline-block;
-}
-.manual-time-link:hover { color: var(--muted); }
-.manual-time-input { margin-top: 8px; }
+
 .field { margin-bottom: 20px; }
 .field label { display: block; font-size: 13px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 7px; }
 .field select, .field input {
@@ -293,7 +377,7 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
   font-weight: 700;
   font-size: 15px;
   cursor: pointer;
-  margin-top: 4px;
+  margin-top: 12px;
 }
 .submit-btn:hover { filter: brightness(1.1); }
 .submit-btn:disabled { opacity: 0.5; cursor: default; }
@@ -377,6 +461,32 @@ td.muted { color: var(--muted); }
 
 /* ---------- Category detail view ---------- */
 .cat-detail-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 620px; margin-bottom: 8px; }
+
+/* ---------- Project entries (editable running list) ---------- */
+.pe-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+}
+.pe-task-input { flex: 1; }
+.pe-date-input { width: 150px; flex-shrink: 0; }
+.pe-hours-input { width: 80px; flex-shrink: 0; }
+.pe-row input {
+  background: rgba(5,15,35,0.6);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 9px 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+}
+.pe-row input:focus { outline: none; border-color: #63bcbc; }
+.pe-row span { color: var(--muted); font-size: 13px; flex-shrink: 0; }
 
 /* ---------- Employee detail agenda (day/time) ---------- */
 .day-card {
@@ -552,12 +662,12 @@ td.muted { color: var(--muted); }
   <!-- LOG TASK VIEW -->
   <div class="view active" id="view-log">
     <header>
-      <h1>Log a Task</h1>
-      <div class="page-eyebrow">Time Entry</div>
+      <h1>My Tasks</h1>
+      <div class="page-eyebrow">Task Tracker</div>
     </header>
 
     <div class="instructions-card">
-      <strong>How to log a task:</strong> Click your name → pick a category → pick a task from the list (or type your own) → enter the start and end time → click <strong>Log It</strong>.
+      <strong>How this works:</strong> Type a task name — if it matches one of your open tasks, this just adds a new entry to it. If it's new, it starts a fresh task. Every task keeps its own running list, notes, and status.
     </div>
 
     <div class="top-tiles">
@@ -583,8 +693,21 @@ td.muted { color: var(--muted); }
             <select id="fTaskSelect" class="task-select"></select>
             <button type="button" class="star-btn" id="starBtn" title="Save as favorite">☆</button>
           </div>
-          <div class="task-or">or type your own</div>
+          <div class="task-or">or type a new task name</div>
           <input type="text" id="fTaskFree" class="task-free" placeholder="Type a task..." />
+
+          <div id="newTaskFields">
+            <div class="section-label" style="margin-top:20px;">Status</div>
+            <div class="status-picker">
+              <button type="button" class="status-btn" data-status="Pending">Pending</button>
+              <button type="button" class="status-btn" data-status="Active" data-active="true">Active</button>
+              <button type="button" class="status-btn" data-status="Completed">Completed</button>
+            </div>
+            <div class="field" style="margin-top:14px;">
+              <label>Notes (optional)</label>
+              <textarea id="fNewNotes" class="notes-textarea" placeholder="Any context worth saving..."></textarea>
+            </div>
+          </div>
         </div>
 
         <div class="right-col">
@@ -593,7 +716,11 @@ td.muted { color: var(--muted); }
               <label>Date</label>
               <span class="date-weekday" id="dateReadout"></span>
             </div>
-            <input type="date" id="fDate" class="date-input-big" />
+            <div class="date-picker-row">
+              <select id="fMonth" class="time-select-small"></select>
+              <span class="time-colon">/</span>
+              <select id="fDay" class="time-select-small"></select>
+            </div>
             <div class="date-quick-row">
               <button type="button" class="quick-date-btn" id="todayBtn">Today</button>
               <button type="button" class="quick-date-btn" id="yesterdayBtn">Yesterday</button>
@@ -608,8 +735,6 @@ td.muted { color: var(--muted); }
               <select id="fStartMin" class="time-select-small"></select>
               <button type="button" class="now-btn" data-target="fStart">Now</button>
             </div>
-            <div class="manual-time-link" id="fStartManualToggle">or type a specific time</div>
-            <input type="time" id="fStartManual" class="manual-time-input" step="300" style="display:none;" />
           </div>
 
           <div class="field">
@@ -620,11 +745,12 @@ td.muted { color: var(--muted); }
               <select id="fEndMin" class="time-select-small"></select>
               <button type="button" class="now-btn" data-target="fEnd">Now</button>
             </div>
-            <div class="manual-time-link" id="fEndManualToggle">or type a specific time</div>
-            <input type="time" id="fEndManual" class="manual-time-input" step="300" style="display:none;" />
           </div>
 
-          <button class="submit-btn" id="submitBtn">Log It</button>
+          <div class="task-or">or just enter total hours</div>
+          <input type="number" id="fHoursDirect" step="0.25" min="0" placeholder="e.g. 1.5" class="hours-direct-input" />
+
+          <button class="submit-btn" id="submitBtn">Add Entry</button>
           <div class="duration-preview" id="durationPreview"></div>
           <div class="form-msg" id="formMsg"></div>
         </div>
@@ -632,8 +758,11 @@ td.muted { color: var(--muted); }
       </div>
     </div>
 
-    <div class="section-label" style="margin-top:32px;">Logged Today</div>
-    <div id="todayList"></div>
+    <div class="section-label" style="margin-top:32px;">My Tasks</div>
+    <div id="myTasksList"></div>
+
+    <div class="section-label" style="margin-top:28px;">Active Tasks · Everyone Else</div>
+    <div id="othersActiveList"></div>
   </div>
 
   <!-- OVERVIEW VIEW -->
@@ -869,7 +998,9 @@ const BUILTIN_TASKS = {
 const BOSS_PASSWORDS = ["LT", "TH"]; // Larry Thomas or Tyler Hare — either works
 const BOSS_SESSION_MINUTES = 120; // how long access stays unlocked before it asks again
 
-let entries = [];
+let tasks = [];          // one row per persistent task: TaskID, TaskName, Category, Status, Notes, CreatedBy, CreatedDate
+let taskEvents = [];     // one row per dated entry against a task: EventID, TaskID, Date, StartTime, EndTime, Hours, Employee
+let entries = [];        // derived, flattened view of tasks+events — same shape Overview/Category/Employee/Boss views already expect
 let selectedEmployee = EMPLOYEES[0].name;
 let selectedCategory = CATEGORIES[0].key;
 
@@ -977,10 +1108,10 @@ function init() {
     if (e.key === "Escape") closePwOverlay();
   });
 
-  document.getElementById("fDate").valueAsDate = new Date();
+  populateDateSelects();
+  setDateFromObj(new Date());
   populateHourMinuteSelects("fStart");
   populateHourMinuteSelects("fEnd");
-  updateDayOfWeek();
 
   const empRow = document.getElementById("empPicker");
   EMPLOYEES.forEach(emp => {
@@ -1013,8 +1144,7 @@ function init() {
   renderCatPicker();
 
   document.getElementById("todayBtn").addEventListener("click", () => {
-    document.getElementById("fDate").valueAsDate = new Date();
-    updateDayOfWeek();
+    setDateFromObj(new Date());
   });
   document.getElementById("yesterdayBtn").addEventListener("click", () => {
     const d = new Date();
@@ -1022,35 +1152,39 @@ function init() {
     while (d.getDay() === 0 || d.getDay() === 6) {
       d.setDate(d.getDate() - 1); // roll back past the weekend to the last business day
     }
-    document.getElementById("fDate").valueAsDate = d;
-    updateDayOfWeek();
+    setDateFromObj(d);
   });
-  document.getElementById("fDate").addEventListener("change", updateDayOfWeek);
+  document.getElementById("fMonth").addEventListener("change", updateDayOfWeek);
+  document.getElementById("fDay").addEventListener("change", updateDayOfWeek);
   document.getElementById("fStartHour").addEventListener("change", updateDurationPreview);
   document.getElementById("fStartMin").addEventListener("change", updateDurationPreview);
   document.getElementById("fEndHour").addEventListener("change", updateDurationPreview);
   document.getElementById("fEndMin").addEventListener("change", updateDurationPreview);
-  document.getElementById("fStartManual").addEventListener("input", updateDurationPreview);
-  document.getElementById("fEndManual").addEventListener("input", updateDurationPreview);
   document.querySelectorAll(".now-btn").forEach(btn => {
     btn.addEventListener("click", () => setNow(btn.dataset.target));
   });
-  document.getElementById("fStartManualToggle").addEventListener("click", () => {
-    const el = document.getElementById("fStartManual");
-    el.style.display = el.style.display === "none" ? "block" : "none";
+  document.getElementById("fTaskSelect").addEventListener("change", () => {
+    updateStarState();
+    updateNewTaskFieldsVisibility();
   });
-  document.getElementById("fEndManualToggle").addEventListener("click", () => {
-    const el = document.getElementById("fEndManual");
-    el.style.display = el.style.display === "none" ? "block" : "none";
+  document.getElementById("fTaskFree").addEventListener("input", () => {
+    updateStarState();
+    updateNewTaskFieldsVisibility();
   });
-  document.getElementById("fTaskSelect").addEventListener("change", updateStarState);
-  document.getElementById("fTaskFree").addEventListener("input", updateStarState);
   document.getElementById("starBtn").addEventListener("click", toggleFavorite);
   document.getElementById("submitBtn").addEventListener("click", submitEntry);
 
+  document.querySelectorAll(".status-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".status-btn").forEach(b => b.dataset.active = "false");
+      btn.dataset.active = "true";
+    });
+  });
+  updateNewTaskFieldsVisibility();
+
   renderFavorites();
   updateStarState();
-  loadEntries();
+  loadTasksAndEvents();
 }
 
 /* =========================================================
@@ -1182,6 +1316,7 @@ function renderCatPicker() {
   updateTaskSuggestions();
   updateStarState();
   updateCatReadout();
+  updateNewTaskFieldsVisibility();
 }
 
 function updateCatReadout() {
@@ -1198,10 +1333,10 @@ function getTaskValue() {
 }
 
 function setTaskValue(category, task) {
-  const options = getTaskOptions(category);
+  const openNames = getOpenTaskNames(category);
   const select = document.getElementById("fTaskSelect");
   const free = document.getElementById("fTaskFree");
-  if (options.includes(task)) {
+  if (openNames.includes(task)) {
     select.value = task;
     free.value = "";
   } else {
@@ -1209,61 +1344,36 @@ function setTaskValue(category, task) {
     select.value = "";
   }
   updateStarState();
+  updateNewTaskFieldsVisibility();
 }
 
-function businessDaysSince(dateStr) {
-  if (!dateStr) return Infinity;
-  const start = new Date(dateStr + "T00:00:00");
-  const end = new Date();
-  end.setHours(0, 0, 0, 0);
-  if (isNaN(start.getTime())) return Infinity;
-  let count = 0;
-  const cur = new Date(start);
-  while (cur < end) {
-    cur.setDate(cur.getDate() + 1);
-    const day = cur.getDay();
-    if (day !== 0 && day !== 6) count++;
-  }
-  return count;
-}
-
-function getTaskOptions(category) {
-  const builtins = BUILTIN_TASKS[category] || [];
-  const catEntries = entries.filter(e => e.Category === category && e.Task);
-
-  // Tally how many times each free-typed task has been used, and when it was last used
-  const stats = {};
-  catEntries.forEach(e => {
-    const t = e.Task;
-    if (!stats[t]) stats[t] = { count: 0, lastDate: e.Date };
-    stats[t].count++;
-    if (e.Date && (!stats[t].lastDate || e.Date > stats[t].lastDate)) stats[t].lastDate = e.Date;
-  });
-
-  // A task "graduates" onto the list once used 5+ times, and falls back off
-  // if it hasn't been used in the last 10 business days
-  const learned = Object.keys(stats).filter(t => {
-    if (builtins.includes(t)) return false;
-    if (stats[t].count < 5) return false;
-    return businessDaysSince(stats[t].lastDate) <= 10;
-  });
-
-  return [...builtins, ...learned];
+function getOpenTaskNames(category) {
+  return tasks.filter(t => t.Category === category && t.Status !== "Completed").map(t => t.TaskName);
 }
 
 function updateTaskSuggestions() {
-  const options = getTaskOptions(selectedCategory);
+  const openNames = getOpenTaskNames(selectedCategory);
+  const builtins = (BUILTIN_TASKS[selectedCategory] || []).filter(t => !openNames.includes(t));
   const select = document.getElementById("fTaskSelect");
   const prevValue = select.value;
-  const optionTags = options.map(t => `<option value="${t.replace(/"/g, "&quot;")}">${t}</option>`).join("");
-  select.innerHTML = options.length
-    ? `<option value="">— choose from list —</option>${optionTags}`
-    : `<option value="">No preset tasks yet for this category</option>`;
-  if (options.includes(prevValue)) select.value = prevValue;
+
+  let html = `<option value="">— choose from list —</option>`;
+  if (openNames.length) {
+    html += `<optgroup label="Continue an existing task">`;
+    html += openNames.map(t => `<option value="${t.replace(/"/g, "&quot;")}">${t}</option>`).join("");
+    html += `</optgroup>`;
+  }
+  if (builtins.length) {
+    html += `<optgroup label="Common task names (starts new)">`;
+    html += builtins.map(t => `<option value="${t.replace(/"/g, "&quot;")}">${t}</option>`).join("");
+    html += `</optgroup>`;
+  }
+  select.innerHTML = html;
+  if ([...openNames, ...builtins].includes(prevValue)) select.value = prevValue;
 }
 
 function updateDayOfWeek() {
-  const val = document.getElementById("fDate").value;
+  const val = getDateValue();
   const el = document.getElementById("dateReadout");
   if (!val) {
     el.textContent = "";
@@ -1271,6 +1381,32 @@ function updateDayOfWeek() {
   }
   const d = new Date(val + "T00:00:00");
   el.textContent = d.toLocaleDateString(undefined, { weekday: "long" });
+}
+
+let currentEntryYear = new Date().getFullYear();
+
+function populateDateSelects() {
+  const monthSelect = document.getElementById("fMonth");
+  const daySelect = document.getElementById("fDay");
+  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  monthSelect.innerHTML = months.map((m, i) => `<option value="${String(i + 1).padStart(2, "0")}">${m}</option>`).join("");
+  let dayHtml = "";
+  for (let d = 1; d <= 31; d++) dayHtml += `<option value="${String(d).padStart(2, "0")}">${d}</option>`;
+  daySelect.innerHTML = dayHtml;
+}
+
+function setDateFromObj(dateObj) {
+  currentEntryYear = dateObj.getFullYear();
+  document.getElementById("fMonth").value = String(dateObj.getMonth() + 1).padStart(2, "0");
+  document.getElementById("fDay").value = String(dateObj.getDate()).padStart(2, "0");
+  updateDayOfWeek();
+}
+
+function getDateValue() {
+  const mm = document.getElementById("fMonth").value;
+  const dd = document.getElementById("fDay").value;
+  if (!mm || !dd) return "";
+  return `${currentEntryYear}-${mm}-${dd}`;
 }
 
 function populateHourMinuteSelects(prefix) {
@@ -1293,8 +1429,6 @@ function populateHourMinuteSelects(prefix) {
 }
 
 function getFieldTime(prefix) {
-  const manual = document.getElementById(prefix + "Manual").value;
-  if (manual) return manual;
   const h = document.getElementById(prefix + "Hour").value;
   const m = document.getElementById(prefix + "Min").value;
   if (h && m) return `${h}:${m}`;
@@ -1304,29 +1438,18 @@ function getFieldTime(prefix) {
 function clearFieldTime(prefix) {
   document.getElementById(prefix + "Hour").value = "";
   document.getElementById(prefix + "Min").value = "";
-  document.getElementById(prefix + "Manual").value = "";
-  document.getElementById(prefix + "Manual").style.display = "none";
 }
 
 function setNow(prefix) {
   const now = new Date();
   let totalMin = now.getHours() * 60 + now.getMinutes();
   totalMin -= totalMin % 5; // round down to nearest 5
-  const h24 = Math.floor(totalMin / 60);
+  let h24 = Math.floor(totalMin / 60);
   const m = totalMin % 60;
+  h24 = Math.min(19, Math.max(7, h24)); // clamp to the 7am–7pm list
 
-  if (h24 >= 7 && h24 <= 19) {
-    document.getElementById(prefix + "Hour").value = String(h24).padStart(2, "0");
-    document.getElementById(prefix + "Min").value = String(m).padStart(2, "0");
-    document.getElementById(prefix + "Manual").value = "";
-    document.getElementById(prefix + "Manual").style.display = "none";
-  } else {
-    // Outside the normal 7am–7pm list — fall back to the manual field
-    document.getElementById(prefix + "Hour").value = "";
-    document.getElementById(prefix + "Min").value = "";
-    document.getElementById(prefix + "Manual").value = `${String(h24).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-    document.getElementById(prefix + "Manual").style.display = "block";
-  }
+  document.getElementById(prefix + "Hour").value = String(h24).padStart(2, "0");
+  document.getElementById(prefix + "Min").value = String(m).padStart(2, "0");
   updateDurationPreview();
 }
 
@@ -1364,99 +1487,184 @@ function updateDurationPreview() {
   el.innerHTML = mins != null ? `Duration: <strong>${formatMinutes(mins)}</strong>` : "";
 }
 
-async function loadEntries() {
+async function loadTasksAndEvents() {
   if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
-    entries = [];
+    tasks = [];
+    taskEvents = [];
+    rebuildDerivedEntries();
     renderAll();
     return;
   }
   try {
-    const res = await fetch(APPS_SCRIPT_URL);
-    entries = await res.json();
-    renderAll();
+    const [tasksRes, eventsRes] = await Promise.all([
+      fetch(APPS_SCRIPT_URL + "?sheet=tasks"),
+      fetch(APPS_SCRIPT_URL + "?sheet=events"),
+    ]);
+    tasks = await tasksRes.json();
+    taskEvents = await eventsRes.json();
   } catch (err) {
-    renderAll();
+    // keep whatever was already loaded
   }
+  rebuildDerivedEntries();
+  renderAll();
+}
+
+// Flattens tasks+events into the same shape the existing Overview/Category/
+// Employee/Boss views already expect, so that code doesn't need to change.
+function rebuildDerivedEntries() {
+  entries = taskEvents.map(ev => {
+    const task = tasks.find(t => t.TaskID === ev.TaskID) || {};
+    let durationMinutes;
+    if (ev.StartTime && ev.EndTime) {
+      durationMinutes = calcDurationMinutes(ev.StartTime, ev.EndTime);
+    } else {
+      durationMinutes = Math.round(Number(ev.Hours || 0) * 60);
+    }
+    return {
+      ID: ev.EventID,
+      TaskID: ev.TaskID,
+      Date: ev.Date,
+      Employee: ev.Employee,
+      Category: task.Category || "",
+      Task: task.TaskName || "",
+      StartTime: ev.StartTime || "",
+      EndTime: ev.EndTime || "",
+      DurationMinutes: durationMinutes,
+    };
+  });
+}
+
+function findOpenTask(taskName, category) {
+  const lower = taskName.trim().toLowerCase();
+  return tasks.find(t =>
+    t.TaskName.trim().toLowerCase() === lower &&
+    t.Category === category &&
+    t.Status !== "Completed"
+  );
 }
 
 async function submitEntry() {
   const employee = selectedEmployee;
-  const date = document.getElementById("fDate").value;
-  const task = getTaskValue();
+  const date = getDateValue();
+  const taskName = getTaskValue();
   const start = getFieldTime("fStart");
   const end = getFieldTime("fEnd");
+  const hoursDirect = parseFloat(document.getElementById("fHoursDirect").value);
   const msg = document.getElementById("formMsg");
 
-  if (!task || !start || !end) {
-    msg.textContent = "Fill in task, start time, and end time.";
+  if (!taskName) {
+    msg.textContent = "Enter or select a task.";
     msg.className = "form-msg err";
     return;
   }
-
-  const durationMinutes = calcDurationMinutes(start, end);
-  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-  const payload = { id, employee, date, category: selectedCategory, task, startTime: start, endTime: end, durationMinutes };
+  const hasTimes = start && end;
+  const hasHours = !isNaN(hoursDirect) && hoursDirect > 0;
+  if (!hasTimes && !hasHours) {
+    msg.textContent = "Fill in start/end time, or enter total hours.";
+    msg.className = "form-msg err";
+    return;
+  }
 
   const btn = document.getElementById("submitBtn");
   btn.disabled = true;
   btn.textContent = "Saving...";
 
   try {
-    if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
-      entries.push({ ID: id, Date: date, Employee: employee, Category: selectedCategory, Task: task, StartTime: start, EndTime: end, DurationMinutes: durationMinutes });
-      renderAll();
-      msg.textContent = "Logged (demo mode — connect backend to save for real).";
-      msg.className = "form-msg ok";
+    let existing = findOpenTask(taskName, selectedCategory);
+    let taskId;
+
+    if (existing) {
+      taskId = existing.TaskID;
     } else {
+      taskId = "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      const status = document.querySelector(".status-btn[data-active=\"true\"]").dataset.status;
+      const notes = document.getElementById("fNewNotes").value.trim();
+      const newTask = {
+        TaskID: taskId,
+        TaskName: taskName,
+        Category: selectedCategory,
+        Status: status,
+        Notes: notes,
+        CreatedBy: employee,
+        CreatedDate: date,
+      };
+      tasks.push(newTask);
+
+      if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+        await fetch(APPS_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "createTask", taskId, taskName, category: selectedCategory, status, notes, createdBy: employee, createdDate: date }),
+        });
+      }
+    }
+
+    const eventId = "e" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const hours = hasTimes ? calcDurationMinutes(start, end) / 60 : hoursDirect;
+    taskEvents.push({
+      EventID: eventId,
+      TaskID: taskId,
+      Date: date,
+      StartTime: hasTimes ? start : "",
+      EndTime: hasTimes ? end : "",
+      Hours: hours,
+      Employee: employee,
+    });
+
+    if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
       await fetch(APPS_SCRIPT_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          action: "addEvent",
+          eventId,
+          taskId,
+          date,
+          startTime: hasTimes ? start : "",
+          endTime: hasTimes ? end : "",
+          hours,
+          employee,
+        }),
       });
       msg.textContent = "Logged.";
       msg.className = "form-msg ok";
-      await loadEntries();
+    } else {
+      msg.textContent = "Logged (demo mode — connect backend to save for real).";
+      msg.className = "form-msg ok";
     }
+
+    rebuildDerivedEntries();
+    renderAll();
+
     document.getElementById("fTaskSelect").value = "";
     document.getElementById("fTaskFree").value = "";
+    document.getElementById("fHoursDirect").value = "";
+    document.getElementById("fNewNotes").value = "";
     clearFieldTime("fStart");
     clearFieldTime("fEnd");
     updateDurationPreview();
     updateStarState();
+    updateNewTaskFieldsVisibility();
   } catch (err) {
     msg.textContent = "Something went wrong. Try again.";
     msg.className = "form-msg err";
   } finally {
     btn.disabled = false;
-    btn.textContent = "Log It";
+    btn.textContent = "Add Entry";
   }
+}
+
+function updateNewTaskFieldsVisibility() {
+  const taskName = getTaskValue();
+  const existing = taskName ? findOpenTask(taskName, selectedCategory) : null;
+  document.getElementById("newTaskFields").style.display = existing ? "none" : "block";
 }
 
 function renderAll() {
-  renderToday();
+  renderMyTasks();
+  renderOthersActive();
   renderOverview();
   updateTaskSuggestions();
-}
-
-function renderToday() {
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const list = document.getElementById("todayList");
-  const todays = entries.filter(e => e.Date === todayStr);
-
-  if (!todays.length) {
-    list.innerHTML = `<div class="empty-state">Nothing logged yet today.</div>`;
-    return;
-  }
-
-  list.innerHTML = todays.map(e => `
-    <div class="today-row" style="border-left-color:${empColor(e.Employee)}">
-      <div class="who" style="color:${empColor(e.Employee)}">${e.Employee || ""}</div>
-      <div class="task">${e.Task || ""}</div>
-      <div class="cat">${e.Category || ""}</div>
-      <div class="time">${formatTimeShort(e.StartTime)}–${formatTimeShort(e.EndTime)}</div>
-      <div class="dur">${formatMinutes(Number(e.DurationMinutes || 0))}</div>
-    </div>
-  `).join("");
 }
 
 function renderOverview() {
@@ -1552,6 +1760,232 @@ function renderOverview() {
 
     list.appendChild(row);
   });
+}
+
+/* =========================================================
+   TASK CARDS — My Tasks / Everyone's Active Tasks
+   ========================================================= */
+function taskHours(taskId) {
+  return entries.filter(e => e.TaskID === taskId).reduce((s, e) => s + Number(e.DurationMinutes || 0), 0) / 60;
+}
+
+function statusTagColor(status) {
+  if (status === "Active") return "#1D9E75";
+  if (status === "Pending") return "#C9A24D";
+  return "#5A6A8F"; // Completed
+}
+
+function renderMyTasks() {
+  const myTaskIds = new Set(entries.filter(e => e.Employee === selectedEmployee).map(e => e.TaskID));
+  const myTasks = tasks.filter(t => myTaskIds.has(t.TaskID));
+  const list = document.getElementById("myTasksList");
+
+  if (!myTasks.length) {
+    list.innerHTML = `<div class="empty-state">No tasks yet — add one above.</div>`;
+    return;
+  }
+
+  list.innerHTML = "";
+  myTasks
+    .sort((a, b) => (a.Status === "Active" ? -1 : 1) - (b.Status === "Active" ? -1 : 1))
+    .forEach(t => list.appendChild(buildTaskCard(t)));
+}
+
+function renderOthersActive() {
+  const myTaskIds = new Set(entries.filter(e => e.Employee === selectedEmployee).map(e => e.TaskID));
+  const othersActive = tasks.filter(t => t.Status === "Active" && !myTaskIds.has(t.TaskID));
+  const list = document.getElementById("othersActiveList");
+
+  if (!othersActive.length) {
+    list.innerHTML = `<div class="empty-state">Nothing from anyone else right now.</div>`;
+    return;
+  }
+
+  list.innerHTML = "";
+  othersActive.forEach(t => list.appendChild(buildTaskCard(t)));
+}
+
+function formatShortDate(dateStr) {
+  if (!dateStr) return "";
+  const parts = dateStr.split("-").map(Number);
+  if (parts.length < 3) return dateStr;
+  return `${parts[1]}/${parts[2]}`;
+}
+
+function buildTaskCard(t) {
+  const color = catColor(t.Category);
+  const hours = taskHours(t.TaskID);
+  const taskEntryList = entries.filter(e => e.TaskID === t.TaskID).sort((a, b) => (a.Date || "").localeCompare(b.Date || ""));
+
+  const card = document.createElement("div");
+  card.className = "task-card";
+  card.style.borderLeft = `3px solid ${color}`;
+  card.dataset.open = "false";
+  card.dataset.taskId = t.TaskID;
+
+  card.innerHTML = `
+    <div class="task-card-head">
+      <div class="task-card-title">
+        <span style="color:${color}">${t.TaskName || ""}</span>
+        <span class="task-card-sep">—</span>
+        <span style="color:${statusTagColor(t.Status)}">${t.Status || ""}</span>
+        <span class="task-card-sep">—</span>
+        <span class="task-card-cat-name">${t.Category || ""}</span>
+      </div>
+      <div class="task-card-hrs">${hours.toFixed(2)} <small>hrs</small></div>
+    </div>
+    <div class="task-card-body">
+      <div class="task-card-status-row">
+        ${["Pending", "Active", "Completed"].map(s => `
+          <button type="button" class="status-btn card-status-btn" data-status="${s}" data-active="${s === t.Status}">${s}</button>
+        `).join("")}
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea class="notes-textarea card-notes">${(t.Notes || "").replace(/</g, "&lt;")}</textarea>
+      </div>
+      <div class="section-label" style="margin-top:16px;">Entries <span style="text-transform:none; letter-spacing:0; color:var(--dim); font-weight:500;">(click one to edit)</span></div>
+      <div class="card-events"></div>
+    </div>
+  `;
+
+  card.querySelector(".task-card-head").addEventListener("click", () => {
+    card.dataset.open = card.dataset.open === "true" ? "false" : "true";
+  });
+
+  card.querySelectorAll(".card-status-btn").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      updateTaskStatus(t.TaskID, btn.dataset.status);
+    });
+  });
+
+  const notesEl = card.querySelector(".card-notes");
+  notesEl.addEventListener("click", e => e.stopPropagation());
+  notesEl.addEventListener("change", () => updateTaskNotes(t.TaskID, notesEl.value.trim()));
+
+  const eventsWrap = card.querySelector(".card-events");
+  if (!taskEntryList.length) {
+    eventsWrap.innerHTML = `<div class="empty-state" style="padding:10px 0;">No entries yet.</div>`;
+  } else {
+    eventsWrap.innerHTML = taskEntryList.map(e => {
+      const hrs = (Number(e.DurationMinutes || 0) / 60).toFixed(2);
+      const timeRange = (e.StartTime && e.EndTime) ? `${formatTimeShort(e.StartTime)}–${formatTimeShort(e.EndTime)}` : "No clock time — hours only";
+      return `
+        <div class="pe-row-compact" data-id="${e.ID}" data-open="false">
+          <div class="pe-summary">
+            <span class="pe-summary-date">${formatShortDate(e.Date)}</span>
+            <span class="pe-summary-hours">${hrs} hrs</span>
+            <span class="pe-summary-emp" style="color:${empColor(e.Employee)}">${e.Employee || ""}</span>
+            <span class="pe-chev">▾</span>
+          </div>
+          <div class="pe-detail">
+            <div class="pe-detail-time">${timeRange}</div>
+            <div class="pe-edit-row">
+              <input type="date" class="pe-date-input" value="${e.Date || ""}" />
+              <input type="number" step="0.25" min="0" class="pe-hours-input" value="${hrs}" />
+              <span>hrs</span>
+              <button type="button" class="delete-entry-btn pe-delete-btn" title="Delete this entry">🗑</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    eventsWrap.querySelectorAll(".pe-row-compact").forEach(row => {
+      row.querySelector(".pe-summary").addEventListener("click", e => {
+        e.stopPropagation();
+        row.dataset.open = row.dataset.open === "true" ? "false" : "true";
+      });
+      const id = row.dataset.id;
+      row.querySelector(".pe-date-input").addEventListener("click", e => e.stopPropagation());
+      row.querySelector(".pe-hours-input").addEventListener("click", e => e.stopPropagation());
+      row.querySelector(".pe-date-input").addEventListener("change", e => updateTaskEvent(id, { date: e.target.value }));
+      row.querySelector(".pe-hours-input").addEventListener("change", e => updateTaskEvent(id, { hours: parseFloat(e.target.value) || 0 }));
+      row.querySelector(".pe-delete-btn").addEventListener("click", () => deleteTaskEvent(id));
+    });
+  }
+
+  return card;
+}
+
+async function updateTaskStatus(taskId, status) {
+  const t = tasks.find(x => x.TaskID === taskId);
+  if (t) t.Status = status;
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "updateTaskStatus", taskId, status }),
+      });
+    } catch (err) {}
+  }
+  renderAll();
+}
+
+async function updateTaskNotes(taskId, notes) {
+  const t = tasks.find(x => x.TaskID === taskId);
+  if (t) t.Notes = notes;
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "updateTaskNotes", taskId, notes }),
+      });
+    } catch (err) {}
+  }
+}
+
+async function updateTaskEvent(eventId, changes) {
+  const ev = taskEvents.find(e => e.EventID === eventId);
+  if (ev) {
+    if (changes.date !== undefined) ev.Date = changes.date;
+    if (changes.hours !== undefined) {
+      ev.Hours = changes.hours;
+      ev.StartTime = "";
+      ev.EndTime = "";
+    }
+  }
+  rebuildDerivedEntries();
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      const payload = { action: "updateEvent", eventId };
+      if (changes.date !== undefined) payload.date = changes.date;
+      if (changes.hours !== undefined) {
+        payload.hours = changes.hours;
+        payload.startTime = "";
+        payload.endTime = "";
+      }
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {}
+  }
+  renderAll();
+}
+
+async function deleteTaskEvent(eventId) {
+  if (!confirm("Delete this entry? This can't be undone.")) return;
+  taskEvents = taskEvents.filter(e => e.EventID !== eventId);
+  rebuildDerivedEntries();
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "deleteEvent", eventId }),
+      });
+    } catch (err) {}
+  }
+  renderAll();
 }
 
 function renderCategoryDetail(key) {
@@ -1720,7 +2154,7 @@ function renderBossView() {
                   <td class="muted">$${rate.toFixed(2)}/hr</td>
                   <td>$${c.toFixed(2)}</td>
                   <td>
-                    <select class="reassign-select" data-id="${e.ID || ""}">
+                    <select class="reassign-select" data-id="${e.TaskID || ""}">
                       ${CATEGORIES.map(oc => `<option value="${oc.key}" ${oc.key === e.Category ? "selected" : ""}>${oc.key}</option>`).join("")}
                     </select>
                   </td>
@@ -1745,16 +2179,16 @@ function renderBossView() {
     });
     row.querySelectorAll(".reassign-select").forEach(sel => {
       sel.addEventListener("click", e => e.stopPropagation());
-      sel.addEventListener("change", () => reassignTask(sel.dataset.id, sel.value));
+      sel.addEventListener("change", () => reassignTaskCategory(sel.dataset.id, sel.value));
     });
     row.querySelectorAll(".reassign-emp-select").forEach(sel => {
       sel.addEventListener("click", e => e.stopPropagation());
-      sel.addEventListener("change", () => reassignEmployee(sel.dataset.id, sel.value));
+      sel.addEventListener("change", () => reassignEventEmployee(sel.dataset.id, sel.value));
     });
     row.querySelectorAll(".delete-entry-btn").forEach(btn => {
       btn.addEventListener("click", e => {
         e.stopPropagation();
-        deleteEntry(btn.dataset.id);
+        deleteBossEvent(btn.dataset.id);
       });
     });
 
@@ -1762,19 +2196,20 @@ function renderBossView() {
   });
 }
 
-async function reassignTask(id, newCategory) {
-  const entry = entries.find(e => e.ID === id);
-  if (entry) entry.Category = newCategory;
+async function reassignTaskCategory(taskId, newCategory) {
+  const t = tasks.find(x => x.TaskID === taskId);
+  if (t) t.Category = newCategory;
+  rebuildDerivedEntries();
 
   if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
     try {
       await fetch(APPS_SCRIPT_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "updateCategory", id, newCategory }),
+        body: JSON.stringify({ action: "updateTaskCategory", taskId, category: newCategory }),
       });
     } catch (err) {
-      // local state already updated; sheet update will retry on next load if this failed
+      // local state already updated; a refresh will retry the sync
     }
   }
 
@@ -1782,19 +2217,20 @@ async function reassignTask(id, newCategory) {
   renderOverview();
 }
 
-async function reassignEmployee(id, newEmployee) {
-  const entry = entries.find(e => e.ID === id);
-  if (entry) entry.Employee = newEmployee;
+async function reassignEventEmployee(eventId, newEmployee) {
+  const ev = taskEvents.find(e => e.EventID === eventId);
+  if (ev) ev.Employee = newEmployee;
+  rebuildDerivedEntries();
 
   if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
     try {
       await fetch(APPS_SCRIPT_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "updateEmployee", id, newEmployee }),
+        body: JSON.stringify({ action: "updateEventEmployee", eventId, newEmployee }),
       });
     } catch (err) {
-      // local state already updated; sheet update will retry on next load if this failed
+      // local state already updated; a refresh will retry the sync
     }
   }
 
@@ -1802,20 +2238,21 @@ async function reassignEmployee(id, newEmployee) {
   renderOverview();
 }
 
-async function deleteEntry(id) {
+async function deleteBossEvent(eventId) {
   if (!confirm("Delete this task entry? This can't be undone.")) return;
 
-  entries = entries.filter(e => e.ID !== id);
+  taskEvents = taskEvents.filter(e => e.EventID !== eventId);
+  rebuildDerivedEntries();
 
   if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
     try {
       await fetch(APPS_SCRIPT_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "delete", id }),
+        body: JSON.stringify({ action: "deleteEvent", eventId }),
       });
     } catch (err) {
-      // local state already updated; sheet delete will need a retry if this failed
+      // local state already updated; a refresh will retry the sync
     }
   }
 
