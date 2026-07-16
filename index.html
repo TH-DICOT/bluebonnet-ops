@@ -380,6 +380,37 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
 }
 .field-hint { text-transform: none; letter-spacing: 0; color: var(--dim); font-weight: 500; font-size: 15px; }
 
+.assignee-checklist { display: flex; flex-wrap: wrap; gap: 10px; }
+.assignee-check-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(5,15,35,0.6);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.assignee-check-item input { cursor: pointer; }
+.task-card-assignee-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+.task-card-assignee-label strong { color: var(--text); }
+.assignee-edit-panel {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+
 .notes-textarea {
   width: 100%;
   min-height: 70px;
@@ -586,12 +617,9 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
   border: 1px solid var(--border);
   border-radius: 8px;
   margin-bottom: 10px;
-  cursor: grab;
   box-shadow: 0 3px 10px rgba(0,0,0,0.3);
   overflow: hidden;
 }
-.project-board-tile:active { cursor: grabbing; }
-.project-board-tile.dragging { opacity: 0.4; }
 .project-board-tile-head { padding: 12px 14px; cursor: pointer; }
 .project-board-tile-name { font-size: 14px; font-weight: 700; display: block; margin-bottom: 4px; }
 .project-board-tile-meta { font-size: 13px; color: var(--muted); }
@@ -1299,6 +1327,11 @@ td.muted { color: var(--muted); }
               <label>Notes (optional)</label>
               <textarea id="fNewNotes" class="notes-textarea" placeholder="Any context worth saving..."></textarea>
             </div>
+
+            <div class="field" id="newTaskAssigneeField" style="margin-top:14px;">
+              <label>Assign To <span class="field-hint">(one or more)</span></label>
+              <div class="assignee-checklist" id="fAssigneeChecklist"></div>
+            </div>
           </div>
 
         </div>
@@ -1428,7 +1461,7 @@ td.muted { color: var(--muted); }
       </div>
       <div class="field">
         <label>Assigned To</label>
-        <select id="ntdAssignee"></select>
+        <div class="assignee-checklist" id="ntdAssigneeChecklist"></div>
       </div>
       <button class="submit-btn" id="ntdCreateBtn">Create To-Do</button>
     </div>
@@ -1492,7 +1525,7 @@ td.muted { color: var(--muted); }
   <div class="view" id="view-board">
     <header>
       <h1>Project Board</h1>
-      <div class="page-eyebrow">Drag a Project to Change Its Status · Click to Open Its Tasks</div>
+      <div class="page-eyebrow">Click a Project to Open Its Tasks</div>
     </header>
 
     <button class="submit-btn" id="newBoardProjectBtn" style="max-width:220px;">+ New Project</button>
@@ -1513,8 +1546,15 @@ td.muted { color: var(--muted); }
       <button class="submit-btn" id="bpCreateBtn">Create Project</button>
     </div>
 
-    <div class="kanban-columns" id="kanbanColumnsWrap" style="margin-top:20px;"></div>
+    <div class="board-filter-row" id="boardFilterRow" style="margin-top:20px;">
+      <button type="button" class="filter-pill" data-status="Pending" data-active="true">Pending</button>
+      <button type="button" class="filter-pill" data-status="Active" data-active="true">Active</button>
+      <button type="button" class="filter-pill" data-status="Completed" data-active="true">Completed</button>
+    </div>
+
+    <div id="projectBoardList" style="margin-top:16px;"></div>
   </div>
+
 
   <!-- OVERVIEW VIEW -->
   <div class="view" id="view-overview">
@@ -1959,6 +1999,17 @@ function init() {
     document.getElementById("newBoardProjectForm").style.display = "none";
   });
 
+  document.querySelectorAll("#boardFilterRow .filter-pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      const status = pill.dataset.status;
+      const nowActive = pill.dataset.active !== "true";
+      pill.dataset.active = nowActive;
+      if (nowActive) boardStatusFilters.add(status);
+      else boardStatusFilters.delete(status);
+      renderKanbanBoard();
+    });
+  });
+
   document.getElementById("projYesBtn").addEventListener("click", () => {
     document.getElementById("projYesBtn").dataset.active = "true";
     document.getElementById("projNoBtn").dataset.active = "false";
@@ -1982,20 +2033,20 @@ function init() {
   let dayOptionsHtml = "";
   for (let d = 1; d <= 28; d++) dayOptionsHtml += `<option value="${d}">${d}</option>`;
   document.getElementById("ntdDayOfMonth").innerHTML = dayOptionsHtml;
-  document.getElementById("ntdAssignee").innerHTML = EMPLOYEES.map(e => `<option value="${e.name}">${e.name}</option>`).join("");
   document.getElementById("newToDoBtn").addEventListener("click", () => {
     const form = document.getElementById("newToDoForm");
     form.style.display = form.style.display === "none" ? "block" : "none";
     document.getElementById("ntdProject").innerHTML = `<option value="">— none —</option>` +
       projects.filter(p => p.Status !== "Completed").map(p => `<option value="${p.ProjectID}">${p.ProjectName}</option>`).join("");
-    document.getElementById("ntdAssignee").value = selectedEmployee;
+    document.getElementById("ntdAssigneeChecklist").innerHTML = buildAssigneeChecklistHtml([selectedEmployee]);
   });
   document.getElementById("ntdCreateBtn").addEventListener("click", () => {
     const name = document.getElementById("ntdName").value.trim();
     const category = document.getElementById("ntdCategory").value;
     const dayOfMonth = document.getElementById("ntdDayOfMonth").value;
     const projectId = document.getElementById("ntdProject").value;
-    const assignee = document.getElementById("ntdAssignee").value;
+    const checkedAssignees = getCheckedAssignees(document.getElementById("ntdAssigneeChecklist"));
+    const assignee = checkedAssignees.length ? checkedAssignees.join(", ") : selectedEmployee;
     if (!name) {
       alert("Enter a name for this to-do.");
       return;
@@ -2194,6 +2245,8 @@ function renderEmpPicker() {
   updateEntryCardColor();
   renderFavorites();
   updateStarState();
+  const assigneeChecklist = document.getElementById("fAssigneeChecklist");
+  if (assigneeChecklist) assigneeChecklist.innerHTML = buildAssigneeChecklistHtml([selectedEmployee]);
   if (typeof renderCalendar === "function") renderCalendar();
 }
 
@@ -2644,6 +2697,9 @@ async function submitEntry() {
         }
       }
 
+      const checkedAssignees = getCheckedAssignees(document.getElementById("fAssigneeChecklist"));
+      const assigneeList = checkedAssignees.length ? checkedAssignees.join(", ") : employee;
+
       const newTask = {
         TaskID: taskId,
         TaskName: taskName,
@@ -2651,7 +2707,7 @@ async function submitEntry() {
         Category: selectedCategory,
         Status: status,
         Notes: notes,
-        Assignee: employee,
+        Assignee: assigneeList,
         DueDate: "",
         AttachmentLink: attachmentLink,
         CreatedBy: employee,
@@ -2663,7 +2719,7 @@ async function submitEntry() {
         await fetch(APPS_SCRIPT_URL, {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "createTask", taskId, taskName, projectId, category: selectedCategory, status, notes, assignee: employee, dueDate: "", attachmentLink, createdBy: employee, createdDate: date }),
+          body: JSON.stringify({ action: "createTask", taskId, taskName, projectId, category: selectedCategory, status, notes, assignee: assigneeList, dueDate: "", attachmentLink, createdBy: employee, createdDate: date }),
         });
       }
 
@@ -2716,6 +2772,7 @@ async function submitEntry() {
     document.getElementById("fHoursDirect").value = "";
     document.getElementById("fNewNotes").value = "";
     document.getElementById("fAttachmentLink").value = "";
+    document.getElementById("fAssigneeChecklist").innerHTML = buildAssigneeChecklistHtml([employee]);
     document.getElementById("fProjectName").value = "";
     selectedProjectIdForTask = "";
     updateProjectSelect();
@@ -2747,6 +2804,20 @@ function updateNewTaskFieldsVisibility() {
   document.getElementById("newTaskFields").style.display = existing ? "none" : "flex";
   document.getElementById("newTaskNotesField").style.display = existing ? "none" : "block";
   document.getElementById("newTaskFields2").style.display = existing ? "none" : "block";
+  document.getElementById("newTaskAssigneeField").style.display = existing ? "none" : "block";
+}
+
+function buildAssigneeChecklistHtml(selectedNames) {
+  return EMPLOYEES.map(e => `
+    <label class="assignee-check-item">
+      <input type="checkbox" value="${e.name}" ${selectedNames.includes(e.name) ? "checked" : ""} />
+      <span style="color:${e.hex}">${e.name}</span>
+    </label>
+  `).join("");
+}
+
+function getCheckedAssignees(container) {
+  return Array.from(container.querySelectorAll("input[type=checkbox]:checked")).map(cb => cb.value);
 }
 
 function renderAll() {
@@ -2927,15 +2998,14 @@ function closeEditEventModal() {
 }
 
 let expandedProjectTiles = new Set();
+let boardStatusFilters = new Set(["Pending", "Active", "Completed"]);
 
 function buildProjectBoardTile(p) {
   const color = catColor(p.Category);
   const projTasks = tasks.filter(t => t.ProjectID === p.ProjectID);
-  const hours = projTasks.reduce((s, t) => s + taskHours(t.TaskID), 0);
 
   const tile = document.createElement("div");
   tile.className = "project-board-tile";
-  tile.draggable = true;
   tile.dataset.projectId = p.ProjectID;
   tile.dataset.open = expandedProjectTiles.has(p.ProjectID) ? "true" : "false";
   tile.style.borderLeft = `3px solid ${color}`;
@@ -2943,16 +3013,19 @@ function buildProjectBoardTile(p) {
   tile.innerHTML = `
     <div class="project-board-tile-head">
       <span class="project-board-tile-name" style="color:${color}">${p.ProjectName || ""}</span>
-      <span class="project-board-tile-meta">${projTasks.length} task${projTasks.length === 1 ? "" : "s"} · ${hours.toFixed(1)} hrs</span>
+      <span class="project-board-tile-meta">${projTasks.length} task${projTasks.length === 1 ? "" : "s"}</span>
     </div>
-    <div class="project-board-tile-body"></div>
+    <div class="project-board-tile-body">
+      <div class="status-picker" style="margin-bottom:16px;">
+        <button type="button" class="status-btn board-status-btn" data-status="Pending" data-active="${p.Status === "Pending"}">Pending</button>
+        <button type="button" class="status-btn board-status-btn" data-status="Active" data-active="${p.Status === "Active"}">Active</button>
+        <button type="button" class="status-btn board-status-btn" data-status="Completed" data-active="${p.Status === "Completed"}">Completed</button>
+      </div>
+      <div class="section-label" style="margin-top:0;">Tasks</div>
+      <div class="project-board-tasks"></div>
+      <button type="button" class="new-project-toggle-btn project-board-add-task-btn" style="margin-top:14px;">+ Add Task</button>
+    </div>
   `;
-
-  tile.addEventListener("dragstart", e => {
-    tile.classList.add("dragging");
-    e.dataTransfer.setData("text/plain", p.ProjectID);
-  });
-  tile.addEventListener("dragend", () => tile.classList.remove("dragging"));
 
   tile.querySelector(".project-board-tile-head").addEventListener("click", () => {
     const nowOpen = tile.dataset.open !== "true";
@@ -2961,51 +3034,55 @@ function buildProjectBoardTile(p) {
     else expandedProjectTiles.delete(p.ProjectID);
   });
 
-  const body = tile.querySelector(".project-board-tile-body");
+  tile.querySelectorAll(".board-status-btn").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      moveProjectStatus(p.ProjectID, btn.dataset.status);
+    });
+  });
+
+  const tasksWrap = tile.querySelector(".project-board-tasks");
   if (!projTasks.length) {
-    body.innerHTML = `<div class="empty-state" style="padding:10px 0;">No tasks in this project yet.</div>`;
+    tasksWrap.innerHTML = `<div class="empty-state" style="padding:10px 0;">No tasks in this project yet.</div>`;
   } else {
-    projTasks.forEach(t => body.appendChild(buildTaskCard(t)));
+    projTasks.forEach(t => tasksWrap.appendChild(buildTaskCard(t)));
   }
+
+  tile.querySelector(".project-board-add-task-btn").addEventListener("click", e => {
+    e.stopPropagation();
+    addTaskToProject(p.ProjectID);
+  });
 
   return tile;
 }
 
 function renderKanbanBoard() {
-  const wrap = document.getElementById("kanbanColumnsWrap");
-  wrap.innerHTML = "";
-  wrap.style.gridTemplateColumns = "repeat(3, 1fr)";
+  const list = document.getElementById("projectBoardList");
+  list.innerHTML = "";
 
-  const statuses = ["Pending", "Active", "Completed"];
+  const matching = projects.filter(p => boardStatusFilters.has(p.Status));
+  if (!matching.length) {
+    list.innerHTML = `<div class="empty-state">No projects match the selected filters.</div>`;
+    return;
+  }
+  matching.forEach(p => list.appendChild(buildProjectBoardTile(p)));
+}
 
-  statuses.forEach(status => {
-    const col = document.createElement("div");
-    col.className = "kanban-cat-col";
-    col.innerHTML = `<div class="kanban-cat-head">${status}</div>`;
-
-    const body = document.createElement("div");
-    body.className = "kanban-status-body";
-    body.dataset.status = status;
-    body.style.minHeight = "200px";
-
-    const matching = projects.filter(p => p.Status === status);
-    matching.forEach(p => body.appendChild(buildProjectBoardTile(p)));
-
-    body.addEventListener("dragover", e => {
-      e.preventDefault();
-      body.classList.add("drag-over");
-    });
-    body.addEventListener("dragleave", () => body.classList.remove("drag-over"));
-    body.addEventListener("drop", e => {
-      e.preventDefault();
-      body.classList.remove("drag-over");
-      const projectId = e.dataTransfer.getData("text/plain");
-      if (projectId) moveProjectStatus(projectId, status);
-    });
-
-    col.appendChild(body);
-    wrap.appendChild(col);
-  });
+function addTaskToProject(projectId) {
+  const p = projects.find(x => x.ProjectID === projectId);
+  if (!p) return;
+  selectedCategory = p.Category;
+  renderCatPicker();
+  document.getElementById("projYesBtn").dataset.active = "true";
+  document.getElementById("projNoBtn").dataset.active = "false";
+  document.getElementById("projectFields").style.display = "block";
+  selectedProjectIdForTask = projectId;
+  updateProjectSelect();
+  document.getElementById("fTaskFree").value = "";
+  document.getElementById("fTaskSelect").value = "";
+  updateStarState();
+  updateNewTaskFieldsVisibility();
+  openEntryModal();
 }
 
 async function moveProjectStatus(projectId, newStatus) {
@@ -3219,7 +3296,7 @@ function buildToDoCard(t) {
       </div>
       <div class="field">
         <label>Assigned To</label>
-        <select class="todo-edit-assignee"></select>
+        <div class="assignee-checklist todo-edit-assignee"></div>
       </div>
       <button type="button" class="submit-btn todo-edit-save-btn">Save Changes</button>
     </div>
@@ -3246,15 +3323,20 @@ function buildToDoCard(t) {
   projSel.innerHTML = `<option value="">— none —</option>` +
     projects.filter(p => p.Status !== "Completed").map(p => `<option value="${p.ProjectID}" ${p.ProjectID === t.ProjectID ? "selected" : ""}>${p.ProjectName}</option>`).join("");
 
-  const assigneeSel = wrap.querySelector(".todo-edit-assignee");
-  assigneeSel.innerHTML = EMPLOYEES.map(e => `<option value="${e.name}" ${e.name === t.Assignee ? "selected" : ""}>${e.name}</option>`).join("");
+  const assigneeChecklist = wrap.querySelector(".todo-edit-assignee");
+  assigneeChecklist.innerHTML = buildAssigneeChecklistHtml(parseAssignees(t.Assignee));
 
   wrap.querySelector(".todo-edit-save-btn").addEventListener("click", () => {
+    const checked = getCheckedAssignees(assigneeChecklist);
+    if (!checked.length) {
+      alert("Pick at least one person.");
+      return;
+    }
     updateToDoDetails(t.ToDoID, {
       category: catSel.value,
       dayOfMonth: daySel.value,
       projectId: projSel.value,
-      assignee: assigneeSel.value,
+      assignee: checked.join(", "),
     });
     editPanel.style.display = "none";
   });
@@ -3706,13 +3788,22 @@ function taskOwner(t) {
   return t.Assignee || t.CreatedBy; // fallback for any rows created before Assignee existed
 }
 
+function parseAssignees(str) {
+  return (str || "").split(",").map(s => s.trim()).filter(Boolean);
+}
+
+function isAssignedTo(t, employeeName) {
+  const list = parseAssignees(taskOwner(t));
+  return list.includes(employeeName);
+}
+
 function renderMyTasks() {
-  const myTasks = tasks.filter(t => taskOwner(t) === selectedEmployee);
+  const myTasks = tasks.filter(t => isAssignedTo(t, selectedEmployee));
   renderGroupedTasks(myTasks, "myTasksList", "No tasks yet — add one above.");
 }
 
 function renderOthersActive() {
-  const othersActive = tasks.filter(t => t.Status === "Active" && taskOwner(t) !== selectedEmployee);
+  const othersActive = tasks.filter(t => t.Status === "Active" && !isAssignedTo(t, selectedEmployee));
   renderGroupedTasks(othersActive, "othersActiveList", "Nothing from anyone else right now.");
 }
 
@@ -3758,7 +3849,15 @@ function buildTaskCard(t) {
           <button type="button" class="status-btn card-status-btn" data-status="${s}" data-active="${s === t.Status}">${s}</button>
         `).join("")}
       </div>
-      <div class="section-label" style="margin-top:0;">Entries <span style="text-transform:none; letter-spacing:0; color:var(--dim); font-weight:500;">(click one to edit)</span></div>
+      <div class="task-card-assignee-row">
+        <span class="task-card-assignee-label">Assigned to: <strong>${parseAssignees(taskOwner(t)).join(", ") || "Unassigned"}</strong></span>
+        <button type="button" class="todo-pause-btn card-edit-assignee-btn">Edit</button>
+      </div>
+      <div class="assignee-edit-panel" style="display:none;">
+        <div class="assignee-checklist card-assignee-checklist"></div>
+        <button type="button" class="submit-btn card-assignee-save-btn" style="margin-top:12px;">Save Assignees</button>
+      </div>
+      <div class="section-label" style="margin-top:16px;">Entries <span style="text-transform:none; letter-spacing:0; color:var(--dim); font-weight:500;">(click one to edit)</span></div>
       <div class="card-events"></div>
       <div class="card-add-entry">
         <input type="date" class="card-add-date" />
@@ -3779,6 +3878,24 @@ function buildTaskCard(t) {
       </div>
     </div>
   `;
+
+  const assigneeChecklistEl = card.querySelector(".card-assignee-checklist");
+  assigneeChecklistEl.innerHTML = buildAssigneeChecklistHtml(parseAssignees(taskOwner(t)));
+  const assigneeEditPanel = card.querySelector(".assignee-edit-panel");
+  card.querySelector(".card-edit-assignee-btn").addEventListener("click", e => {
+    e.stopPropagation();
+    assigneeEditPanel.style.display = assigneeEditPanel.style.display === "none" ? "block" : "none";
+  });
+  card.querySelector(".card-assignee-save-btn").addEventListener("click", e => {
+    e.stopPropagation();
+    const checked = getCheckedAssignees(assigneeChecklistEl);
+    if (!checked.length) {
+      alert("Pick at least one person.");
+      return;
+    }
+    updateTaskAssignees(t.TaskID, checked.join(", "));
+    assigneeEditPanel.style.display = "none";
+  });
 
   card.querySelector(".task-card-head").addEventListener("click", () => {
     const nowOpen = card.dataset.open !== "true";
@@ -3904,6 +4021,22 @@ async function updateTaskStatus(taskId, status) {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({ action: "updateTaskStatus", taskId, status }),
+      });
+    } catch (err) {}
+  }
+  renderAll();
+}
+
+async function updateTaskAssignees(taskId, assigneeList) {
+  const t = tasks.find(x => x.TaskID === taskId);
+  if (t) t.Assignee = assigneeList;
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "updateTaskAssignee", taskId, assignee: assigneeList }),
       });
     } catch (err) {}
   }
