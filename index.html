@@ -191,19 +191,19 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
   max-width: 700px;
   background: var(--bg);
   border-radius: 16px;
-  padding: 12px;
+  padding: 50px 12px 12px;
 }
 .modal-close-btn {
   position: absolute;
-  top: -6px;
-  right: -6px;
+  top: 14px;
+  right: 14px;
   background: var(--card);
   border: 1px solid var(--border);
   color: var(--muted);
-  width: 36px;
-  height: 36px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  font-size: 20px;
+  font-size: 28px;
   cursor: pointer;
   z-index: 5;
 }
@@ -291,16 +291,17 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
   font-size: 18px;
   color: var(--muted);
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
-.cat-readout .dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.cat-readout .dot { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; }
 .cat-readout .cat-badge {
   font-weight: 700;
-  padding: 4px 14px;
-  border-radius: 20px;
+  font-size: 22px;
+  padding: 8px 24px;
+  border-radius: 26px;
 }
 .task-col label { display: block; font-size: 15px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
 .task-or { font-size: 14px; color: var(--dim); text-align: center; margin: 10px 0; }
@@ -630,6 +631,56 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
 }
 .todo-pause-btn:hover { border-color: #C9A24D; color: #C9A24D; }
 .todo-delete-btn:hover { border-color: #D95C84; color: #D95C84; }
+
+.ticket-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 10px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.ticket-title { font-size: 15px; font-weight: 700; }
+.ticket-meta-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ticket-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 12px;
+  text-transform: uppercase;
+}
+.ticket-assignee { font-size: 13px; color: var(--muted); }
+.ticket-actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+.ticket-action-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.ticket-action-btn.claim:hover { border-color: #1D9E75; color: #1D9E75; }
+.ticket-action-btn.convert:hover { border-color: var(--cat-accent, #63bcbc); color: var(--cat-accent, #63bcbc); }
+.ticket-action-btn.close:hover { border-color: #D95C84; color: #D95C84; }
+.ticket-history-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
 .project-delete-btn {
   position: absolute;
   top: 10px;
@@ -724,7 +775,7 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
 }
 .cat-item[data-active="true"] { color: var(--text); font-weight: 700; }
 
-.field-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+.field-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 18px; }
 .datetime-box {
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -735,14 +786,34 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
 .time-picker-row, .date-picker-row { display: flex; align-items: center; gap: 8px; }
 .time-select-small {
   flex: 1;
+  min-width: 64px;
   background: rgba(5,15,35,0.6);
   border: 1px solid var(--border);
   border-radius: 8px;
   color: var(--text);
-  padding: 14px 10px;
+  padding: 14px 24px 14px 12px;
   font-size: 16px;
-  text-align: center;
+  text-align: left;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M0 0L5 6L10 0Z' fill='%238FA0C4'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
 }
+.time-text-input {
+  flex: 1;
+  min-width: 130px;
+  background: rgba(5,15,35,0.6);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 14px 16px;
+  font-size: 16px;
+  font-family: 'DM Sans', sans-serif;
+}
+.time-text-input:focus { outline: none; border-color: var(--cat-accent, #63bcbc); }
+
 .time-select-small:focus { outline: none; border-color: #63bcbc; }
 .time-colon { color: var(--muted); font-weight: 700; font-size: 18px; }
 .now-btn {
@@ -751,7 +822,7 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
   border: 1px solid var(--cat-accent, #63bcbc);
   color: var(--cat-accent, #63bcbc);
   border-radius: 8px;
-  padding: 13px 16px;
+  padding: 13px 12px;
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
@@ -808,6 +879,19 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
 }
 .submit-btn:hover { filter: brightness(1.1); }
 .submit-btn:disabled { opacity: 0.5; cursor: default; }
+.cancel-btn {
+  width: 100%;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 13px 22px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+.cancel-btn:hover { border-color: #D95C84; color: #D95C84; }
 
 .duration-preview { font-size: 15px; color: var(--muted); text-align: center; margin-top: 14px; }
 .duration-preview strong { color: var(--cat-accent, #63bcbc); }
@@ -1075,7 +1159,8 @@ td.muted { color: var(--muted); }
   <div class="brand">HR Task Tracker<div class="eyebrow">DICOT · Talent Team</div></div>
   <div class="nav-item active" data-view="log">My Tasks</div>
   <div class="nav-item" data-view="board">Board</div>
-  <div class="nav-item" data-view="todos">To-Dos</div>
+  <div class="nav-item" data-view="todos">Recurring To-Dos</div>
+  <div class="nav-item" data-view="tickets">Tickets</div>
   <div class="nav-item" data-view="overview">Overview</div>
   <div class="nav-item" id="categoriesToggle">Categories <span class="nav-chev" id="catChev">▾</span></div>
   <div class="nav-sublist" id="categoriesSublist"></div>
@@ -1215,9 +1300,7 @@ td.muted { color: var(--muted); }
               <div class="field">
                 <label>Start</label>
                 <div class="time-picker-row">
-                  <select id="fStartHour" class="time-select-small"></select>
-                  <span class="time-colon">:</span>
-                  <select id="fStartMin" class="time-select-small"></select>
+                  <input type="text" id="fStartTime" class="time-text-input" list="timeOptionsList" placeholder="e.g. 7:00 AM" autocomplete="off" />
                   <button type="button" class="now-btn" data-target="fStart">Now</button>
                 </div>
               </div>
@@ -1225,12 +1308,11 @@ td.muted { color: var(--muted); }
               <div class="field">
                 <label>End</label>
                 <div class="time-picker-row">
-                  <select id="fEndHour" class="time-select-small"></select>
-                  <span class="time-colon">:</span>
-                  <select id="fEndMin" class="time-select-small"></select>
+                  <input type="text" id="fEndTime" class="time-text-input" list="timeOptionsList" placeholder="e.g. 5:00 PM" autocomplete="off" />
                   <button type="button" class="now-btn" data-target="fEnd">Now</button>
                 </div>
               </div>
+              <datalist id="timeOptionsList"></datalist>
             </div>
           </div>
 
@@ -1243,6 +1325,7 @@ td.muted { color: var(--muted); }
           </div>
 
           <button class="submit-btn" id="submitBtn">Add Entry</button>
+          <button type="button" class="cancel-btn" id="cancelEntryBtn">Cancel</button>
           <div class="duration-preview" id="durationPreview"></div>
           <div class="form-msg" id="formMsg"></div>
         </div>
@@ -1289,12 +1372,12 @@ td.muted { color: var(--muted); }
   <!-- TO-DOS VIEW (recurring templates that spawn a Task each month) -->
   <div class="view" id="view-todos">
     <header>
-      <h1>To-Dos</h1>
-      <div class="page-eyebrow">Recurring Templates — Spawn a Task Each Month</div>
+      <h1>Recurring To-Dos</h1>
+      <div class="page-eyebrow">Spawn a Task Each Month</div>
     </header>
 
     <div class="instructions-card">
-      <strong>How this works:</strong> Set up a To-Do once with a name, category, and a day of the month. On or after that day, opening the app will automatically create a real Task for that month — optionally inside a Project you pick.
+      <strong>How this works:</strong> Set up a Recurring To-Do once with a name, category, and a day of the month. Each month on that day, it automatically creates a real task for you — optionally inside a Project you pick.
     </div>
 
     <button class="submit-btn" id="newToDoBtn" style="max-width:220px;">+ New To-Do</button>
@@ -1326,6 +1409,54 @@ td.muted { color: var(--muted); }
 
     <div class="section-label" style="margin-top:28px;">Paused To-Dos</div>
     <div id="todosPausedList"></div>
+  </div>
+
+  <!-- TICKETS VIEW -->
+  <div class="view" id="view-tickets">
+    <header>
+      <h1>Tickets</h1>
+      <div class="page-eyebrow">Requests Waiting to Become Real Work</div>
+    </header>
+
+    <div class="instructions-card">
+      <strong>How this works:</strong> A ticket is a quick flag for something that needs to happen — no date, no owner required yet. Anyone can claim an open ticket, and converting it turns it into a real Task or Project, ready to track.
+    </div>
+
+    <button class="submit-btn" id="newTicketBtn" style="max-width:220px;">+ New Ticket</button>
+
+    <div class="entry-card" id="newTicketForm" style="display:none; max-width:560px; margin-top:16px;">
+      <div class="field">
+        <label>Title</label>
+        <input type="text" id="ntkTitle" placeholder="e.g. Build a Radiologist position" />
+      </div>
+      <div class="field-row" style="grid-template-columns: 1fr 1fr; margin-bottom:18px;">
+        <div class="field">
+          <label>Category <span class="field-hint">(optional)</span></label>
+          <select id="ntkCategory"></select>
+        </div>
+        <div class="field">
+          <label>Priority <span class="field-hint">(optional)</span></label>
+          <select id="ntkPriority">
+            <option value="">— none —</option>
+            <option value="Low">Low</option>
+            <option value="Normal">Normal</option>
+            <option value="High">High</option>
+            <option value="Urgent">Urgent</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Assignee <span class="field-hint">(optional — leave unassigned if unsure)</span></label>
+        <select id="ntkAssignee"></select>
+      </div>
+      <button class="submit-btn" id="ntkCreateBtn">Create Ticket</button>
+    </div>
+
+    <div class="section-label" style="margin-top:28px;">Open Tickets</div>
+    <div id="ticketsList"></div>
+
+    <div class="section-label" style="margin-top:28px;">Closed / Converted <span class="field-hint">(click to expand)</span></div>
+    <div id="ticketsHistoryList"></div>
   </div>
 
   <!-- KANBAN BOARD VIEW -->
@@ -1366,6 +1497,9 @@ td.muted { color: var(--muted); }
 
     <div class="section-label">By Employee</div>
     <div class="cat-cols" id="empCards"></div>
+
+    <div class="section-label">Employee Detail</div>
+    <div id="empBreakdownList"></div>
 
     <div class="section-label">By Category</div>
     <div class="cat-cols" id="catCards"></div>
@@ -1577,6 +1711,8 @@ const BOSS_SESSION_MINUTES = 120; // how long access stays unlocked before it as
 
 let projects = [];       // one row per project: ProjectID, ProjectName, Category, Status, CreatedBy, CreatedDate
 let todos = [];          // recurring templates: ToDoID, ToDoName, Category, ProjectID, DayOfMonth, Status, LastGeneratedMonth, CreatedBy, CreatedDate
+let tickets = [];        // TicketID, Title, Category, Priority, Assignee, Status, ConvertedType, ConvertedID, CreatedBy, CreatedDate
+let convertingTicketId = null; // set while converting a ticket into a Task, so submitEntry knows to mark it converted
 let tasks = [];          // one row per persistent task: TaskID, TaskName, ProjectID, Category, Status, Notes, Assignee, DueDate, CreatedBy, CreatedDate
 let expandedTaskCards = new Set(); // which task cards are currently open, so re-renders don't collapse them
 let taskEvents = [];     // one row per dated entry against a task: EventID, TaskID, Date, StartTime, EndTime, Hours, Employee
@@ -1691,8 +1827,7 @@ function init() {
 
   populateDateSelects();
   setDateFromObj(new Date());
-  populateHourMinuteSelects("fStart");
-  populateHourMinuteSelects("fEnd");
+  populateTimeOptionsList();
 
   document.getElementById("empSwitchBtn").addEventListener("click", e => {
     e.stopPropagation();
@@ -1735,10 +1870,8 @@ function init() {
   });
   document.getElementById("fMonth").addEventListener("change", updateDayOfWeek);
   document.getElementById("fDay").addEventListener("change", updateDayOfWeek);
-  document.getElementById("fStartHour").addEventListener("change", updateDurationPreview);
-  document.getElementById("fStartMin").addEventListener("change", updateDurationPreview);
-  document.getElementById("fEndHour").addEventListener("change", updateDurationPreview);
-  document.getElementById("fEndMin").addEventListener("change", updateDurationPreview);
+  document.getElementById("fStartTime").addEventListener("input", updateDurationPreview);
+  document.getElementById("fEndTime").addEventListener("input", updateDurationPreview);
   document.querySelectorAll(".now-btn").forEach(btn => {
     btn.addEventListener("click", () => setNow(btn.dataset.target));
   });
@@ -1812,6 +1945,28 @@ function init() {
     document.getElementById("newToDoForm").style.display = "none";
   });
 
+  document.getElementById("ntkCategory").innerHTML = `<option value="">— none —</option>` +
+    CATEGORIES.map(c => `<option value="${c.key}">${c.key}</option>`).join("");
+  document.getElementById("ntkAssignee").innerHTML = `<option value="">— unassigned —</option>` +
+    EMPLOYEES.map(e => `<option value="${e.name}">${e.name}</option>`).join("");
+  document.getElementById("newTicketBtn").addEventListener("click", () => {
+    const form = document.getElementById("newTicketForm");
+    form.style.display = form.style.display === "none" ? "block" : "none";
+  });
+  document.getElementById("ntkCreateBtn").addEventListener("click", () => {
+    const title = document.getElementById("ntkTitle").value.trim();
+    const category = document.getElementById("ntkCategory").value;
+    const priority = document.getElementById("ntkPriority").value;
+    const assignee = document.getElementById("ntkAssignee").value;
+    if (!title) {
+      alert("Enter a title for this ticket.");
+      return;
+    }
+    createTicket(title, category, priority, assignee);
+    document.getElementById("ntkTitle").value = "";
+    document.getElementById("newTicketForm").style.display = "none";
+  });
+
   document.getElementById("calPrevDay").addEventListener("click", () => {
     calendarDate.setDate(calendarDate.getDate() - 7);
     renderCalendar();
@@ -1826,6 +1981,7 @@ function init() {
   });
   document.getElementById("openEntryModalBtn").addEventListener("click", () => openEntryModal());
   document.getElementById("entryModalClose").addEventListener("click", closeEntryModal);
+  document.getElementById("cancelEntryBtn").addEventListener("click", closeEntryModal);
   document.getElementById("editEventModalClose").addEventListener("click", closeEditEventModal);
   document.getElementById("editEventModalOverlay").addEventListener("click", e => {
     if (e.target.id === "editEventModalOverlay") closeEditEventModal();
@@ -1848,9 +2004,6 @@ function init() {
     const id = editingEventId;
     closeEditEventModal();
     deleteTaskEvent(id);
-  });
-  document.getElementById("entryModalOverlay").addEventListener("click", e => {
-    if (e.target.id === "entryModalOverlay") closeEntryModal();
   });
   document.addEventListener("keydown", e => {
     if (e.key === "Escape") closeEntryModal();
@@ -2038,7 +2191,7 @@ function updateCategorySectionTint(hex) {
   document.querySelectorAll(".form-section, .right-col").forEach(el => {
     el.style.background = hex + "14";
   });
-  document.querySelector(".entry-card").style.setProperty("--cat-accent", hex);
+  document.body.style.setProperty("--cat-accent", hex);
 }
 
 function getTaskValue() {
@@ -2103,7 +2256,7 @@ let currentEntryYear = new Date().getFullYear();
 function populateDateSelects() {
   const monthSelect = document.getElementById("fMonth");
   const daySelect = document.getElementById("fDay");
-  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   monthSelect.innerHTML = months.map((m, i) => `<option value="${String(i + 1).padStart(2, "0")}">${m}</option>`).join("");
   let dayHtml = "";
   for (let d = 1; d <= 31; d++) dayHtml += `<option value="${String(d).padStart(2, "0")}">${d}</option>`;
@@ -2140,33 +2293,58 @@ function minOptionsHtml() {
   }
   return html;
 }
-function populateHourMinuteSelects(prefix) {
-  document.getElementById(prefix + "Hour").innerHTML = hourOptionsHtml();
-  document.getElementById(prefix + "Min").innerHTML = minOptionsHtml();
+
+function formatTime12(h24, m) {
+  const period = h24 < 12 ? "AM" : "PM";
+  const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+  return `${h12}:${String(m).padStart(2, "0")} ${period}`;
+}
+
+function populateTimeOptionsList() {
+  const list = document.getElementById("timeOptionsList");
+  let html = "";
+  for (let mins = 7 * 60; mins <= 19 * 60; mins += 5) {
+    html += `<option value="${formatTime12(Math.floor(mins / 60), mins % 60)}"></option>`;
+  }
+  list.innerHTML = html;
+}
+
+// Accepts "7:05 AM", "7:05am", "07:05", "19:05", etc. Returns 24-hour "HH:MM" or "" if unreadable.
+function parseTimeInput(str) {
+  if (!str) return "";
+  const clean = str.trim().toUpperCase();
+  const m = clean.match(/^(\d{1,2}):?(\d{2})\s*(AM|PM)?$/);
+  if (!m) return "";
+  let h = parseInt(m[1], 10);
+  const min = parseInt(m[2], 10);
+  const period = m[3];
+  if (min > 59) return "";
+  if (period) {
+    if (h < 1 || h > 12) return "";
+    if (h === 12) h = 0;
+    if (period === "PM") h += 12;
+  } else if (h > 23) {
+    return "";
+  }
+  return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
 }
 
 function getFieldTime(prefix) {
-  const h = document.getElementById(prefix + "Hour").value;
-  const m = document.getElementById(prefix + "Min").value;
-  if (h && m) return `${h}:${m}`;
-  return "";
+  const el = document.getElementById(prefix + "Time");
+  return parseTimeInput(el.value);
 }
 
 function clearFieldTime(prefix) {
-  document.getElementById(prefix + "Hour").value = "";
-  document.getElementById(prefix + "Min").value = "";
+  document.getElementById(prefix + "Time").value = "";
 }
 
 function setNow(prefix) {
   const now = new Date();
   let totalMin = now.getHours() * 60 + now.getMinutes();
   totalMin -= totalMin % 5; // round down to nearest 5
-  let h24 = Math.floor(totalMin / 60);
+  const h24 = Math.floor(totalMin / 60);
   const m = totalMin % 60;
-  h24 = Math.min(19, Math.max(7, h24)); // clamp to the 7am–7pm list
-
-  document.getElementById(prefix + "Hour").value = String(h24).padStart(2, "0");
-  document.getElementById(prefix + "Min").value = String(m).padStart(2, "0");
+  document.getElementById(prefix + "Time").value = formatTime12(h24, m);
   updateDurationPreview();
 }
 
@@ -2210,21 +2388,24 @@ async function loadTasksAndEvents() {
     tasks = [];
     taskEvents = [];
     todos = [];
+    tickets = [];
     rebuildDerivedEntries();
     renderAll();
     return;
   }
   try {
-    const [projectsRes, tasksRes, eventsRes, todosRes] = await Promise.all([
+    const [projectsRes, tasksRes, eventsRes, todosRes, ticketsRes] = await Promise.all([
       fetch(APPS_SCRIPT_URL + "?sheet=projects"),
       fetch(APPS_SCRIPT_URL + "?sheet=tasks"),
       fetch(APPS_SCRIPT_URL + "?sheet=events"),
       fetch(APPS_SCRIPT_URL + "?sheet=todos"),
+      fetch(APPS_SCRIPT_URL + "?sheet=tickets"),
     ]);
     projects = await projectsRes.json();
     tasks = await tasksRes.json();
     taskEvents = await eventsRes.json();
     todos = await todosRes.json();
+    tickets = await ticketsRes.json();
   } catch (err) {
     // keep whatever was already loaded
   }
@@ -2325,7 +2506,7 @@ function rebuildDerivedEntries() {
 function findOpenTask(taskName, category) {
   const lower = taskName.trim().toLowerCase();
   return tasks.find(t =>
-    t.TaskName.trim().toLowerCase() === lower &&
+    (t.TaskName || "").trim().toLowerCase() === lower &&
     t.Category === category &&
     t.Status !== "Completed"
   );
@@ -2423,6 +2604,11 @@ async function submitEntry() {
           body: JSON.stringify({ action: "createTask", taskId, taskName, projectId, category: selectedCategory, status, notes, assignee: employee, dueDate: "", attachmentLink, createdBy: employee, createdDate: date }),
         });
       }
+
+      if (convertingTicketId) {
+        await markTicketConverted(convertingTicketId, "Task", taskId);
+        convertingTicketId = null;
+      }
     }
 
     const eventId = "e" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -2484,7 +2670,8 @@ async function submitEntry() {
     updateStarState();
     updateNewTaskFieldsVisibility();
   } catch (err) {
-    msg.textContent = "Something went wrong. Try again.";
+    console.error("submitEntry failed:", err);
+    msg.textContent = "Something went wrong. Try again. (Details in browser console — press F12)";
     msg.className = "form-msg err";
   } finally {
     btn.disabled = false;
@@ -2509,6 +2696,7 @@ function renderAll() {
   updateProjectSelect();
   renderCalendar();
   renderToDos();
+  renderTickets();
 }
 
 /* =========================================================
@@ -2647,8 +2835,7 @@ function openEntryModal(dateStr, hour, minute) {
   const d = dateStr ? new Date(dateStr + "T00:00:00") : calendarDate;
   setDateFromObj(d);
   if (hour !== undefined && minute !== undefined) {
-    document.getElementById("fStartHour").value = hour;
-    document.getElementById("fStartMin").value = minute;
+    document.getElementById("fStartTime").value = formatTime12(Number(hour), Number(minute));
     updateDurationPreview();
   }
   document.getElementById("entryModalOverlay").style.display = "flex";
@@ -2656,6 +2843,7 @@ function openEntryModal(dateStr, hour, minute) {
 
 function closeEntryModal() {
   document.getElementById("entryModalOverlay").style.display = "none";
+  convertingTicketId = null;
 }
 
 let editingEventId = null;
@@ -3001,6 +3189,203 @@ async function deleteToDo(toDoId, toDoName) {
   renderToDos();
 }
 
+/* =========================================================
+   TICKETS — lightweight requests that convert into a Task or Project
+   ========================================================= */
+function priorityColor(priority) {
+  if (priority === "Urgent") return "#D95C84";
+  if (priority === "High") return "#C9A24D";
+  if (priority === "Normal") return "#5494D4";
+  if (priority === "Low") return "#5A6A8F";
+  return "";
+}
+
+function renderTickets() {
+  const openList = document.getElementById("ticketsList");
+  const open = tickets.filter(t => t.Status === "Open");
+  openList.innerHTML = open.length
+    ? open.map(t => buildTicketCardHtml(t)).join("")
+    : `<div class="empty-state">No open tickets right now.</div>`;
+
+  const historyList = document.getElementById("ticketsHistoryList");
+  const history = tickets.filter(t => t.Status !== "Open");
+  historyList.innerHTML = history.length
+    ? history.map(t => `
+        <div class="ticket-history-item">
+          <span>${t.Title}</span>
+          <span style="margin-left:auto;">${t.Status}${t.ConvertedType ? ` → ${t.ConvertedType}` : ""}</span>
+        </div>
+      `).join("")
+    : `<div class="empty-state">Nothing here yet.</div>`;
+
+  openList.querySelectorAll("[data-claim-id]").forEach(btn => {
+    btn.addEventListener("click", () => claimTicket(btn.dataset.claimId));
+  });
+  openList.querySelectorAll("[data-convert-task-id]").forEach(btn => {
+    btn.addEventListener("click", () => convertTicketToTask(btn.dataset.convertTaskId));
+  });
+  openList.querySelectorAll("[data-convert-project-id]").forEach(btn => {
+    btn.addEventListener("click", () => convertTicketToProject(btn.dataset.convertProjectId));
+  });
+  openList.querySelectorAll("[data-close-id]").forEach(btn => {
+    btn.addEventListener("click", () => closeTicket(btn.dataset.closeId));
+  });
+}
+
+function buildTicketCardHtml(t) {
+  const catHex = t.Category ? catColor(t.Category) : "";
+  const border = catHex || "var(--border)";
+  return `
+    <div class="ticket-card" style="border-left:3px solid ${border}">
+      <div>
+        <div class="ticket-title">${t.Title}</div>
+        <div class="ticket-meta-row">
+          ${t.Category ? `<span class="ticket-badge" style="background:${catHex}22; color:${catHex};">${t.Category}</span>` : ""}
+          ${t.Priority ? `<span class="ticket-badge" style="background:${priorityColor(t.Priority)}22; color:${priorityColor(t.Priority)};">${t.Priority}</span>` : ""}
+          <span class="ticket-assignee">${t.Assignee ? t.Assignee : "Unassigned"}</span>
+        </div>
+      </div>
+      <div class="ticket-actions">
+        ${!t.Assignee ? `<button type="button" class="ticket-action-btn claim" data-claim-id="${t.TicketID}">Claim</button>` : ""}
+        <button type="button" class="ticket-action-btn convert" data-convert-task-id="${t.TicketID}">→ Task</button>
+        <button type="button" class="ticket-action-btn convert" data-convert-project-id="${t.TicketID}">→ Project</button>
+        <button type="button" class="ticket-action-btn close" data-close-id="${t.TicketID}">Close</button>
+      </div>
+    </div>
+  `;
+}
+
+async function createTicket(title, category, priority, assignee) {
+  const ticketId = "tk" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const createdDate = dateToStr(new Date());
+  const newTicket = {
+    TicketID: ticketId,
+    Title: title,
+    Category: category || "",
+    Priority: priority || "",
+    Assignee: assignee || "",
+    Status: "Open",
+    ConvertedType: "",
+    ConvertedID: "",
+    CreatedBy: selectedEmployee,
+    CreatedDate: createdDate,
+  };
+  tickets.push(newTicket);
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "createTicket", ticketId, title, category: category || "", priority: priority || "",
+          assignee: assignee || "", createdBy: selectedEmployee, createdDate,
+        }),
+      });
+    } catch (err) {}
+  }
+  renderTickets();
+}
+
+async function claimTicket(ticketId) {
+  const t = tickets.find(x => x.TicketID === ticketId);
+  if (t) t.Assignee = selectedEmployee;
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "updateTicketAssignee", ticketId, assignee: selectedEmployee }),
+      });
+    } catch (err) {}
+  }
+  renderTickets();
+}
+
+async function closeTicket(ticketId) {
+  if (!confirm("Close this ticket without converting it? This can't be undone.")) return;
+  const t = tickets.find(x => x.TicketID === ticketId);
+  if (t) t.Status = "Closed";
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "updateTicketStatus", ticketId, status: "Closed" }),
+      });
+    } catch (err) {}
+  }
+  renderTickets();
+}
+
+async function markTicketConverted(ticketId, convertedType, convertedId) {
+  const t = tickets.find(x => x.TicketID === ticketId);
+  if (t) {
+    t.Status = "Converted";
+    t.ConvertedType = convertedType;
+    t.ConvertedID = convertedId;
+  }
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "markTicketConverted", ticketId, convertedType, convertedId }),
+      });
+    } catch (err) {}
+  }
+  renderTickets();
+}
+
+function convertTicketToTask(ticketId) {
+  const t = tickets.find(x => x.TicketID === ticketId);
+  if (!t) return;
+  if (t.Category) {
+    selectedCategory = t.Category;
+    renderCatPicker();
+  }
+  document.getElementById("fTaskFree").value = t.Title;
+  document.getElementById("fTaskSelect").value = "";
+  updateStarState();
+  updateNewTaskFieldsVisibility();
+  convertingTicketId = ticketId;
+  openEntryModal();
+}
+
+async function convertTicketToProject(ticketId) {
+  const t = tickets.find(x => x.TicketID === ticketId);
+  if (!t) return;
+  const category = t.Category || selectedCategory;
+  const projectId = "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const createdDate = dateToStr(new Date());
+  const newProject = {
+    ProjectID: projectId,
+    ProjectName: t.Title,
+    Category: category,
+    Status: "Active",
+    Notes: "",
+    CreatedBy: selectedEmployee,
+    CreatedDate: createdDate,
+  };
+  projects.push(newProject);
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "createProject", projectId, projectName: t.Title, category, status: "Active", notes: "", createdBy: selectedEmployee, createdDate }),
+      });
+    } catch (err) {}
+  }
+
+  await markTicketConverted(ticketId, "Project", projectId);
+  renderAll();
+}
+
 function renderOverview() {
   const totalMinutes = entries.reduce((sum, e) => sum + Number(e.DurationMinutes || 0), 0);
   const totalTasks = entries.length;
@@ -3025,6 +3410,55 @@ function renderOverview() {
     `;
     empCards.appendChild(card);
   });
+
+  const empList = document.getElementById("empBreakdownList");
+  empList.innerHTML = "";
+  if (entries.length) {
+    EMPLOYEES.forEach(emp => {
+      const empEntries = entries.filter(e => e.Employee === emp.name);
+      if (!empEntries.length) return;
+
+      const mins = empEntries.reduce((s, e) => s + Number(e.DurationMinutes || 0), 0);
+
+      const row = document.createElement("div");
+      row.className = "breakdown-row";
+      row.style.borderLeftColor = emp.hex;
+      row.dataset.open = "false";
+
+      row.innerHTML = `
+        <div class="breakdown-head">
+          <div class="name" style="color:${emp.hex}">${emp.name}</div>
+          <div class="hrs">${(mins/60).toFixed(1)} <small>hrs</small></div>
+          <div class="count">${empEntries.length} task${empEntries.length===1?"":"s"}</div>
+          <div class="chev">▾</div>
+        </div>
+        <div class="breakdown-body">
+          <table>
+            <thead>
+              <tr><th>Date</th><th>Category</th><th>Task</th><th>Time</th><th>Duration</th></tr>
+            </thead>
+            <tbody>
+              ${empEntries.map(e => `
+                <tr>
+                  <td class="muted">${e.Date || ""}</td>
+                  <td style="color:${catColor(e.Category)}">${e.Category || ""}</td>
+                  <td>${e.Task || ""}</td>
+                  <td class="muted">${formatTimeShort(e.StartTime)}–${formatTimeShort(e.EndTime)}</td>
+                  <td>${formatMinutes(Number(e.DurationMinutes || 0))}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      row.querySelector(".breakdown-head").addEventListener("click", () => {
+        row.dataset.open = row.dataset.open === "true" ? "false" : "true";
+      });
+
+      empList.appendChild(row);
+    });
+  }
 
   const catCards = document.getElementById("catCards");
   catCards.innerHTML = "";
