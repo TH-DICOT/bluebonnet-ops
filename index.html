@@ -29,6 +29,36 @@ body {
   display: flex;
 }
 
+#appRoot { flex-direction: column; width: 100%; }
+
+/* ---------- Top tab bar (personal views) ---------- */
+.top-tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 14px 28px;
+  background: rgba(5,15,35,0.75);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.top-tabs-brand { font-family: 'DM Serif Display', serif; font-size: 17px; flex-shrink: 0; }
+.top-tabs-brand-sub { font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--dim); font-weight: 500; }
+.top-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+.top-tab-item {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 20px;
+  padding: 8px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.top-tab-item.active { background: #63bcbc; color: #050F23; border-color: transparent; }
+.top-tab-item:hover:not(.active) { border-color: #63bcbc; color: #63bcbc; }
+
+.app-body-row { display: flex; flex: 1; min-height: 0; }
+
 /* ---------- Sidebar ---------- */
 .sidebar {
   width: 220px;
@@ -1208,23 +1238,52 @@ td.muted { color: var(--muted); }
 </div>
 
 <div id="appRoot" style="display:none;">
+<div class="top-tabs-bar">
+  <div class="top-tabs-brand">HR Task Tracker <span class="top-tabs-brand-sub">— Your Views</span></div>
+  <div class="top-tabs">
+    <button type="button" class="top-tab-item" data-view="my-tickets">My Tickets</button>
+    <button type="button" class="top-tab-item active" data-view="log">My Tasks</button>
+    <button type="button" class="top-tab-item" data-view="my-board">My Project Board</button>
+    <button type="button" class="top-tab-item" data-view="index">Index</button>
+  </div>
+</div>
+
+<div class="app-body-row">
 <div class="sidebar">
-  <div class="brand">HR Task Tracker<div class="eyebrow">DICOT · Talent Team</div></div>
-  <div class="nav-item active" data-view="log">My Tasks</div>
-  <div class="nav-item" data-view="board">Project Board</div>
-  <div class="nav-item" data-view="todos">Recurring Templates</div>
+  <div class="brand">Team Views<div class="eyebrow">DICOT · Talent Team</div></div>
   <div class="nav-item" data-view="tickets">Tickets</div>
-  <div class="nav-item" data-view="overview">Overview</div>
-  <div class="nav-item" id="categoriesToggle">Categories <span class="nav-chev" id="catChev">▾</span></div>
-  <div class="nav-sublist" id="categoriesSublist"></div>
-  <div class="nav-item" id="employeesToggle">Employees <span class="nav-chev" id="empChev">▾</span></div>
-  <div class="nav-sublist" id="employeesSublist"></div>
+  <div class="nav-item" data-view="board">Team Project Board</div>
+  <div class="nav-item" data-view="todos">Recurring Templates</div>
+  <div class="nav-item" data-view="overview">Data</div>
 
   <div class="sidebar-spacer"></div>
   <div class="hidden-badge" id="bossBadge" title="">HR</div>
 </div>
 
 <main>
+
+  <!-- INDEX VIEW (help / what everything is) -->
+  <div class="view" id="view-index">
+    <header>
+      <h1>Index</h1>
+      <div class="page-eyebrow">What Everything Is</div>
+    </header>
+
+    <div class="instructions-card">
+      The tabs up top are <strong>your</strong> views — filtered to you specifically. The sidebar on the left is the <strong>team's</strong> views — everyone, everything, unfiltered.
+    </div>
+
+    <div class="section-label" style="margin-top:28px;">Your Views (tabs, above)</div>
+    <div class="todo-card"><div><div class="todo-card-name">My Tasks</div><div class="todo-card-meta">Log time, see your day on the calendar, and view every task assigned to you or anyone else on the team.</div></div></div>
+    <div class="todo-card"><div><div class="todo-card-name">My Project Board</div><div class="todo-card-meta">Only the projects you're actually involved in — created by you, or with a task assigned to you.</div></div></div>
+    <div class="todo-card"><div><div class="todo-card-name">My Tickets</div><div class="todo-card-meta">Tickets assigned to you or that you created. You can add a new one right from here.</div></div></div>
+
+    <div class="section-label" style="margin-top:28px;">Team Views (sidebar, left)</div>
+    <div class="todo-card"><div><div class="todo-card-name">Team Project Board</div><div class="todo-card-meta">Every project on the team, filterable by status. Open one to see and edit its tasks.</div></div></div>
+    <div class="todo-card"><div><div class="todo-card-name">Tickets</div><div class="todo-card-meta">The full open-ticket queue — claim one, or convert it into a real Task or Project.</div></div></div>
+    <div class="todo-card"><div><div class="todo-card-name">Recurring Templates</div><div class="todo-card-meta">Set up something once (like "Birthday cards — El Paso"), and it spawns a real task automatically each month.</div></div></div>
+    <div class="todo-card"><div><div class="todo-card-name">Data</div><div class="todo-card-meta">Team-wide stats, plus a breakdown by employee and by category.</div></div></div>
+  </div>
 
   <!-- LOG TASK VIEW -->
   <div class="view active" id="view-log">
@@ -1427,6 +1486,57 @@ td.muted { color: var(--muted); }
     <div id="othersActiveList"></div>
   </div>
 
+  <!-- MY PROJECT BOARD VIEW (personal - only projects relevant to me) -->
+  <div class="view" id="view-my-board">
+    <header>
+      <h1>My Project Board</h1>
+      <div class="page-eyebrow">Just the Projects You're In</div>
+    </header>
+
+    <div class="instructions-card">
+      <strong>How this works:</strong> Shows projects you created, or projects with at least one task assigned to you. For the full team view, see Project Board in the sidebar.
+    </div>
+
+    <div id="myProjectBoardList" style="margin-top:20px;"></div>
+  </div>
+
+  <!-- MY TICKETS VIEW (personal - only tickets relevant to me) -->
+  <div class="view" id="view-my-tickets">
+    <header>
+      <h1>My Tickets</h1>
+      <div class="page-eyebrow">Assigned to You, or Created by You</div>
+    </header>
+
+    <button class="submit-btn" id="newMyTicketBtn" style="max-width:220px;">+ New Ticket</button>
+
+    <div class="entry-card" id="newMyTicketForm" style="display:none; max-width:560px; margin-top:16px;">
+      <div class="field">
+        <label>Title</label>
+        <input type="text" id="mtkTitle" placeholder="e.g. Build a Radiologist position" />
+      </div>
+      <div class="field-row" style="grid-template-columns: 1fr 1fr; margin-bottom:18px;">
+        <div class="field">
+          <label>Category <span class="field-hint">(optional)</span></label>
+          <select id="mtkCategory"></select>
+        </div>
+        <div class="field">
+          <label>Priority <span class="field-hint">(optional)</span></label>
+          <select id="mtkPriority">
+            <option value="">— none —</option>
+            <option value="Low">Low</option>
+            <option value="Normal">Normal</option>
+            <option value="High">High</option>
+            <option value="Urgent">Urgent</option>
+          </select>
+        </div>
+      </div>
+      <button class="submit-btn" id="mtkCreateBtn">Create Ticket</button>
+    </div>
+
+    <div class="section-label" style="margin-top:28px;">Your Open Tickets</div>
+    <div id="myTicketsList"></div>
+  </div>
+
   <!-- TO-DOS VIEW (recurring templates that spawn a Task each month) -->
   <div class="view" id="view-todos">
     <header>
@@ -1524,7 +1634,7 @@ td.muted { color: var(--muted); }
   <!-- KANBAN BOARD VIEW -->
   <div class="view" id="view-board">
     <header>
-      <h1>Project Board</h1>
+      <h1>Team Project Board</h1>
       <div class="page-eyebrow">Click a Project to Open Its Tasks</div>
     </header>
 
@@ -1682,6 +1792,7 @@ td.muted { color: var(--muted); }
   </div>
 
 </main>
+</div><!-- /app-body-row -->
 
 <!-- Password overlay for the hidden Boss view -->
 <div class="pw-overlay" id="pwOverlay">
@@ -1835,6 +1946,7 @@ function updateEntryCardColor() {
 function switchView(viewId, navItemEl) {
   document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
   document.querySelectorAll(".nav-subitem").forEach(i => i.classList.remove("active"));
+  document.querySelectorAll(".top-tab-item").forEach(i => i.classList.remove("active"));
   document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
   if (navItemEl) navItemEl.classList.add("active");
   document.getElementById(viewId).classList.add("active");
@@ -1845,43 +1957,8 @@ function init() {
   document.querySelectorAll(".nav-item[data-view]").forEach(item => {
     item.addEventListener("click", () => switchView("view-" + item.dataset.view, item));
   });
-
-  document.getElementById("categoriesToggle").addEventListener("click", () => {
-    const sub = document.getElementById("categoriesSublist");
-    sub.classList.toggle("open");
-    document.getElementById("catChev").textContent = sub.classList.contains("open") ? "▴" : "▾";
-  });
-
-  const sublist = document.getElementById("categoriesSublist");
-  CATEGORIES.forEach(cat => {
-    const item = document.createElement("div");
-    item.className = "nav-subitem";
-    item.textContent = cat.key;
-    item.style.borderLeft = `3px solid ${cat.hex}`;
-    item.addEventListener("click", () => {
-      switchView("view-category-detail", item);
-      renderCategoryDetail(cat.key);
-    });
-    sublist.appendChild(item);
-  });
-
-  document.getElementById("employeesToggle").addEventListener("click", () => {
-    const sub = document.getElementById("employeesSublist");
-    sub.classList.toggle("open");
-    document.getElementById("empChev").textContent = sub.classList.contains("open") ? "▴" : "▾";
-  });
-
-  const empSublist = document.getElementById("employeesSublist");
-  EMPLOYEES.forEach(emp => {
-    const item = document.createElement("div");
-    item.className = "nav-subitem";
-    item.textContent = emp.name;
-    item.style.borderLeft = `3px solid ${emp.hex}`;
-    item.addEventListener("click", () => {
-      switchView("view-employee-detail", item);
-      renderEmployeeDetail(emp.name);
-    });
-    empSublist.appendChild(item);
+  document.querySelectorAll(".top-tab-item[data-view]").forEach(item => {
+    item.addEventListener("click", () => switchView("view-" + item.dataset.view, item));
   });
 
   // Hidden maintenance badge
@@ -2076,6 +2153,25 @@ function init() {
     createTicket(title, category, priority, assignee);
     document.getElementById("ntkTitle").value = "";
     document.getElementById("newTicketForm").style.display = "none";
+  });
+
+  document.getElementById("mtkCategory").innerHTML = `<option value="">— none —</option>` +
+    CATEGORIES.map(c => `<option value="${c.key}">${c.key}</option>`).join("");
+  document.getElementById("newMyTicketBtn").addEventListener("click", () => {
+    const form = document.getElementById("newMyTicketForm");
+    form.style.display = form.style.display === "none" ? "block" : "none";
+  });
+  document.getElementById("mtkCreateBtn").addEventListener("click", () => {
+    const title = document.getElementById("mtkTitle").value.trim();
+    const category = document.getElementById("mtkCategory").value;
+    const priority = document.getElementById("mtkPriority").value;
+    if (!title) {
+      alert("Enter a title for this ticket.");
+      return;
+    }
+    createTicket(title, category, priority, selectedEmployee);
+    document.getElementById("mtkTitle").value = "";
+    document.getElementById("newMyTicketForm").style.display = "none";
   });
 
   document.getElementById("calPrevDay").addEventListener("click", () => {
@@ -2830,6 +2926,8 @@ function renderAll() {
   renderCalendar();
   renderToDos();
   renderTickets();
+  renderMyProjectBoard();
+  renderMyTickets();
 }
 
 /* =========================================================
@@ -3473,6 +3571,52 @@ function renderTickets() {
   });
 }
 
+/* ---------- Personal views: My Project Board, My Tickets ---------- */
+function getMyProjects() {
+  return projects.filter(p => {
+    const hasMyTask = tasks.some(t => t.ProjectID === p.ProjectID && isAssignedTo(t, selectedEmployee));
+    return hasMyTask || p.CreatedBy === selectedEmployee;
+  });
+}
+
+function renderMyProjectBoard() {
+  const list = document.getElementById("myProjectBoardList");
+  if (!list) return;
+  list.innerHTML = "";
+  const mine = getMyProjects();
+  if (!mine.length) {
+    list.innerHTML = `<div class="empty-state">Nothing yet — projects you create, or get assigned a task in, show up here.</div>`;
+    return;
+  }
+  mine.forEach(p => list.appendChild(buildProjectBoardTile(p)));
+}
+
+function getMyTickets() {
+  return tickets.filter(t => t.Status === "Open" && (t.Assignee === selectedEmployee || t.CreatedBy === selectedEmployee));
+}
+
+function renderMyTickets() {
+  const list = document.getElementById("myTicketsList");
+  if (!list) return;
+  const mine = getMyTickets();
+  list.innerHTML = mine.length
+    ? mine.map(t => buildTicketCardHtml(t)).join("")
+    : `<div class="empty-state">Nothing here yet.</div>`;
+
+  list.querySelectorAll("[data-claim-id]").forEach(btn => {
+    btn.addEventListener("click", () => claimTicket(btn.dataset.claimId));
+  });
+  list.querySelectorAll("[data-convert-task-id]").forEach(btn => {
+    btn.addEventListener("click", () => convertTicketToTask(btn.dataset.convertTaskId));
+  });
+  list.querySelectorAll("[data-convert-project-id]").forEach(btn => {
+    btn.addEventListener("click", () => convertTicketToProject(btn.dataset.convertProjectId));
+  });
+  list.querySelectorAll("[data-close-id]").forEach(btn => {
+    btn.addEventListener("click", () => closeTicket(btn.dataset.closeId));
+  });
+}
+
 function buildTicketCardHtml(t) {
   const catHex = t.Category ? catColor(t.Category) : "";
   const border = catHex || "var(--border)";
@@ -3876,6 +4020,7 @@ function buildTaskCard(t) {
         <label>Notes</label>
         <textarea class="notes-textarea card-notes">${(t.Notes || "").replace(/</g, "&lt;")}</textarea>
       </div>
+      <button type="button" class="new-project-toggle-btn card-delete-task-btn" style="margin-top:16px; border-color:#D95C84; color:#D95C84;">Delete This Task</button>
     </div>
   `;
 
@@ -3895,6 +4040,11 @@ function buildTaskCard(t) {
     }
     updateTaskAssignees(t.TaskID, checked.join(", "));
     assigneeEditPanel.style.display = "none";
+  });
+
+  card.querySelector(".card-delete-task-btn").addEventListener("click", e => {
+    e.stopPropagation();
+    deleteTask(t.TaskID, t.TaskName);
   });
 
   card.querySelector(".task-card-head").addEventListener("click", () => {
@@ -4037,6 +4187,29 @@ async function updateTaskAssignees(taskId, assigneeList) {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({ action: "updateTaskAssignee", taskId, assignee: assigneeList }),
+      });
+    } catch (err) {}
+  }
+  renderAll();
+}
+
+async function deleteTask(taskId, taskName) {
+  const eventCount = taskEvents.filter(e => e.TaskID === taskId).length;
+  const warning = eventCount
+    ? `Delete "${taskName}"? This will also delete ${eventCount} logged time ${eventCount === 1 ? "entry" : "entries"} for it. This can't be undone.`
+    : `Delete "${taskName}"? This can't be undone.`;
+  if (!confirm(warning)) return;
+
+  tasks = tasks.filter(t => t.TaskID !== taskId);
+  taskEvents = taskEvents.filter(e => e.TaskID !== taskId);
+  rebuildDerivedEntries();
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "deleteTask", taskId }),
       });
     } catch (err) {}
   }
