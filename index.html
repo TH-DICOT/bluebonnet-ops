@@ -581,6 +581,23 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
 .kanban-tile-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
 .kanban-tile-meta { font-size: 14px; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
 
+.project-board-tile {
+  background: rgba(5,15,35,0.6);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 10px;
+  cursor: grab;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+  overflow: hidden;
+}
+.project-board-tile:active { cursor: grabbing; }
+.project-board-tile.dragging { opacity: 0.4; }
+.project-board-tile-head { padding: 12px 14px; cursor: pointer; }
+.project-board-tile-name { font-size: 14px; font-weight: 700; display: block; margin-bottom: 4px; }
+.project-board-tile-meta { font-size: 13px; color: var(--muted); }
+.project-board-tile-body { display: none; padding: 0 14px 14px; }
+.project-board-tile[data-open="true"] .project-board-tile-body { display: block; }
+
 /* ---------- Projects (drag tasks into) ---------- */
 .unassigned-tray {
   background: var(--card);
@@ -604,6 +621,7 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
   box-shadow: 0 6px 18px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
 }
 
+.todo-card-wrap { margin-bottom: 10px; }
 .todo-card {
   display: flex;
   align-items: center;
@@ -613,8 +631,15 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 14px 18px;
-  margin-bottom: 10px;
   box-shadow: 0 6px 18px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.todo-edit-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  padding: 16px 18px;
+  margin-top: -1px;
 }
 .todo-card-name { font-size: 15px; font-weight: 700; }
 .todo-card-meta { font-size: 13px; color: var(--muted); }
@@ -1158,8 +1183,8 @@ td.muted { color: var(--muted); }
 <div class="sidebar">
   <div class="brand">HR Task Tracker<div class="eyebrow">DICOT · Talent Team</div></div>
   <div class="nav-item active" data-view="log">My Tasks</div>
-  <div class="nav-item" data-view="board">Board</div>
-  <div class="nav-item" data-view="todos">Recurring To-Dos</div>
+  <div class="nav-item" data-view="board">Project Board</div>
+  <div class="nav-item" data-view="todos">Recurring Templates</div>
   <div class="nav-item" data-view="tickets">Tickets</div>
   <div class="nav-item" data-view="overview">Overview</div>
   <div class="nav-item" id="categoriesToggle">Categories <span class="nav-chev" id="catChev">▾</span></div>
@@ -1200,7 +1225,7 @@ td.muted { color: var(--muted); }
     </div>
     </div>
 
-    <div class="tile-card calendar-tile">
+    <div class="tile-card calendar-tile" id="calendarTile" style="border-left: 4px solid var(--border);">
       <div class="calendar-header-row">
         <div class="section-label" style="margin-top:0;">Your Week <span class="field-hint">(click an open time slot to log a task, click an entry to edit it)</span></div>
         <div class="calendar-nav">
@@ -1372,7 +1397,7 @@ td.muted { color: var(--muted); }
   <!-- TO-DOS VIEW (recurring templates that spawn a Task each month) -->
   <div class="view" id="view-todos">
     <header>
-      <h1>Recurring To-Dos</h1>
+      <h1>Recurring Templates</h1>
       <div class="page-eyebrow">Spawn a Task Each Month</div>
     </header>
 
@@ -1400,6 +1425,10 @@ td.muted { color: var(--muted); }
       <div class="field">
         <label>Project <span class="field-hint">(optional)</span></label>
         <select id="ntdProject"></select>
+      </div>
+      <div class="field">
+        <label>Assigned To</label>
+        <select id="ntdAssignee"></select>
       </div>
       <button class="submit-btn" id="ntdCreateBtn">Create To-Do</button>
     </div>
@@ -1462,15 +1491,29 @@ td.muted { color: var(--muted); }
   <!-- KANBAN BOARD VIEW -->
   <div class="view" id="view-board">
     <header>
-      <h1>Board</h1>
-      <div class="page-eyebrow">By Category · Drag to Move</div>
+      <h1>Project Board</h1>
+      <div class="page-eyebrow">Drag a Project to Change Its Status · Click to Open Its Tasks</div>
     </header>
 
-    <div class="board-filter-row">
-      <button type="button" class="filter-pill" id="showCompletedPill" data-active="false">Show Completed</button>
+    <button class="submit-btn" id="newBoardProjectBtn" style="max-width:220px;">+ New Project</button>
+
+    <div class="entry-card" id="newBoardProjectForm" style="display:none; max-width:560px; margin-top:16px;">
+      <div class="field">
+        <label>Project Name</label>
+        <input type="text" id="bpName" placeholder="e.g. Radiologist Requisition" />
+      </div>
+      <div class="field">
+        <label>Category</label>
+        <select id="bpCategory"></select>
+      </div>
+      <div class="field">
+        <label>Notes <span class="field-hint">(optional)</span></label>
+        <textarea id="bpNotes" class="notes-textarea" placeholder="Any context worth saving..."></textarea>
+      </div>
+      <button class="submit-btn" id="bpCreateBtn">Create Project</button>
     </div>
 
-    <div class="kanban-columns" id="kanbanColumnsWrap"></div>
+    <div class="kanban-columns" id="kanbanColumnsWrap" style="margin-top:20px;"></div>
   </div>
 
   <!-- OVERVIEW VIEW -->
@@ -1896,10 +1939,24 @@ function init() {
 
   renderFavorites();
   updateStarState();
-  document.getElementById("showCompletedPill").addEventListener("click", () => {
-    boardShowCompleted = !boardShowCompleted;
-    document.getElementById("showCompletedPill").dataset.active = boardShowCompleted;
-    renderKanbanBoard();
+
+  document.getElementById("bpCategory").innerHTML = CATEGORIES.map(c => `<option value="${c.key}">${c.key}</option>`).join("");
+  document.getElementById("newBoardProjectBtn").addEventListener("click", () => {
+    const form = document.getElementById("newBoardProjectForm");
+    form.style.display = form.style.display === "none" ? "block" : "none";
+  });
+  document.getElementById("bpCreateBtn").addEventListener("click", () => {
+    const name = document.getElementById("bpName").value.trim();
+    const category = document.getElementById("bpCategory").value;
+    const notes = document.getElementById("bpNotes").value.trim();
+    if (!name) {
+      alert("Enter a project name first.");
+      return;
+    }
+    createStandaloneProject(name, category, notes);
+    document.getElementById("bpName").value = "";
+    document.getElementById("bpNotes").value = "";
+    document.getElementById("newBoardProjectForm").style.display = "none";
   });
 
   document.getElementById("projYesBtn").addEventListener("click", () => {
@@ -1925,22 +1982,25 @@ function init() {
   let dayOptionsHtml = "";
   for (let d = 1; d <= 28; d++) dayOptionsHtml += `<option value="${d}">${d}</option>`;
   document.getElementById("ntdDayOfMonth").innerHTML = dayOptionsHtml;
+  document.getElementById("ntdAssignee").innerHTML = EMPLOYEES.map(e => `<option value="${e.name}">${e.name}</option>`).join("");
   document.getElementById("newToDoBtn").addEventListener("click", () => {
     const form = document.getElementById("newToDoForm");
     form.style.display = form.style.display === "none" ? "block" : "none";
     document.getElementById("ntdProject").innerHTML = `<option value="">— none —</option>` +
       projects.filter(p => p.Status !== "Completed").map(p => `<option value="${p.ProjectID}">${p.ProjectName}</option>`).join("");
+    document.getElementById("ntdAssignee").value = selectedEmployee;
   });
   document.getElementById("ntdCreateBtn").addEventListener("click", () => {
     const name = document.getElementById("ntdName").value.trim();
     const category = document.getElementById("ntdCategory").value;
     const dayOfMonth = document.getElementById("ntdDayOfMonth").value;
     const projectId = document.getElementById("ntdProject").value;
+    const assignee = document.getElementById("ntdAssignee").value;
     if (!name) {
       alert("Enter a name for this to-do.");
       return;
     }
-    createToDo(name, category, dayOfMonth, projectId);
+    createToDo(name, category, dayOfMonth, projectId, assignee);
     document.getElementById("ntdName").value = "";
     document.getElementById("newToDoForm").style.display = "none";
   });
@@ -2117,6 +2177,7 @@ function renderEmpPicker() {
   const nameEl = document.getElementById("empDisplayName");
   nameEl.textContent = selectedEmployee;
   nameEl.style.color = color;
+  document.getElementById("calendarTile").style.borderLeftColor = color;
 
   const dd = document.getElementById("empSwitchDropdown");
   dd.innerHTML = EMPLOYEES.filter(e => e.name !== selectedEmployee).map(e => `
@@ -2431,6 +2492,7 @@ async function checkAndGenerateToDos() {
     if (todayOfMonth < Number(t.DayOfMonth)) continue;
 
     const taskId = "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const assignee = t.Assignee || t.CreatedBy;
     const newTask = {
       TaskID: taskId,
       TaskName: t.ToDoName,
@@ -2438,7 +2500,7 @@ async function checkAndGenerateToDos() {
       Category: t.Category,
       Status: "Pending",
       Notes: "",
-      Assignee: t.CreatedBy,
+      Assignee: assignee,
       DueDate: "",
       AttachmentLink: "",
       CreatedBy: t.CreatedBy,
@@ -2454,7 +2516,7 @@ async function checkAndGenerateToDos() {
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({
             action: "createTask", taskId, taskName: t.ToDoName, projectId: t.ProjectID || "",
-            category: t.Category, status: "Pending", notes: "", assignee: t.CreatedBy,
+            category: t.Category, status: "Pending", notes: "", assignee: assignee,
             dueDate: "", attachmentLink: "", createdBy: t.CreatedBy, createdDate: todayStr,
           }),
         });
@@ -2864,109 +2926,129 @@ function closeEditEventModal() {
   editingEventId = null;
 }
 
-let boardShowCompleted = false;
+let expandedProjectTiles = new Set();
 
-function buildKanbanTile(t) {
+function buildProjectBoardTile(p) {
+  const color = catColor(p.Category);
+  const projTasks = tasks.filter(t => t.ProjectID === p.ProjectID);
+  const hours = projTasks.reduce((s, t) => s + taskHours(t.TaskID), 0);
+
   const tile = document.createElement("div");
-  tile.className = "kanban-tile";
+  tile.className = "project-board-tile";
   tile.draggable = true;
-  tile.dataset.taskId = t.TaskID;
-  const color = catColor(t.Category);
-  const hours = taskHours(t.TaskID);
+  tile.dataset.projectId = p.ProjectID;
+  tile.dataset.open = expandedProjectTiles.has(p.ProjectID) ? "true" : "false";
+  tile.style.borderLeft = `3px solid ${color}`;
+
   tile.innerHTML = `
-    <div class="kanban-tile-name" style="color:${color}">${t.TaskName || ""}</div>
-    <div class="kanban-tile-meta">
-      <span>${taskOwner(t) || ""}</span>
-      <span>${hours.toFixed(2)} hrs</span>
+    <div class="project-board-tile-head">
+      <span class="project-board-tile-name" style="color:${color}">${p.ProjectName || ""}</span>
+      <span class="project-board-tile-meta">${projTasks.length} task${projTasks.length === 1 ? "" : "s"} · ${hours.toFixed(1)} hrs</span>
     </div>
+    <div class="project-board-tile-body"></div>
   `;
+
   tile.addEventListener("dragstart", e => {
     tile.classList.add("dragging");
-    e.dataTransfer.setData("text/plain", t.TaskID);
+    e.dataTransfer.setData("text/plain", p.ProjectID);
   });
   tile.addEventListener("dragend", () => tile.classList.remove("dragging"));
+
+  tile.querySelector(".project-board-tile-head").addEventListener("click", () => {
+    const nowOpen = tile.dataset.open !== "true";
+    tile.dataset.open = nowOpen ? "true" : "false";
+    if (nowOpen) expandedProjectTiles.add(p.ProjectID);
+    else expandedProjectTiles.delete(p.ProjectID);
+  });
+
+  const body = tile.querySelector(".project-board-tile-body");
+  if (!projTasks.length) {
+    body.innerHTML = `<div class="empty-state" style="padding:10px 0;">No tasks in this project yet.</div>`;
+  } else {
+    projTasks.forEach(t => body.appendChild(buildTaskCard(t)));
+  }
+
   return tile;
 }
 
 function renderKanbanBoard() {
   const wrap = document.getElementById("kanbanColumnsWrap");
   wrap.innerHTML = "";
+  wrap.style.gridTemplateColumns = "repeat(3, 1fr)";
 
   const statuses = ["Pending", "Active", "Completed"];
 
-  CATEGORIES.forEach(cat => {
+  statuses.forEach(status => {
     const col = document.createElement("div");
     col.className = "kanban-cat-col";
-    col.style.borderTopColor = cat.hex;
-    col.innerHTML = `<div class="kanban-cat-head" style="color:${cat.hex}">${cat.key}</div>`;
+    col.innerHTML = `<div class="kanban-cat-head">${status}</div>`;
 
-    statuses.forEach(status => {
-      const section = document.createElement("div");
-      section.className = "kanban-status-section";
-      if (status === "Completed" && !boardShowCompleted) section.classList.add("completed-hidden");
+    const body = document.createElement("div");
+    body.className = "kanban-status-body";
+    body.dataset.status = status;
+    body.style.minHeight = "200px";
 
-      const label = document.createElement("div");
-      label.className = "kanban-status-label";
-      label.textContent = status;
-      section.appendChild(label);
+    const matching = projects.filter(p => p.Status === status);
+    matching.forEach(p => body.appendChild(buildProjectBoardTile(p)));
 
-      const body = document.createElement("div");
-      body.className = "kanban-status-body";
-      body.dataset.category = cat.key;
-      body.dataset.status = status;
-
-      const matching = tasks.filter(t => t.Category === cat.key && t.Status === status);
-      matching.forEach(t => body.appendChild(buildKanbanTile(t)));
-
-      body.addEventListener("dragover", e => {
-        e.preventDefault();
-        body.classList.add("drag-over");
-      });
-      body.addEventListener("dragleave", () => body.classList.remove("drag-over"));
-      body.addEventListener("drop", e => {
-        e.preventDefault();
-        body.classList.remove("drag-over");
-        const taskId = e.dataTransfer.getData("text/plain");
-        if (taskId) moveTask(taskId, body.dataset.category, body.dataset.status);
-      });
-
-      section.appendChild(body);
-      col.appendChild(section);
+    body.addEventListener("dragover", e => {
+      e.preventDefault();
+      body.classList.add("drag-over");
+    });
+    body.addEventListener("dragleave", () => body.classList.remove("drag-over"));
+    body.addEventListener("drop", e => {
+      e.preventDefault();
+      body.classList.remove("drag-over");
+      const projectId = e.dataTransfer.getData("text/plain");
+      if (projectId) moveProjectStatus(projectId, status);
     });
 
+    col.appendChild(body);
     wrap.appendChild(col);
   });
 }
 
-async function moveTask(taskId, newCategory, newStatus) {
-  const t = tasks.find(x => x.TaskID === taskId);
-  if (!t) return;
-  const categoryChanged = t.Category !== newCategory;
-  const statusChanged = t.Status !== newStatus;
-  if (!categoryChanged && !statusChanged) return;
-  if (categoryChanged) t.Category = newCategory;
-  if (statusChanged) t.Status = newStatus;
-  rebuildDerivedEntries();
+async function moveProjectStatus(projectId, newStatus) {
+  const p = projects.find(x => x.ProjectID === projectId);
+  if (!p || p.Status === newStatus) return;
+  p.Status = newStatus;
 
   if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
     try {
-      if (categoryChanged) {
-        await fetch(APPS_SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "updateTaskCategory", taskId, category: newCategory }),
-        });
-      }
-      if (statusChanged) {
-        await fetch(APPS_SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "updateTaskStatus", taskId, status: newStatus }),
-        });
-      }
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "updateProjectStatus", projectId, status: newStatus }),
+      });
     } catch (err) {
       // local state already updated; a refresh will retry the sync
     }
+  }
+  renderAll();
+}
+
+async function createStandaloneProject(name, category, notes) {
+  const projectId = "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const createdDate = dateToStr(new Date());
+  const newProject = {
+    ProjectID: projectId,
+    ProjectName: name,
+    Category: category,
+    Status: "Active",
+    Notes: notes || "",
+    CreatedBy: selectedEmployee,
+    CreatedDate: createdDate,
+  };
+  projects.push(newProject);
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "createProject", projectId, projectName: name, category, status: "Active", notes: notes || "", createdBy: selectedEmployee, createdDate }),
+      });
+    } catch (err) {}
   }
   renderAll();
 }
@@ -3091,41 +3173,96 @@ function renderToDos() {
   const active = todos.filter(t => t.Status === "Active");
   const paused = todos.filter(t => t.Status === "Paused");
 
-  activeList.innerHTML = active.length
-    ? active.map(t => buildToDoCardHtml(t)).join("")
-    : `<div class="empty-state">No active to-dos yet.</div>`;
-  pausedList.innerHTML = paused.length
-    ? paused.map(t => buildToDoCardHtml(t)).join("")
-    : `<div class="empty-state">Nothing paused.</div>`;
+  activeList.innerHTML = "";
+  if (active.length) active.forEach(t => activeList.appendChild(buildToDoCard(t)));
+  else activeList.innerHTML = `<div class="empty-state">No active to-dos yet.</div>`;
 
-  document.querySelectorAll(".todo-pause-btn").forEach(btn => {
-    btn.addEventListener("click", () => toggleToDoStatus(btn.dataset.id, btn.dataset.nextStatus));
-  });
-  document.querySelectorAll(".todo-delete-btn").forEach(btn => {
-    btn.addEventListener("click", () => deleteToDo(btn.dataset.id, btn.dataset.name));
-  });
+  pausedList.innerHTML = "";
+  if (paused.length) paused.forEach(t => pausedList.appendChild(buildToDoCard(t)));
+  else pausedList.innerHTML = `<div class="empty-state">Nothing paused.</div>`;
 }
 
-function buildToDoCardHtml(t) {
+function buildToDoCard(t) {
   const color = catColor(t.Category);
   const project = projects.find(p => p.ProjectID === t.ProjectID);
   const nextStatus = t.Status === "Active" ? "Paused" : "Active";
   const pauseLabel = t.Status === "Active" ? "Pause" : "Resume";
-  return `
+
+  const wrap = document.createElement("div");
+  wrap.className = "todo-card-wrap";
+  wrap.innerHTML = `
     <div class="todo-card" style="border-left:3px solid ${color}">
       <div>
         <div class="todo-card-name" style="color:${color}">${t.ToDoName}</div>
-        <div class="todo-card-meta">${t.Category} · Day ${t.DayOfMonth} of each month${project ? ` · ${project.ProjectName}` : ""}</div>
+        <div class="todo-card-meta">${t.Category} · Day ${t.DayOfMonth} of each month${project ? ` · ${project.ProjectName}` : ""}${t.Assignee ? ` · Assigned to ${t.Assignee}` : ""}</div>
       </div>
       <div class="todo-card-actions">
-        <button type="button" class="todo-pause-btn" data-id="${t.ToDoID}" data-next-status="${nextStatus}">${pauseLabel}</button>
-        <button type="button" class="todo-delete-btn" data-id="${t.ToDoID}" data-name="${t.ToDoName}">Delete</button>
+        <button type="button" class="todo-pause-btn todo-edit-btn" id="toDoEditBtn-${t.ToDoID}">Edit</button>
+        <button type="button" class="todo-pause-btn todo-resume-btn">${pauseLabel}</button>
+        <button type="button" class="todo-delete-btn">Delete</button>
       </div>
     </div>
+    <div class="todo-edit-panel" id="toDoEditPanel-${t.ToDoID}" style="display:none;">
+      <div class="field-row" style="grid-template-columns: 1fr 1fr; margin-bottom:14px;">
+        <div class="field">
+          <label>Category</label>
+          <select class="todo-edit-category"></select>
+        </div>
+        <div class="field">
+          <label>Day of Month</label>
+          <select class="todo-edit-day"></select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Project <span class="field-hint">(optional)</span></label>
+        <select class="todo-edit-project"></select>
+      </div>
+      <div class="field">
+        <label>Assigned To</label>
+        <select class="todo-edit-assignee"></select>
+      </div>
+      <button type="button" class="submit-btn todo-edit-save-btn">Save Changes</button>
+    </div>
   `;
+
+  wrap.querySelector(".todo-resume-btn").addEventListener("click", () => toggleToDoStatus(t.ToDoID, nextStatus));
+  wrap.querySelector(".todo-delete-btn").addEventListener("click", () => deleteToDo(t.ToDoID, t.ToDoName));
+
+  const editPanel = wrap.querySelector(`#toDoEditPanel-${t.ToDoID}`);
+  wrap.querySelector(`#toDoEditBtn-${t.ToDoID}`).addEventListener("click", () => {
+    const nowOpen = editPanel.style.display === "none";
+    editPanel.style.display = nowOpen ? "block" : "none";
+  });
+
+  const catSel = wrap.querySelector(".todo-edit-category");
+  catSel.innerHTML = CATEGORIES.map(c => `<option value="${c.key}" ${c.key === t.Category ? "selected" : ""}>${c.key}</option>`).join("");
+
+  const daySel = wrap.querySelector(".todo-edit-day");
+  let dayHtml = "";
+  for (let d = 1; d <= 28; d++) dayHtml += `<option value="${d}" ${String(d) === String(t.DayOfMonth) ? "selected" : ""}>${d}</option>`;
+  daySel.innerHTML = dayHtml;
+
+  const projSel = wrap.querySelector(".todo-edit-project");
+  projSel.innerHTML = `<option value="">— none —</option>` +
+    projects.filter(p => p.Status !== "Completed").map(p => `<option value="${p.ProjectID}" ${p.ProjectID === t.ProjectID ? "selected" : ""}>${p.ProjectName}</option>`).join("");
+
+  const assigneeSel = wrap.querySelector(".todo-edit-assignee");
+  assigneeSel.innerHTML = EMPLOYEES.map(e => `<option value="${e.name}" ${e.name === t.Assignee ? "selected" : ""}>${e.name}</option>`).join("");
+
+  wrap.querySelector(".todo-edit-save-btn").addEventListener("click", () => {
+    updateToDoDetails(t.ToDoID, {
+      category: catSel.value,
+      dayOfMonth: daySel.value,
+      projectId: projSel.value,
+      assignee: assigneeSel.value,
+    });
+    editPanel.style.display = "none";
+  });
+
+  return wrap;
 }
 
-async function createToDo(name, category, dayOfMonth, projectId) {
+async function createToDo(name, category, dayOfMonth, projectId, assignee) {
   const toDoId = "td" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   const createdDate = dateToStr(new Date());
   const newToDo = {
@@ -3134,6 +3271,7 @@ async function createToDo(name, category, dayOfMonth, projectId) {
     Category: category,
     ProjectID: projectId || "",
     DayOfMonth: dayOfMonth,
+    Assignee: assignee || selectedEmployee,
     Status: "Active",
     LastGeneratedMonth: "",
     CreatedBy: selectedEmployee,
@@ -3148,8 +3286,29 @@ async function createToDo(name, category, dayOfMonth, projectId) {
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
           action: "createToDo", toDoId, toDoName: name, category, projectId: projectId || "",
-          dayOfMonth, status: "Active", lastGeneratedMonth: "", createdBy: selectedEmployee, createdDate,
+          dayOfMonth, assignee: assignee || selectedEmployee, status: "Active", lastGeneratedMonth: "", createdBy: selectedEmployee, createdDate,
         }),
+      });
+    } catch (err) {}
+  }
+  renderToDos();
+}
+
+async function updateToDoDetails(toDoId, changes) {
+  const t = todos.find(x => x.ToDoID === toDoId);
+  if (t) {
+    if (changes.category !== undefined) t.Category = changes.category;
+    if (changes.dayOfMonth !== undefined) t.DayOfMonth = changes.dayOfMonth;
+    if (changes.projectId !== undefined) t.ProjectID = changes.projectId;
+    if (changes.assignee !== undefined) t.Assignee = changes.assignee;
+  }
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(Object.assign({ action: "updateToDo", toDoId }, changes)),
       });
     } catch (err) {}
   }
