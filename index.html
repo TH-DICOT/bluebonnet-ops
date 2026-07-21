@@ -33,13 +33,17 @@ body {
 
 /* ---------- Top tab bar (personal views) ---------- */
 .top-tabs-bar {
+  padding: 14px 28px;
+  background: rgba(5,15,35,0.75);
+  border-bottom: 1px solid var(--border);
+}
+.top-tabs-inner {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 4px;
-  padding: 14px 28px;
-  background: rgba(5,15,35,0.75);
-  border-bottom: 1px solid var(--border);
+  max-width: 1200px;
+  margin: 0 auto;
 }
 .top-tabs-brand { font-family: 'DM Serif Display', serif; font-size: 17px; flex-shrink: 0; }
 .quick-log-btns { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
@@ -103,7 +107,7 @@ body {
 .hidden-badge:hover { opacity: 0.9; }
 
 /* ---------- Main ---------- */
-main { flex: 1; padding: 40px 48px 80px; max-width: 1200px; }
+main { flex: 1; padding: 40px 48px 80px; max-width: 1200px; margin: 0 auto; width: 100%; }
 main.board-active { max-width: none; }
 .view { display: none; }
 .view.active { display: block; }
@@ -649,6 +653,7 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
   box-shadow: 0 3px 10px rgba(0,0,0,0.3);
   overflow: hidden;
 }
+.project-board-tile.drag-over { border-color: #63bcbc; background: rgba(99,188,188,0.08); }
 .project-board-tile-head { padding: 12px 14px; cursor: pointer; }
 .project-board-tile-name { font-size: 14px; font-weight: 700; display: block; margin-bottom: 4px; }
 .project-board-tile-meta { font-size: 13px; color: var(--muted); }
@@ -1238,6 +1243,7 @@ td.muted { color: var(--muted); }
 
 <div id="appRoot" style="display:none;">
 <div class="top-tabs-bar">
+<div class="top-tabs-inner">
   <div class="top-tabs-header-row">
     <div class="top-tabs-brand">HR Task Tracker</div>
     <div class="hidden-badge" id="bossBadge" title="">HR</div>
@@ -1264,7 +1270,8 @@ td.muted { color: var(--muted); }
       <button type="button" class="top-tab-item" data-view="overview">Data</button>
     </div>
   </div>
-</div>
+</div><!-- /top-tabs-inner -->
+</div><!-- /top-tabs-bar -->
 
 <main>
 
@@ -1669,7 +1676,7 @@ td.muted { color: var(--muted); }
     <div class="section-label" style="margin-top:28px;">Open Tickets</div>
     <div id="ticketsList"></div>
 
-    <div class="section-label" style="margin-top:28px;">Closed / Converted <span class="field-hint">(click to expand)</span></div>
+    <div class="section-label" style="margin-top:28px;">Closed / Completed / Converted <span class="field-hint">(click to expand)</span></div>
     <div id="ticketsHistoryList"></div>
   </div>
 
@@ -1704,6 +1711,10 @@ td.muted { color: var(--muted); }
       <button type="button" class="filter-pill" data-status="Completed" data-active="true">Completed</button>
     </div>
 
+    <div class="section-label" style="margin-top:24px;">Unassigned Tasks <span class="field-hint">(drag one onto a project below to assign it)</span></div>
+    <div class="unassigned-tray" id="unassignedTasksTray"></div>
+
+    <div class="section-label" style="margin-top:24px;">Projects</div>
     <div id="projectBoardList" style="margin-top:16px;"></div>
   </div>
 
@@ -2115,6 +2126,19 @@ function init() {
     document.getElementById("bpName").value = "";
     document.getElementById("bpNotes").value = "";
     document.getElementById("newBoardProjectForm").style.display = "none";
+  });
+
+  const unassignedTray = document.getElementById("unassignedTasksTray");
+  unassignedTray.addEventListener("dragover", e => {
+    e.preventDefault();
+    unassignedTray.classList.add("drag-over");
+  });
+  unassignedTray.addEventListener("dragleave", () => unassignedTray.classList.remove("drag-over"));
+  unassignedTray.addEventListener("drop", e => {
+    e.preventDefault();
+    unassignedTray.classList.remove("drag-over");
+    const taskId = e.dataTransfer.getData("text/plain");
+    if (taskId) reassignTaskProject(taskId, "");
   });
 
   document.querySelectorAll("#boardFilterRow .filter-pill").forEach(pill => {
@@ -3228,6 +3252,19 @@ function buildProjectBoardTile(p) {
     else expandedProjectTiles.delete(p.ProjectID);
   });
 
+  tile.addEventListener("dragover", e => {
+    e.preventDefault();
+    tile.classList.add("drag-over");
+  });
+  tile.addEventListener("dragleave", () => tile.classList.remove("drag-over"));
+  tile.addEventListener("drop", e => {
+    e.preventDefault();
+    e.stopPropagation();
+    tile.classList.remove("drag-over");
+    const taskId = e.dataTransfer.getData("text/plain");
+    if (taskId) reassignTaskProject(taskId, p.ProjectID);
+  });
+
   tile.querySelectorAll(".board-status-btn").forEach(btn => {
     btn.addEventListener("click", e => {
       e.stopPropagation();
@@ -3289,9 +3326,36 @@ function renderKanbanBoard() {
   const matching = projects.filter(p => boardStatusFilters.has(p.Status));
   if (!matching.length) {
     list.innerHTML = `<div class="empty-state">No projects match the selected filters.</div>`;
-    return;
+  } else {
+    matching.forEach(p => list.appendChild(buildProjectBoardTile(p)));
   }
-  matching.forEach(p => list.appendChild(buildProjectBoardTile(p)));
+
+  const tray = document.getElementById("unassignedTasksTray");
+  const unassignedTasks = tasks.filter(t => !t.ProjectID);
+  tray.innerHTML = "";
+  if (!unassignedTasks.length) {
+    tray.innerHTML = `<div class="empty-state">Nothing unassigned right now.</div>`;
+  } else {
+    unassignedTasks.forEach(t => tray.appendChild(buildUnassignedTaskTile(t)));
+  }
+}
+
+function buildUnassignedTaskTile(t) {
+  const color = catColor(t.Category);
+  const tile = document.createElement("div");
+  tile.className = "kanban-tile";
+  tile.draggable = true;
+  tile.dataset.taskId = t.TaskID;
+  tile.innerHTML = `
+    <div class="kanban-tile-name" style="color:${color}">${t.TaskName || ""}</div>
+    <div class="kanban-tile-meta"><span>${t.Category || ""}</span><span>${taskOwner(t) || ""}</span></div>
+  `;
+  tile.addEventListener("dragstart", e => {
+    tile.classList.add("dragging");
+    e.dataTransfer.setData("text/plain", t.TaskID);
+  });
+  tile.addEventListener("dragend", () => tile.classList.remove("dragging"));
+  return tile;
 }
 
 function addTaskToProject(projectId) {
@@ -3458,7 +3522,7 @@ function buildProjectGroup(project, groupTasks) {
   wrap.innerHTML = `
     <div class="project-group-head" style="color:${color}">
       <span>${isUnassigned ? "Unassigned" : project.ProjectName}</span>
-      ${!isUnassigned ? `<button type="button" class="project-delete-btn-inline" title="Delete this project">&times;</button>` : ""}
+      ${!isUnassigned ? `<button type="button" class="todo-delete-btn project-delete-btn-inline" style="margin-left:auto;">Delete Project</button>` : ""}
     </div>
     <div class="project-group-body"></div>
   `;
@@ -3789,6 +3853,9 @@ function renderTickets() {
   openList.querySelectorAll("[data-close-id]").forEach(btn => {
     btn.addEventListener("click", () => closeTicket(btn.dataset.closeId));
   });
+  openList.querySelectorAll("[data-complete-id]").forEach(btn => {
+    btn.addEventListener("click", () => completeTicket(btn.dataset.completeId));
+  });
 }
 
 /* ---------- Personal views: My Project Board, My Tickets ---------- */
@@ -3835,6 +3902,9 @@ function renderMyTickets() {
   list.querySelectorAll("[data-close-id]").forEach(btn => {
     btn.addEventListener("click", () => closeTicket(btn.dataset.closeId));
   });
+  list.querySelectorAll("[data-complete-id]").forEach(btn => {
+    btn.addEventListener("click", () => completeTicket(btn.dataset.completeId));
+  });
 }
 
 function buildTicketCardHtml(t) {
@@ -3854,6 +3924,7 @@ function buildTicketCardHtml(t) {
         ${!t.Assignee ? `<button type="button" class="ticket-action-btn claim" data-claim-id="${t.TicketID}">Claim</button>` : ""}
         <button type="button" class="ticket-action-btn convert" data-convert-task-id="${t.TicketID}">→ Task</button>
         <button type="button" class="ticket-action-btn convert" data-convert-project-id="${t.TicketID}">→ Project</button>
+        <button type="button" class="ticket-action-btn claim" data-complete-id="${t.TicketID}">Complete</button>
         <button type="button" class="ticket-action-btn close" data-close-id="${t.TicketID}">Close</button>
       </div>
     </div>
@@ -3923,6 +3994,24 @@ async function closeTicket(ticketId) {
     } catch (err) {}
   }
   renderTickets();
+  renderMyTickets();
+}
+
+async function completeTicket(ticketId) {
+  const t = tickets.find(x => x.TicketID === ticketId);
+  if (t) t.Status = "Completed";
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "updateTicketStatus", ticketId, status: "Completed" }),
+      });
+    } catch (err) {}
+  }
+  renderTickets();
+  renderMyTickets();
 }
 
 async function markTicketConverted(ticketId, convertedType, convertedId) {
