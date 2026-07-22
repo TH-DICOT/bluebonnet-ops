@@ -688,6 +688,47 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
 .todoist-sidebar-row:hover { background: rgba(255,255,255,0.04); color: var(--text); }
 .todoist-sidebar-row[data-active="true"] { background: rgba(99,188,188,0.12); color: var(--text); }
 .todoist-sidebar-row.drag-over { background: rgba(99,188,188,0.22); }
+.todoist-sidebar-twisty {
+  width: 14px;
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--dim);
+  text-align: center;
+  user-select: none;
+}
+.todoist-sidebar-twisty:hover { color: var(--text); }
+.todoist-sidebar-twisty-empty { visibility: hidden; }
+.todoist-sidebar-row[data-nested="true"] { font-size: 15px; font-weight: 500; }
+.todoist-breadcrumb {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dim);
+  margin-bottom: 4px;
+}
+.todoist-breadcrumb span { cursor: pointer; }
+.todoist-breadcrumb span:hover { color: var(--text); text-decoration: underline; }
+.subproject-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.subproject-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.05);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}
+.subproject-chip:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+.subproject-chip-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.subproject-chip-count { color: var(--dim); font-weight: 700; }
+.rollup-note { font-size: 13px; color: var(--dim); margin-bottom: 14px; }
 .todoist-sidebar-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
 .todoist-sidebar-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .todoist-sidebar-count { font-size: 14px; color: var(--dim); font-weight: 700; }
@@ -1439,6 +1480,10 @@ td.muted { color: var(--muted); }
                 <div class="field">
                   <label>New Project Name</label>
                   <input type="text" id="fProjectName" placeholder="e.g. Radiologist Requisition" />
+                </div>
+                <div class="field">
+                  <label>Sits Inside <span class="field-hint">(optional — nest it in a bigger bucket)</span></label>
+                  <select id="fProjectParent"></select>
                 </div>
                 <div class="field">
                   <label>Project Notes <span class="field-hint">(for a new project)</span></label>
@@ -2257,7 +2302,7 @@ function init() {
     const form = document.getElementById("newToDoForm");
     form.style.display = form.style.display === "none" ? "block" : "none";
     document.getElementById("ntdProject").innerHTML = `<option value="">— none —</option>` +
-      projects.filter(p => p.Status !== "Completed").map(p => `<option value="${p.ProjectID}">${p.ProjectName}</option>`).join("");
+      projectOptionsHtml("");
     document.getElementById("ntdAssigneeChecklist").innerHTML = buildAssigneeChecklistHtml([selectedEmployee]);
   });
   document.getElementById("ntdCreateBtn").addEventListener("click", () => {
@@ -2538,6 +2583,14 @@ function updateProjectSelect() {
   const wrap = document.getElementById("fProjectTiles");
   const openProjects = projects.filter(p => p.Category === selectedCategory && p.Status !== "Completed");
 
+  // The "sits inside" picker isn't limited to the current category — a
+  // candidate under Hiring might well be categorised differently.
+  const parentSel = document.getElementById("fProjectParent");
+  if (parentSel) {
+    const keep = parentSel.value;
+    parentSel.innerHTML = `<option value="">— top level —</option>` + projectOptionsHtml(keep);
+  }
+
   if (!openProjects.some(p => p.ProjectID === selectedProjectIdForTask)) {
     selectedProjectIdForTask = "";
   }
@@ -2547,9 +2600,15 @@ function updateProjectSelect() {
     return;
   }
 
-  wrap.innerHTML = openProjects.map(p => `
-    <button type="button" class="project-tile" data-project-id="${p.ProjectID}" data-active="${p.ProjectID === selectedProjectIdForTask}" title="${p.ProjectName}">${p.ProjectName}</button>
-  `).join("");
+  wrap.innerHTML = openProjects.map(p => {
+    // A bare "John Doe" tile is useless if three reqs have one. Show the
+    // bucket it lives in, and the full path on hover.
+    const parent = projectById(parentIdOf(p));
+    const label = parent ? `${parent.ProjectName} › ${p.ProjectName}` : p.ProjectName;
+    return `
+    <button type="button" class="project-tile" data-project-id="${p.ProjectID}" data-active="${p.ProjectID === selectedProjectIdForTask}" title="${projectPath(p.ProjectID)}">${label}</button>
+  `;
+  }).join("");
 
   wrap.querySelectorAll(".project-tile").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -3011,6 +3070,8 @@ async function submitEntry() {
       } else if (wantsProject && projectName) {
         projectId = "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
         const projectNotes = document.getElementById("fProjectNotes").value.trim();
+        const parentSel = document.getElementById("fProjectParent");
+        const parentProjectId = parentSel ? parentSel.value : "";
         const newProject = {
           ProjectID: projectId,
           ProjectName: projectName,
@@ -3019,6 +3080,7 @@ async function submitEntry() {
           Notes: projectNotes,
           CreatedBy: employee,
           CreatedDate: date,
+          ParentProjectID: parentProjectId,
         };
         projects.push(newProject);
 
@@ -3026,7 +3088,7 @@ async function submitEntry() {
           await fetch(APPS_SCRIPT_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "createProject", projectId, projectName, category: selectedCategory, status: "Active", notes: projectNotes, createdBy: employee, createdDate: date }),
+            body: JSON.stringify({ action: "createProject", projectId, projectName, category: selectedCategory, status: "Active", notes: projectNotes, createdBy: employee, createdDate: date, parentProjectId }),
           });
         }
       }
@@ -3108,6 +3170,8 @@ async function submitEntry() {
     document.getElementById("fAttachmentLink").value = "";
     document.getElementById("fAssigneeChecklist").innerHTML = buildAssigneeChecklistHtml([employee]);
     document.getElementById("fProjectName").value = "";
+    const parentReset = document.getElementById("fProjectParent");
+    if (parentReset) parentReset.value = "";
     selectedProjectIdForTask = "";
     updateProjectSelect();
     document.getElementById("fProjectNotes").value = "";
@@ -3349,18 +3413,148 @@ let boardStatusFilters = new Set(["Pending", "Active", "Completed"]);
 
 let selectedBoardProjectId = null; // null = nothing picked yet, "" = Unassigned, else a real ProjectID
 
-function buildSidebarRow(idValue, name, color, count, isUnassigned) {
+/* ---------------------------------------------------------
+   PROJECT NESTING
+   A project can sit inside another project via ParentProjectID.
+   Blank parent = top level. Depth is unlimited, so you can do
+   Recruiting > Hiring > John Doe > (tickets and tasks).
+   Tasks still attach to a single ProjectID — they can hang off
+   any level of the tree, not just the bottom one.
+   --------------------------------------------------------- */
+let expandedProjectIds = new Set();
+
+function projectById(id) {
+  return projects.find(p => p.ProjectID === id) || null;
+}
+
+function parentIdOf(p) {
+  return p && p.ParentProjectID ? String(p.ParentProjectID) : "";
+}
+
+function childProjects(parentId, pool) {
+  return (pool || projects).filter(p => parentIdOf(p) === (parentId || ""));
+}
+
+// Everything underneath this project, at any depth. Excludes the project itself.
+function descendantProjects(projectId, pool) {
+  const list = pool || projects;
+  const out = [];
+  const seen = new Set();
+  const walk = id => {
+    if (seen.has(id)) return; // paranoia against a corrupted loop in the Sheet
+    seen.add(id);
+    childProjects(id, list).forEach(c => {
+      out.push(c);
+      walk(c.ProjectID);
+    });
+  };
+  walk(projectId);
+  return out;
+}
+
+// This project plus everything under it — what rolled-up counts run on.
+function projectFamilyIds(projectId) {
+  return [projectId, ...descendantProjects(projectId).map(p => p.ProjectID)];
+}
+
+// The chain above a project, outermost bucket first.
+function projectAncestors(projectId) {
+  const chain = [];
+  const seen = new Set([projectId]);
+  let current = projectById(projectId);
+  while (current && parentIdOf(current)) {
+    const next = projectById(parentIdOf(current));
+    if (!next || seen.has(next.ProjectID)) break;
+    seen.add(next.ProjectID);
+    chain.unshift(next);
+    current = next;
+  }
+  return chain;
+}
+
+function projectPath(projectId, separator) {
+  const p = projectById(projectId);
+  if (!p) return "";
+  return [...projectAncestors(projectId), p].map(x => x.ProjectName).join(separator || " › ");
+}
+
+// You can't file a bucket inside itself, or inside one of its own children.
+function wouldCreateLoop(projectId, newParentId) {
+  if (!newParentId) return false;
+  return projectFamilyIds(projectId).includes(newParentId);
+}
+
+// Tasks sitting directly on this project, or on it plus everything beneath it.
+function tasksInProject(projectId, includeNested) {
+  const idSet = new Set(includeNested ? projectFamilyIds(projectId) : [projectId]);
+  return tasks.filter(t => idSet.has(t.ProjectID));
+}
+
+// Indented option list for any project <select>, so a "John Doe" under
+// Hiring is tellable from one filed somewhere else entirely.
+function projectOptionsHtml(selectedId, opts) {
+  const o = opts || {};
+  const pool = o.includeCompleted ? projects.slice() : projects.filter(p => p.Status !== "Completed");
+  const skip = new Set(o.excludeIds || []);
+  const usable = pool.filter(p => !skip.has(p.ProjectID));
+  const emitted = new Set();
+  const out = [];
+  const optionFor = (p, label) =>
+    `<option value="${p.ProjectID}" ${p.ProjectID === selectedId ? "selected" : ""}>${label}</option>`;
+
+  const walk = (parentId, depth) => {
+    usable.filter(p => parentIdOf(p) === parentId).forEach(p => {
+      if (emitted.has(p.ProjectID)) return;
+      emitted.add(p.ProjectID);
+      const pad = "&nbsp;&nbsp;&nbsp;&nbsp;".repeat(depth);
+      out.push(optionFor(p, `${pad}${depth ? "└ " : ""}${p.ProjectName}`));
+      walk(p.ProjectID, depth + 1);
+    });
+  };
+  walk("", 0);
+
+  // A live sub-project whose parent got filtered out would vanish otherwise,
+  // so list any stragglers with their full path spelled out.
+  usable.forEach(p => {
+    if (emitted.has(p.ProjectID)) return;
+    emitted.add(p.ProjectID);
+    out.push(optionFor(p, projectPath(p.ProjectID)));
+  });
+  return out.join("");
+}
+
+function buildSidebarRow(idValue, name, color, count, isUnassigned, opts) {
+  const o = opts || {};
+  const depth = o.depth || 0;
   const row = document.createElement("div");
   row.className = "todoist-sidebar-row";
   row.dataset.projectId = idValue;
   row.dataset.active = selectedBoardProjectId === idValue;
+  if (depth) row.dataset.nested = "true";
+  row.style.paddingLeft = 16 + depth * 20 + "px";
+
+  const twisty = o.hasChildren
+    ? `<span class="todoist-sidebar-twisty" data-twisty="1">${o.expanded ? "▾" : "▸"}</span>`
+    : `<span class="todoist-sidebar-twisty todoist-sidebar-twisty-empty"></span>`;
+
   row.innerHTML = `
+    ${twisty}
     <span class="todoist-sidebar-dot" style="background:${color}"></span>
     <span class="todoist-sidebar-name">${name}</span>
     <span class="todoist-sidebar-count">${count}</span>
   `;
-  row.addEventListener("click", () => {
+  row.addEventListener("click", e => {
+    // Clicking the little arrow only folds or unfolds — it shouldn't yank you
+    // over to a different project.
+    if (e.target.dataset && e.target.dataset.twisty) {
+      e.stopPropagation();
+      if (expandedProjectIds.has(idValue)) expandedProjectIds.delete(idValue);
+      else expandedProjectIds.add(idValue);
+      renderKanbanBoard();
+      return;
+    }
     selectedBoardProjectId = idValue;
+    if (o.hasChildren) expandedProjectIds.add(idValue);
     renderKanbanBoard();
   });
   row.addEventListener("dragover", e => {
@@ -3377,6 +3571,20 @@ function buildSidebarRow(idValue, name, color, count, isUnassigned) {
   return row;
 }
 
+// Draws one project and, if it's unfolded, everything nested under it.
+function appendProjectBranch(container, p, pool, depth) {
+  const kids = pool.filter(c => parentIdOf(c) === p.ProjectID);
+  const expanded = expandedProjectIds.has(p.ProjectID);
+  container.appendChild(
+    buildSidebarRow(p.ProjectID, p.ProjectName, catColor(p.Category), tasksInProject(p.ProjectID, true).length, false, {
+      depth,
+      hasChildren: kids.length > 0,
+      expanded,
+    })
+  );
+  if (expanded) kids.forEach(k => appendProjectBranch(container, k, pool, depth + 1));
+}
+
 function renderKanbanBoard() {
   const sidebar = document.getElementById("projectSidebarList");
   const detail = document.getElementById("projectDetailPanel");
@@ -3388,19 +3596,34 @@ function renderKanbanBoard() {
     matching = matching.filter(p => mineIds.has(p.ProjectID));
   }
 
-  const unassignedCount = tasks.filter(t => !t.ProjectID).length;
-  sidebar.appendChild(buildSidebarRow("", "Unassigned", "var(--dim)", unassignedCount, true));
+  // A sub-project is meaningless without the bucket it lives in, so pull in
+  // the parents of anything that matched, even if they didn't match themselves.
+  const visibleIds = new Set(matching.map(p => p.ProjectID));
+  matching.forEach(p => projectAncestors(p.ProjectID).forEach(a => visibleIds.add(a.ProjectID)));
+  const visible = projects.filter(p => visibleIds.has(p.ProjectID));
 
-  if (!matching.length) {
+  const unassignedCount = tasks.filter(t => !t.ProjectID).length;
+  sidebar.appendChild(buildSidebarRow("", "Unassigned", "var(--dim)", unassignedCount, true, {}));
+
+  // Finished buckets drop into their own section at the bottom, so a year of
+  // hired candidates doesn't bury the work you're actually doing.
+  const live = visible.filter(p => p.Status !== "Completed");
+  const done = visible.filter(p => p.Status === "Completed");
+
+  if (!visible.length) {
     const msg = document.createElement("div");
     msg.className = "empty-state";
     msg.style.padding = "12px 4px";
     msg.textContent = boardShowMineOnly ? "No projects of yours match right now." : "No projects match the selected filters.";
     sidebar.appendChild(msg);
   } else {
+    // Only projects whose parent isn't showing anchor a category heading —
+    // everything else gets drawn underneath its own parent instead.
+    const isRootIn = (p, pool) => !pool.some(x => x.ProjectID === parentIdOf(p));
+
     CATEGORIES.forEach(cat => {
-      const catProjects = matching.filter(p => p.Category === cat.key);
-      if (!catProjects.length) return;
+      const roots = live.filter(p => p.Category === cat.key && isRootIn(p, live));
+      if (!roots.length) return;
 
       const label = document.createElement("div");
       label.className = "todoist-sidebar-category-label";
@@ -3408,15 +3631,21 @@ function renderKanbanBoard() {
       label.textContent = cat.key;
       sidebar.appendChild(label);
 
-      catProjects.forEach(p => {
-        const count = tasks.filter(t => t.ProjectID === p.ProjectID).length;
-        sidebar.appendChild(buildSidebarRow(p.ProjectID, p.ProjectName, catColor(p.Category), count, false));
-      });
+      roots.forEach(p => appendProjectBranch(sidebar, p, live, 0));
     });
+
+    if (done.length) {
+      const label = document.createElement("div");
+      label.className = "todoist-sidebar-category-label";
+      label.style.color = "var(--dim)";
+      label.textContent = `Completed (${done.length})`;
+      sidebar.appendChild(label);
+      done.filter(p => isRootIn(p, done)).forEach(p => appendProjectBranch(sidebar, p, done, 0));
+    }
   }
 
   // Keep a valid selection — if what was selected got filtered out, fall back to Unassigned
-  if (selectedBoardProjectId && selectedBoardProjectId !== "" && !matching.some(p => p.ProjectID === selectedBoardProjectId)) {
+  if (selectedBoardProjectId && selectedBoardProjectId !== "" && !visible.some(p => p.ProjectID === selectedBoardProjectId)) {
     selectedBoardProjectId = "";
     sidebar.querySelectorAll(".todoist-sidebar-row").forEach(r => {
       r.dataset.active = r.dataset.projectId === "";
@@ -3458,8 +3687,34 @@ function renderProjectDetailPanel(detail) {
 
   const color = catColor(p.Category);
   const projTasks = tasks.filter(t => t.ProjectID === p.ProjectID);
+  const subProjects = childProjects(p.ProjectID);
+  const ancestors = projectAncestors(p.ProjectID);
+  const nestedTaskCount = tasksInProject(p.ProjectID, true).length;
+
+  const breadcrumbHtml = ancestors.length
+    ? `<div class="todoist-breadcrumb">${ancestors
+        .map(a => `<span data-jump="${a.ProjectID}">${a.ProjectName}</span>`)
+        .join(" › ")} ›</div>`
+    : "";
+
+  const rollupHtml = subProjects.length
+    ? `<div class="rollup-note">${projTasks.length} task${projTasks.length === 1 ? "" : "s"} directly here · ${nestedTaskCount} counting everything nested inside</div>`
+    : "";
+
+  const subProjectHtml = subProjects.length
+    ? `<div class="subproject-strip">${subProjects
+        .map(
+          s => `<div class="subproject-chip" data-jump="${s.ProjectID}">
+            <span class="subproject-chip-dot" style="background:${catColor(s.Category)}"></span>
+            ${s.ProjectName}
+            <span class="subproject-chip-count">${tasksInProject(s.ProjectID, true).length}</span>
+          </div>`
+        )
+        .join("")}</div>`
+    : "";
 
   detail.innerHTML = `
+    ${breadcrumbHtml}
     <div class="todoist-detail-header">
       <div class="todoist-detail-title" style="color:${color}">${p.ProjectName || ""}</div>
       <div class="todoist-detail-actions">
@@ -3481,16 +3736,35 @@ function renderProjectDetailPanel(detail) {
         <label>Category</label>
         <select id="boardEditCategory"></select>
       </div>
+      <div class="field">
+        <label>Sits Inside <span class="field-hint">(leave blank to make this a top-level bucket)</span></label>
+        <select id="boardEditParent"></select>
+      </div>
       <button type="button" class="submit-btn" id="boardDetailSaveBtn" style="margin-top:8px;">Save Changes</button>
     </div>
+    ${rollupHtml}
+    ${subProjectHtml}
     <div class="todoist-task-list" id="boardTaskListWrap"></div>
     <button type="button" class="new-project-toggle-btn" id="boardDetailAddTaskBtn" style="margin-top:14px;">+ Add Task</button>
-    ${projTasks.length === 1 ? `<button type="button" class="new-project-toggle-btn" id="boardDetailConvertBtn" style="margin-top:10px;">Convert to a Single Task Instead</button>` : ""}
+    <button type="button" class="new-project-toggle-btn" id="boardDetailAddSubBtn" style="margin-top:10px;">+ Add Sub-Project Inside This One</button>
+    ${projTasks.length === 1 && !subProjects.length ? `<button type="button" class="new-project-toggle-btn" id="boardDetailConvertBtn" style="margin-top:10px;">Convert to a Single Task Instead</button>` : ""}
   `;
+
+  // Breadcrumb links and sub-project chips both just jump the board
+  detail.querySelectorAll("[data-jump]").forEach(el => {
+    el.addEventListener("click", () => {
+      selectedBoardProjectId = el.dataset.jump;
+      expandedProjectIds.add(el.dataset.jump);
+      projectAncestors(el.dataset.jump).forEach(a => expandedProjectIds.add(a.ProjectID));
+      renderKanbanBoard();
+    });
+  });
 
   const taskListWrap = detail.querySelector("#boardTaskListWrap");
   if (!projTasks.length) {
-    taskListWrap.innerHTML = `<div class="empty-state" style="padding:10px 0;">No tasks in this project yet.</div>`;
+    taskListWrap.innerHTML = subProjects.length
+      ? `<div class="empty-state" style="padding:10px 0;">No tasks directly on this one — check the buckets above.</div>`
+      : `<div class="empty-state" style="padding:10px 0;">No tasks in this project yet.</div>`;
   } else {
     projTasks.forEach(t => taskListWrap.appendChild(buildTaskCard(t)));
   }
@@ -3503,23 +3777,36 @@ function renderProjectDetailPanel(detail) {
   const editCategorySel = detail.querySelector("#boardEditCategory");
   editCategorySel.innerHTML = CATEGORIES.map(c => `<option value="${c.key}" ${c.key === p.Category ? "selected" : ""}>${c.key}</option>`).join("");
 
+  // You can't file a bucket inside itself or inside one of its own children,
+  // so those options simply aren't offered.
+  const editParentSel = detail.querySelector("#boardEditParent");
+  editParentSel.innerHTML =
+    `<option value="">— top level —</option>` +
+    projectOptionsHtml(parentIdOf(p), { includeCompleted: true, excludeIds: projectFamilyIds(p.ProjectID) });
+
   detail.querySelector("#boardDetailEditBtn").addEventListener("click", () => {
     editPanel.style.display = editPanel.style.display === "none" ? "block" : "none";
   });
   detail.querySelector("#boardDetailSaveBtn").addEventListener("click", () => {
     const newName = detail.querySelector("#boardEditName").value.trim();
     const newCategory = editCategorySel.value;
+    const newParent = editParentSel.value;
     if (!newName) {
       alert("Project name can't be empty.");
       return;
     }
-    updateProjectDetails(p.ProjectID, newName, newCategory);
+    if (wouldCreateLoop(p.ProjectID, newParent)) {
+      alert("A project can't sit inside itself or inside one of its own sub-projects.");
+      return;
+    }
+    updateProjectDetails(p.ProjectID, newName, newCategory, newParent);
     editPanel.style.display = "none";
   });
   detail.querySelector("#boardDetailDeleteBtn").addEventListener("click", () => {
     deleteProject(p.ProjectID, p.ProjectName);
   });
   detail.querySelector("#boardDetailAddTaskBtn").addEventListener("click", () => addTaskToProject(p.ProjectID));
+  detail.querySelector("#boardDetailAddSubBtn").addEventListener("click", () => createSubProject(p.ProjectID));
 
   const convertBtn = detail.querySelector("#boardDetailConvertBtn");
   if (convertBtn) convertBtn.addEventListener("click", () => convertProjectToTask(p.ProjectID));
@@ -3561,19 +3848,72 @@ async function moveProjectStatus(projectId, newStatus) {
   renderAll();
 }
 
-async function updateProjectDetails(projectId, newName, newCategory) {
+async function updateProjectDetails(projectId, newName, newCategory, newParentId) {
   const p = projects.find(x => x.ProjectID === projectId);
   if (p) {
     p.ProjectName = newName;
     p.Category = newCategory;
+    if (newParentId !== undefined) p.ParentProjectID = newParentId || "";
   }
+
+  const payload = { action: "updateProject", projectId, projectName: newName, category: newCategory };
+  if (newParentId !== undefined) payload.parentProjectId = newParentId || "";
 
   if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
     try {
       await fetch(APPS_SCRIPT_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "updateProject", projectId, projectName: newName, category: newCategory }),
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {}
+  }
+  renderAll();
+}
+
+// Creates a new bucket nested inside an existing one — e.g. a candidate
+// inside Hiring. It inherits the parent's category so the board stays
+// colour-consistent, and you can change that afterwards from Edit.
+async function createSubProject(parentProjectId) {
+  const parent = projects.find(x => x.ProjectID === parentProjectId);
+  if (!parent) return;
+  const name = prompt(`New bucket inside "${parent.ProjectName}" — what's it called?`);
+  if (name === null) return;
+  const trimmed = name.trim();
+  if (!trimmed) return;
+
+  const projectId = "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const createdDate = dateToStr(new Date());
+  const newProject = {
+    ProjectID: projectId,
+    ProjectName: trimmed,
+    Category: parent.Category,
+    Status: "Active",
+    Notes: "",
+    CreatedBy: selectedEmployee,
+    CreatedDate: createdDate,
+    ParentProjectID: parentProjectId,
+  };
+  projects.push(newProject);
+  expandedProjectIds.add(parentProjectId);
+  selectedBoardProjectId = projectId;
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "createProject",
+          projectId,
+          projectName: trimmed,
+          category: parent.Category,
+          status: "Active",
+          notes: "",
+          createdBy: selectedEmployee,
+          createdDate,
+          parentProjectId,
+        }),
       });
     } catch (err) {}
   }
@@ -3766,10 +4106,18 @@ async function reassignTaskProject(taskId, projectId) {
 
 async function deleteProject(projectId, projectName) {
   const taskCount = tasks.filter(t => t.ProjectID === projectId).length;
-  const warning = taskCount
-    ? `Delete "${projectName}"? Its ${taskCount} task${taskCount === 1 ? "" : "s"} will NOT be deleted — they'll just become unassigned again. This can't be undone.`
-    : `Delete "${projectName}"? This can't be undone.`;
+  const kids = childProjects(projectId);
+  const parts = [];
+  if (taskCount) parts.push(`Its ${taskCount} task${taskCount === 1 ? "" : "s"} will NOT be deleted — they'll just become unassigned again.`);
+  if (kids.length) parts.push(`The ${kids.length} bucket${kids.length === 1 ? "" : "s"} nested inside will NOT be deleted — they'll move up to sit where this one did.`);
+  const warning = `Delete "${projectName}"? ${parts.join(" ")} This can't be undone.`;
   if (!confirm(warning)) return;
+
+  // Lift the children up to this project's own parent so nothing gets orphaned.
+  const grandparent = parentIdOf(projectById(projectId));
+  projects.forEach(p => {
+    if (parentIdOf(p) === projectId) p.ParentProjectID = grandparent;
+  });
 
   projects = projects.filter(p => p.ProjectID !== projectId);
   tasks.forEach(t => {
@@ -3870,7 +4218,7 @@ function buildToDoCard(t) {
 
   const projSel = wrap.querySelector(".todo-edit-project");
   projSel.innerHTML = `<option value="">— none —</option>` +
-    projects.filter(p => p.Status !== "Completed").map(p => `<option value="${p.ProjectID}" ${p.ProjectID === t.ProjectID ? "selected" : ""}>${p.ProjectName}</option>`).join("");
+    projectOptionsHtml(t.ProjectID);
 
   const assigneeChecklist = wrap.querySelector(".todo-edit-assignee");
   assigneeChecklist.innerHTML = buildAssigneeChecklistHtml(parseAssignees(t.Assignee));
@@ -4682,7 +5030,7 @@ function buildTaskCard(t) {
 
   const detailsProjectSel = card.querySelector(".card-edit-project-select");
   detailsProjectSel.innerHTML = `<option value="">— none —</option>` +
-    projects.filter(p => p.Status !== "Completed").map(p => `<option value="${p.ProjectID}" ${p.ProjectID === t.ProjectID ? "selected" : ""}>${p.ProjectName}</option>`).join("");
+    projectOptionsHtml(t.ProjectID);
 
   card.querySelector(".card-edit-details-btn").addEventListener("click", e => {
     e.stopPropagation();
@@ -5241,3 +5589,4 @@ if (isSiteAuthed()) {
 </script>
 </body>
 </html>
+
