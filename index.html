@@ -85,7 +85,26 @@ body {
 .top-tab-item.active { background: #63bcbc; color: #050F23; border-color: transparent; }
 .top-tab-item:hover:not(.active) { border-color: #63bcbc; color: #63bcbc; }
 
-.top-tabs-header-row { display: flex; flex-direction: column; align-items: flex-start; }
+.top-tabs-header-row { display: flex; flex-direction: column; align-items: flex-start; position: relative; }
+
+/* The Index is a reference you only reach for now and then, so it sits up in
+   the corner out of the way instead of taking a slot in the main tab row. */
+.index-corner-btn {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  padding: 8px 18px;
+  font-size: 14px;
+  border-radius: 20px;
+  opacity: 0.7;
+}
+.index-corner-btn:hover { opacity: 1; }
+.index-corner-btn.active { opacity: 1; }
+@media (max-width: 760px) {
+  /* Nothing to tuck into on a narrow screen — let it sit inline instead of
+     landing on top of the title. */
+  .index-corner-btn { position: static; margin-top: 10px; }
+}
 .tab-row-group { display: flex; flex-direction: row; align-items: center; gap: 16px; margin-bottom: 12px; flex-wrap: wrap; }
 .tab-row-group:last-child { margin-bottom: 0; }
 .tab-row-label {
@@ -408,6 +427,10 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
 .status-btn[data-status="Pending"][data-active="true"] { background: #C9A24D; color: #050F23; border-color: transparent; }
 .status-btn[data-status="Active"][data-active="true"] { background: #1D9E75; color: #050F23; border-color: transparent; }
 .status-btn[data-status="Completed"][data-active="true"] { background: #5A6A8F; color: #EAF0FB; border-color: transparent; }
+/* Task vs Ticket toggle on a recurring item — same pill shape as the status
+   picker, but keyed off data-type instead of data-status. */
+.ntd-type-btn[data-active="true"],
+.todo-edit-type-btn[data-active="true"] { background: #63bcbc; color: #050F23; border-color: transparent; }
 
 .yesno-picker { display: flex; gap: 8px; max-width: 220px; }
 .yesno-btn {
@@ -1370,6 +1393,7 @@ td.muted { color: var(--muted); }
 <div class="top-tabs-inner">
   <div class="top-tabs-header-row">
     <div class="top-tabs-brand"><span class="brand-hr-trigger" id="bossBadge" title="">HR</span> Task Tracker</div>
+    <button type="button" class="top-tab-item index-corner-btn" data-view="index">📖 Index</button>
     <div class="quick-log-btns">
       <button type="button" class="quick-log-btn" id="quickLogTaskBtn">+ Log a Task</button>
       <button type="button" class="quick-log-btn" id="quickLogTicketBtn">+ Log a Ticket</button>
@@ -1377,7 +1401,6 @@ td.muted { color: var(--muted); }
   </div>
 
   <div class="top-tabs">
-    <button type="button" class="top-tab-item" data-view="index">📖 Index</button>
     <button type="button" class="top-tab-item active" data-view="tickets">🎫 Tickets</button>
     <button type="button" class="top-tab-item" data-view="board">📌 Project Bulletin Board</button>
     <button type="button" class="top-tab-item" data-view="log">📅 My Calendar</button>
@@ -1653,22 +1676,22 @@ td.muted { color: var(--muted); }
     <div id="othersActiveList"></div>
   </div>
 
-  <!-- TO-DOS VIEW (recurring templates that spawn a Task each month) -->
+  <!-- RECURRING ITEMS VIEW (templates that spawn a Task or Ticket each month) -->
   <div class="view" id="view-todos">
     <header>
       <h1>Recurring Items</h1>
-      <div class="page-eyebrow">Spawn a Task Each Month</div>
+      <div class="page-eyebrow">Set It Once, It Shows Up Every Month</div>
     </header>
 
     <div class="instructions-card">
-      <strong>How this works:</strong> Set up a Recurring To-Do once with a name, category, and a day of the month. Each month on that day, it automatically creates a real task for you — optionally inside a Project you pick.
+      <strong>How this works:</strong> Set something up once with a name, a category, and a day of the month. Each month on that day it creates itself for real — either as a task or as a ticket in the queue, whichever you pick — and you can file it inside a project or sub-project.
     </div>
 
-    <button class="submit-btn" id="newToDoBtn" style="max-width:220px;">+ New To-Do</button>
+    <button class="submit-btn" id="newToDoBtn" style="max-width:340px;">+ Schedule a Recurring Task/Ticket</button>
 
     <div class="entry-card" id="newToDoForm" style="display:none; max-width:560px; margin-top:16px;">
       <div class="field">
-        <label>To-Do Name</label>
+        <label>Name</label>
         <input type="text" id="ntdName" placeholder="e.g. Birthday cards - El Paso" />
       </div>
       <div class="field-row" style="grid-template-columns: 1fr 1fr; margin-bottom:18px;">
@@ -1682,20 +1705,27 @@ td.muted { color: var(--muted); }
         </div>
       </div>
       <div class="field">
-        <label>Project <span class="field-hint">(optional)</span></label>
+        <label>Creates A</label>
+        <div class="status-picker" id="ntdTypePicker">
+          <button type="button" class="status-btn ntd-type-btn" data-type="Task" data-active="true">Task</button>
+          <button type="button" class="status-btn ntd-type-btn" data-type="Ticket" data-active="false">Ticket</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Project <span class="field-hint">(optional — a project or a sub-project)</span></label>
         <select id="ntdProject"></select>
       </div>
       <div class="field">
         <label>Assigned To</label>
         <div class="assignee-checklist" id="ntdAssigneeChecklist"></div>
       </div>
-      <button class="submit-btn" id="ntdCreateBtn">Create To-Do</button>
+      <button class="submit-btn" id="ntdCreateBtn">Schedule It</button>
     </div>
 
-    <div class="section-label" style="margin-top:28px;">Active To-Dos</div>
+    <div class="section-label" style="margin-top:28px;">Active</div>
     <div id="todosList"></div>
 
-    <div class="section-label" style="margin-top:28px;">Paused To-Dos</div>
+    <div class="section-label" style="margin-top:28px;">Paused</div>
     <div id="todosPausedList"></div>
   </div>
 
@@ -2298,6 +2328,12 @@ function init() {
   let dayOptionsHtml = "";
   for (let d = 1; d <= 28; d++) dayOptionsHtml += `<option value="${d}">${d}</option>`;
   document.getElementById("ntdDayOfMonth").innerHTML = dayOptionsHtml;
+  document.querySelectorAll(".ntd-type-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".ntd-type-btn").forEach(b => (b.dataset.active = "false"));
+      btn.dataset.active = "true";
+    });
+  });
   document.getElementById("newToDoBtn").addEventListener("click", () => {
     const form = document.getElementById("newToDoForm");
     form.style.display = form.style.display === "none" ? "block" : "none";
@@ -2310,13 +2346,15 @@ function init() {
     const category = document.getElementById("ntdCategory").value;
     const dayOfMonth = document.getElementById("ntdDayOfMonth").value;
     const projectId = document.getElementById("ntdProject").value;
+    const activeType = document.querySelector('.ntd-type-btn[data-active="true"]');
+    const itemType = activeType ? activeType.dataset.type : "Task";
     const checkedAssignees = getCheckedAssignees(document.getElementById("ntdAssigneeChecklist"));
     const assignee = checkedAssignees.length ? checkedAssignees.join(", ") : selectedEmployee;
     if (!name) {
-      alert("Enter a name for this to-do.");
+      alert("Give this recurring item a name.");
       return;
     }
-    createToDo(name, category, dayOfMonth, projectId, assignee);
+    createToDo(name, category, dayOfMonth, projectId, assignee, itemType);
     document.getElementById("ntdName").value = "";
     document.getElementById("newToDoForm").style.display = "none";
   });
@@ -2916,11 +2954,18 @@ async function runToDoGeneration() {
     // Safety net: even if the flag above didn't stick for some reason, don't
     // create a second copy of something this template already produced this
     // month. Cheap insurance against ever seeing duplicates again.
-    const alreadyThere = tasks.some(existing =>
-      existing.TaskName === t.ToDoName &&
-      String(existing.ProjectID || "") === String(t.ProjectID || "") &&
-      monthKey(cleanDate(existing.CreatedDate)) === currentMonthStr
-    );
+    const makesTicket = String(t.ItemType || "Task") === "Ticket";
+    const alreadyThere = makesTicket
+      ? tickets.some(existing =>
+          existing.Title === t.ToDoName &&
+          String(existing.ProjectID || "") === String(t.ProjectID || "") &&
+          monthKey(cleanDate(existing.CreatedDate)) === currentMonthStr
+        )
+      : tasks.some(existing =>
+          existing.TaskName === t.ToDoName &&
+          String(existing.ProjectID || "") === String(t.ProjectID || "") &&
+          monthKey(cleanDate(existing.CreatedDate)) === currentMonthStr
+        );
     if (alreadyThere) {
       t.LastGeneratedMonth = currentMonthStr;
       if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
@@ -2937,8 +2982,56 @@ async function runToDoGeneration() {
       continue;
     }
 
-    const taskId = "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     const assignee = t.Assignee || t.CreatedBy;
+    const wantsTicket = String(t.ItemType || "Task") === "Ticket";
+
+    if (wantsTicket) {
+      // Lands in the ticket queue instead of becoming a task. It still carries
+      // the project, so a recurring ticket can sit inside a sub-project.
+      const ticketId = "tk" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      tickets.push({
+        TicketID: ticketId,
+        Title: t.ToDoName,
+        Category: t.Category,
+        Priority: "",
+        Assignee: assignee,
+        Status: "Open",
+        Notes: "",
+        LastUpdated: "",
+        ConvertedType: "",
+        ConvertedID: "",
+        CreatedBy: t.CreatedBy,
+        CreatedDate: todayStr,
+        ExternalName: "",
+        ExternalEmail: "",
+        ProjectID: t.ProjectID || "",
+      });
+      t.LastGeneratedMonth = currentMonthStr;
+
+      if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+        try {
+          await fetch(APPS_SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({
+              action: "createTicket", ticketId, title: t.ToDoName, category: t.Category,
+              priority: "", assignee, notes: "", createdBy: t.CreatedBy, createdDate: todayStr,
+              externalName: "", externalEmail: "", projectId: t.ProjectID || "",
+            }),
+          });
+          await fetch(APPS_SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "markToDoGenerated", toDoId: t.ToDoID, lastGeneratedMonth: currentMonthStr }),
+          });
+        } catch (err) {
+          // if this fails, it'll just retry next time the app loads
+        }
+      }
+      continue;
+    }
+
+    const taskId = "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     const newTask = {
       TaskID: taskId,
       TaskName: t.ToDoName,
@@ -4139,7 +4232,8 @@ async function deleteProject(projectId, projectName) {
 }
 
 /* =========================================================
-   TO-DOS — recurring templates that spawn a real Task each month
+   RECURRING ITEMS — templates that spawn a real Task or Ticket
+   each month on a chosen day
    ========================================================= */
 function renderToDos() {
   const activeList = document.getElementById("todosList");
@@ -4149,7 +4243,7 @@ function renderToDos() {
 
   activeList.innerHTML = "";
   if (active.length) active.forEach(t => activeList.appendChild(buildToDoCard(t)));
-  else activeList.innerHTML = `<div class="empty-state">No active to-dos yet.</div>`;
+  else activeList.innerHTML = `<div class="empty-state">Nothing scheduled yet.</div>`;
 
   pausedList.innerHTML = "";
   if (paused.length) paused.forEach(t => pausedList.appendChild(buildToDoCard(t)));
@@ -4158,7 +4252,9 @@ function renderToDos() {
 
 function buildToDoCard(t) {
   const color = catColor(t.Category);
-  const project = projects.find(p => p.ProjectID === t.ProjectID);
+  const isTicket = String(t.ItemType || "Task") === "Ticket";
+  const typeLabel = isTicket ? "🎫 Creates a ticket" : "📋 Creates a task";
+  const projectLabel = t.ProjectID && projectById(t.ProjectID) ? ` · ${projectPath(t.ProjectID)}` : "";
   const nextStatus = t.Status === "Active" ? "Paused" : "Active";
   const pauseLabel = t.Status === "Active" ? "Pause" : "Resume";
 
@@ -4168,7 +4264,7 @@ function buildToDoCard(t) {
     <div class="todo-card" style="border-left:3px solid ${color}">
       <div>
         <div class="todo-card-name" style="color:${color}">${t.ToDoName}</div>
-        <div class="todo-card-meta">${t.Category} · Day ${t.DayOfMonth} of each month${project ? ` · ${project.ProjectName}` : ""}${t.Assignee ? ` · Assigned to ${t.Assignee}` : ""}</div>
+        <div class="todo-card-meta">${typeLabel} · ${t.Category} · Day ${t.DayOfMonth} of each month${projectLabel}${t.Assignee ? ` · Assigned to ${t.Assignee}` : ""}</div>
       </div>
       <div class="todo-card-actions">
         <button type="button" class="todo-pause-btn todo-edit-btn" id="toDoEditBtn-${t.ToDoID}">Edit</button>
@@ -4188,7 +4284,14 @@ function buildToDoCard(t) {
         </div>
       </div>
       <div class="field">
-        <label>Project <span class="field-hint">(optional)</span></label>
+        <label>Creates A</label>
+        <div class="status-picker">
+          <button type="button" class="status-btn todo-edit-type-btn" data-type="Task" data-active="${!isTicket}">Task</button>
+          <button type="button" class="status-btn todo-edit-type-btn" data-type="Ticket" data-active="${isTicket}">Ticket</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Project <span class="field-hint">(a project or a sub-project)</span></label>
         <select class="todo-edit-project"></select>
       </div>
       <div class="field">
@@ -4220,6 +4323,14 @@ function buildToDoCard(t) {
   projSel.innerHTML = `<option value="">— none —</option>` +
     projectOptionsHtml(t.ProjectID);
 
+  const typeBtns = wrap.querySelectorAll(".todo-edit-type-btn");
+  typeBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      typeBtns.forEach(b => (b.dataset.active = "false"));
+      btn.dataset.active = "true";
+    });
+  });
+
   const assigneeChecklist = wrap.querySelector(".todo-edit-assignee");
   assigneeChecklist.innerHTML = buildAssigneeChecklistHtml(parseAssignees(t.Assignee));
 
@@ -4229,11 +4340,13 @@ function buildToDoCard(t) {
       alert("Pick at least one person.");
       return;
     }
+    const activeType = wrap.querySelector('.todo-edit-type-btn[data-active="true"]');
     updateToDoDetails(t.ToDoID, {
       category: catSel.value,
       dayOfMonth: daySel.value,
       projectId: projSel.value,
       assignee: checked.join(", "),
+      itemType: activeType ? activeType.dataset.type : "Task",
     });
     editPanel.style.display = "none";
   });
@@ -4241,9 +4354,10 @@ function buildToDoCard(t) {
   return wrap;
 }
 
-async function createToDo(name, category, dayOfMonth, projectId, assignee) {
+async function createToDo(name, category, dayOfMonth, projectId, assignee, itemType) {
   const toDoId = "td" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   const createdDate = dateToStr(new Date());
+  const type = itemType === "Ticket" ? "Ticket" : "Task";
   const newToDo = {
     ToDoID: toDoId,
     ToDoName: name,
@@ -4255,6 +4369,7 @@ async function createToDo(name, category, dayOfMonth, projectId, assignee) {
     LastGeneratedMonth: "",
     CreatedBy: selectedEmployee,
     CreatedDate: createdDate,
+    ItemType: type,
   };
   todos.push(newToDo);
 
@@ -4266,6 +4381,7 @@ async function createToDo(name, category, dayOfMonth, projectId, assignee) {
         body: JSON.stringify({
           action: "createToDo", toDoId, toDoName: name, category, projectId: projectId || "",
           dayOfMonth, assignee: assignee || selectedEmployee, status: "Active", lastGeneratedMonth: "", createdBy: selectedEmployee, createdDate,
+          itemType: type,
         }),
       });
     } catch (err) {}
@@ -4280,6 +4396,7 @@ async function updateToDoDetails(toDoId, changes) {
     if (changes.dayOfMonth !== undefined) t.DayOfMonth = changes.dayOfMonth;
     if (changes.projectId !== undefined) t.ProjectID = changes.projectId;
     if (changes.assignee !== undefined) t.Assignee = changes.assignee;
+    if (changes.itemType !== undefined) t.ItemType = changes.itemType;
   }
 
   if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
@@ -4311,7 +4428,7 @@ async function toggleToDoStatus(toDoId, newStatus) {
 }
 
 async function deleteToDo(toDoId, toDoName) {
-  if (!confirm(`Delete the recurring to-do "${toDoName}"? This won't affect any tasks it already created — just stops future ones. This can't be undone.`)) return;
+  if (!confirm(`Delete the recurring item "${toDoName}"? This won't affect anything it already created — it just stops future ones. This can't be undone.`)) return;
 
   todos = todos.filter(t => t.ToDoID !== toDoId);
 
@@ -4430,7 +4547,11 @@ function buildTicketCardHtml(t) {
     return `
       <div class="ticket-project-cat-label" style="color:${cat.hex}">${cat.key}</div>
       <div class="ticket-project-pills">
-        ${catProjects.map(p => `<button type="button" class="ticket-project-pill" data-ticket-id="${t.TicketID}" data-project-id="${p.ProjectID}" data-active="${p.ProjectID === t.ProjectID}">${p.ProjectName}</button>`).join("")}
+        ${catProjects.map(p => {
+          const parent = projectById(parentIdOf(p));
+          const label = parent ? `${parent.ProjectName} › ${p.ProjectName}` : p.ProjectName;
+          return `<button type="button" class="ticket-project-pill" data-ticket-id="${t.TicketID}" data-project-id="${p.ProjectID}" data-active="${p.ProjectID === t.ProjectID}" title="${projectPath(p.ProjectID)}">${label}</button>`;
+        }).join("")}
       </div>
     `;
   }).join("");
@@ -4486,7 +4607,13 @@ function renderNtkProjectPills() {
     return `
       <div class="ticket-project-cat-label" style="color:${cat.hex}">${cat.key}</div>
       <div class="ticket-project-pills">
-        ${catProjects.map(p => `<button type="button" class="ticket-project-pill ntk-project-pill" data-project-id="${p.ProjectID}" data-active="false">${p.ProjectName}</button>`).join("")}
+        ${catProjects.map(p => {
+          // A sub-project pill on its own is ambiguous, so show the bucket it
+          // lives in and put the whole path on hover.
+          const parent = projectById(parentIdOf(p));
+          const label = parent ? `${parent.ProjectName} › ${p.ProjectName}` : p.ProjectName;
+          return `<button type="button" class="ticket-project-pill ntk-project-pill" data-project-id="${p.ProjectID}" data-active="false" title="${projectPath(p.ProjectID)}">${label}</button>`;
+        }).join("")}
       </div>
     `;
   }).join("");
@@ -5589,4 +5716,3 @@ if (isSiteAuthed()) {
 </script>
 </body>
 </html>
-
