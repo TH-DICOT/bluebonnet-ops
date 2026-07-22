@@ -2801,12 +2801,49 @@ async function loadTasksAndEvents() {
   renderAll();
 }
 
+// Turns whatever LastGeneratedMonth comes back as into a plain "YYYY-MM"
+// key. Older rows in the Sheet may still hold a real date cell (Sheets
+// auto-converted them), which arrives here as a full ISO timestamp and would
+// never match a plain "2026-07" — that's what made recurring items fire
+// again on every single app open.
+function monthKey(value) {
+  if (!value) return "";
+  const s = String(value).trim();
+  if (/^\d{4}-\d{2}$/.test(s)) return s;
+  const isoDate = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoDate) {
+    // A UTC-midnight date can render as the last day of the previous month
+    // in some timezones, so nudge those forward before taking the month.
+    const d = new Date(Date.UTC(+isoDate[1], +isoDate[2] - 1, +isoDate[3], 12));
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+  }
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  }
+  return s;
+}
+
+let todoGenerationInFlight = false;
+
+async function checkAndGenerateToDos() {
+  // A second load starting while the first is still writing would generate
+  // the same item twice, since neither has marked it done yet.
+  if (todoGenerationInFlight) return;
+  todoGenerationInFlight = true;
+  try {
+    await runToDoGeneration();
+  } finally {
+    todoGenerationInFlight = false;
+  }
+}
+
 // Runs whenever the app loads. For each Active ToDo, if today is on or past
-// its trigger day AND we haven't already generated this month's task for it,
-// create a real Task (into its Project if one is set) and mark it done for
+// its trigger day AND we haven't already generated this month's item for it,
+// create the real thing (into its Project if one is set) and mark it done for
 // this month. This is a check-on-open, not a background job — see the note
 // in the Apps Script file for what that means.
-async function checkAndGenerateToDos() {
+async function runToDoGeneration() {
   const now = new Date();
   const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const todayOfMonth = now.getDate();
@@ -2814,8 +2851,32 @@ async function checkAndGenerateToDos() {
 
   for (const t of todos) {
     if (t.Status !== "Active") continue;
-    if (t.LastGeneratedMonth === currentMonthStr) continue;
+    if (monthKey(t.LastGeneratedMonth) === currentMonthStr) continue;
     if (todayOfMonth < Number(t.DayOfMonth)) continue;
+
+    // Safety net: even if the flag above didn't stick for some reason, don't
+    // create a second copy of something this template already produced this
+    // month. Cheap insurance against ever seeing duplicates again.
+    const alreadyThere = tasks.some(existing =>
+      existing.TaskName === t.ToDoName &&
+      String(existing.ProjectID || "") === String(t.ProjectID || "") &&
+      monthKey(cleanDate(existing.CreatedDate)) === currentMonthStr
+    );
+    if (alreadyThere) {
+      t.LastGeneratedMonth = currentMonthStr;
+      if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+        try {
+          await fetch(APPS_SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "markToDoGenerated", toDoId: t.ToDoID, lastGeneratedMonth: currentMonthStr }),
+          });
+        } catch (err) {
+          // it'll try again next load
+        }
+      }
+      continue;
+    }
 
     const taskId = "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     const assignee = t.Assignee || t.CreatedBy;
