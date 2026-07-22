@@ -667,6 +667,13 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
 
 .todoist-board { display: flex; gap: 20px; align-items: flex-start; margin-top: 8px; }
 .todoist-sidebar { width: 340px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; }
+.todoist-sidebar-category-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 14px 12px 4px;
+}
 .todoist-sidebar-row {
   display: flex;
   align-items: center;
@@ -811,6 +818,27 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
 .ticket-action-btn.claim:hover { border-color: #1D9E75; color: #1D9E75; }
 .ticket-action-btn.convert:hover { border-color: var(--cat-accent, #63bcbc); color: var(--cat-accent, #63bcbc); }
 .ticket-action-btn.close:hover { border-color: #D95C84; color: #D95C84; }
+.ticket-project-cat-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin: 10px 0 6px;
+}
+.ticket-project-cat-label:first-child { margin-top: 0; }
+.ticket-project-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+.ticket-project-pill {
+  padding: 8px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ticket-project-pill[data-active="true"] { background: #63bcbc; color: #050F23; border-color: transparent; }
+
 .ticket-history-item {
   display: flex;
   align-items: center;
@@ -1538,8 +1566,8 @@ td.muted { color: var(--muted); }
             </div>
           </div>
           <div class="field">
-            <label>Assignee <span class="field-hint">(optional — leave unassigned if unsure)</span></label>
-            <select id="qtkAssignee"></select>
+            <label>Assignee <span class="field-hint">(optional, one or more)</span></label>
+            <div class="assignee-checklist" id="qtkAssigneeChecklist"></div>
           </div>
           <button class="submit-btn" id="qtkCreateBtn">Create Ticket</button>
           <button type="button" class="cancel-btn" id="qtkCancelBtn">Cancel</button>
@@ -1663,8 +1691,8 @@ td.muted { color: var(--muted); }
         </div>
       </div>
       <div class="field">
-        <label>Assignee <span class="field-hint">(optional — leave unassigned if unsure)</span></label>
-        <select id="ntkAssignee"></select>
+        <label>Assignee <span class="field-hint">(optional, one or more)</span></label>
+        <div class="assignee-checklist" id="ntkAssigneeChecklist"></div>
       </div>
       <div class="field-row" style="grid-template-columns: 1fr 1fr; margin-bottom:0;">
         <div class="field">
@@ -1673,8 +1701,12 @@ td.muted { color: var(--muted); }
         </div>
         <div class="field">
           <label>Their Email <span class="field-hint">(optional)</span></label>
-          <input type="text" id="ntkExternalEmail" placeholder="hilda@example.com" />
+          <input type="text" id="ntkExternalEmail" placeholder="thare@dicotexas.com" />
         </div>
+      </div>
+      <div class="field">
+        <label>Attach to a Project <span class="field-hint">(optional — stays a ticket until Complete)</span></label>
+        <div id="ntkProjectPills"></div>
       </div>
       <button class="submit-btn" id="ntkCreateBtn">Create Ticket</button>
     </div>
@@ -1689,7 +1721,7 @@ td.muted { color: var(--muted); }
       </div>
       <div class="field">
         <label>Their Email <span class="field-hint">(optional)</span></label>
-        <input type="text" id="invEmail" placeholder="hilda@example.com" />
+        <input type="text" id="invEmail" placeholder="thare@dicotexas.com" />
       </div>
       <div class="field">
         <label>Link Expires In</label>
@@ -2246,27 +2278,30 @@ function init() {
 
   document.getElementById("ntkCategory").innerHTML = `<option value="">— none —</option>` +
     CATEGORIES.map(c => `<option value="${c.key}">${c.key}</option>`).join("");
-  document.getElementById("ntkAssignee").innerHTML = `<option value="">— unassigned —</option>` +
-    EMPLOYEES.map(e => `<option value="${e.name}">${e.name}</option>`).join("");
+  document.getElementById("ntkAssigneeChecklist").innerHTML = buildAssigneeChecklistHtml([]);
   document.getElementById("newTicketBtn").addEventListener("click", () => {
     const form = document.getElementById("newTicketForm");
     form.style.display = form.style.display === "none" ? "block" : "none";
+    renderNtkProjectPills();
   });
   document.getElementById("ntkCreateBtn").addEventListener("click", () => {
     const title = document.getElementById("ntkTitle").value.trim();
     const category = document.getElementById("ntkCategory").value;
     const priority = document.getElementById("ntkPriority").value;
-    const assignee = document.getElementById("ntkAssignee").value;
+    const assignee = getCheckedAssignees(document.getElementById("ntkAssigneeChecklist")).join(", ");
     const externalName = document.getElementById("ntkExternalName").value.trim();
     const externalEmail = document.getElementById("ntkExternalEmail").value.trim();
+    const activePill = document.querySelector('.ntk-project-pill[data-active="true"]');
+    const projectId = activePill ? activePill.dataset.projectId : "";
     if (!title) {
       alert("Enter a title for this ticket.");
       return;
     }
-    createTicket(title, category, priority, assignee, "", externalName, externalEmail);
+    createTicket(title, category, priority, assignee, "", externalName, externalEmail, projectId);
     document.getElementById("ntkTitle").value = "";
     document.getElementById("ntkExternalName").value = "";
     document.getElementById("ntkExternalEmail").value = "";
+    document.getElementById("ntkAssigneeChecklist").innerHTML = buildAssigneeChecklistHtml([]);
     document.getElementById("newTicketForm").style.display = "none";
   });
 
@@ -2314,7 +2349,7 @@ function init() {
     const title = document.getElementById("qtkTitle").value.trim();
     const category = document.getElementById("qtkCategory").value;
     const priority = document.getElementById("qtkPriority").value;
-    const assignee = document.getElementById("qtkAssignee").value;
+    const assignee = getCheckedAssignees(document.getElementById("qtkAssigneeChecklist")).join(", ");
     if (!title) {
       alert("Enter a title for this ticket.");
       return;
@@ -3223,9 +3258,7 @@ function openQuickTicketModal() {
   document.getElementById("qtkCategory").innerHTML = `<option value="">— none —</option>` +
     CATEGORIES.map(c => `<option value="${c.key}">${c.key}</option>`).join("");
   document.getElementById("qtkPriority").value = "";
-  document.getElementById("qtkAssignee").innerHTML = `<option value="">— unassigned —</option>` +
-    EMPLOYEES.map(e => `<option value="${e.name}">${e.name}</option>`).join("");
-  document.getElementById("qtkAssignee").value = selectedEmployee;
+  document.getElementById("qtkAssigneeChecklist").innerHTML = buildAssigneeChecklistHtml([selectedEmployee]);
   document.getElementById("quickTicketModalOverlay").style.display = "flex";
 }
 
@@ -3304,9 +3337,20 @@ function renderKanbanBoard() {
     msg.textContent = boardShowMineOnly ? "No projects of yours match right now." : "No projects match the selected filters.";
     sidebar.appendChild(msg);
   } else {
-    matching.forEach(p => {
-      const count = tasks.filter(t => t.ProjectID === p.ProjectID).length;
-      sidebar.appendChild(buildSidebarRow(p.ProjectID, p.ProjectName, catColor(p.Category), count, false));
+    CATEGORIES.forEach(cat => {
+      const catProjects = matching.filter(p => p.Category === cat.key);
+      if (!catProjects.length) return;
+
+      const label = document.createElement("div");
+      label.className = "todoist-sidebar-category-label";
+      label.style.color = cat.hex;
+      label.textContent = cat.key;
+      sidebar.appendChild(label);
+
+      catProjects.forEach(p => {
+        const count = tasks.filter(t => t.ProjectID === p.ProjectID).length;
+        sidebar.appendChild(buildSidebarRow(p.ProjectID, p.ProjectName, catColor(p.Category), count, false));
+      });
     });
   }
 
@@ -3929,12 +3973,23 @@ function wireTicketCardActions(container) {
       if (panel) panel.style.display = panel.style.display === "none" ? "block" : "none";
     });
   });
+  container.querySelectorAll(".ticket-project-pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      const ticketId = pill.dataset.ticketId;
+      const nowActive = pill.dataset.active !== "true";
+      container.querySelectorAll(`.ticket-project-pill[data-ticket-id="${ticketId}"]`).forEach(p => p.dataset.active = "false");
+      pill.dataset.active = nowActive;
+    });
+  });
   container.querySelectorAll(".ticket-update-save-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const ticketId = btn.dataset.ticketId;
       const notes = container.querySelector(`.ticket-notes-input[data-ticket-id="${ticketId}"]`).value.trim();
-      const assignee = container.querySelector(`.ticket-reassign-select[data-ticket-id="${ticketId}"]`).value;
-      updateTicketDetails(ticketId, notes, assignee);
+      const checklist = container.querySelector(`.ticket-reassign-checklist[data-ticket-id="${ticketId}"]`);
+      const assignee = getCheckedAssignees(checklist).join(", ");
+      const activePill = container.querySelector(`.ticket-project-pill[data-ticket-id="${ticketId}"][data-active="true"]`);
+      const projectId = activePill ? activePill.dataset.projectId : "";
+      updateTicketDetails(ticketId, notes, assignee, projectId);
     });
   });
 }
@@ -3948,7 +4003,7 @@ function getMyProjects() {
 }
 
 function getMyTickets() {
-  return tickets.filter(t => t.Assignee === selectedEmployee || t.CreatedBy === selectedEmployee);
+  return tickets.filter(t => parseAssignees(t.Assignee).includes(selectedEmployee) || t.CreatedBy === selectedEmployee);
 }
 
 let ticketsShowMineOnly = false;
@@ -3957,8 +4012,20 @@ let boardShowMineOnly = false;
 function buildTicketCardHtml(t) {
   const catHex = t.Category ? catColor(t.Category) : "";
   const border = catHex || "var(--border)";
-  const assigneeOptions = `<option value="">— unassigned —</option>` +
-    EMPLOYEES.map(e => `<option value="${e.name}" ${e.name === t.Assignee ? "selected" : ""}>${e.name}</option>`).join("");
+  const assigneeNames = parseAssignees(t.Assignee);
+  const project = projects.find(p => p.ProjectID === t.ProjectID);
+
+  const activeProjectsByCategory = CATEGORIES.map(cat => {
+    const catProjects = projects.filter(p => p.Category === cat.key && p.Status === "Active");
+    if (!catProjects.length) return "";
+    return `
+      <div class="ticket-project-cat-label" style="color:${cat.hex}">${cat.key}</div>
+      <div class="ticket-project-pills">
+        ${catProjects.map(p => `<button type="button" class="ticket-project-pill" data-ticket-id="${t.TicketID}" data-project-id="${p.ProjectID}" data-active="${p.ProjectID === t.ProjectID}">${p.ProjectName}</button>`).join("")}
+      </div>
+    `;
+  }).join("");
+
   return `
     <div class="ticket-card-wrap">
       <div class="ticket-card" style="border-left:3px solid ${border}">
@@ -3967,14 +4034,15 @@ function buildTicketCardHtml(t) {
           <div class="ticket-meta-row">
             ${t.Category ? `<span class="ticket-badge" style="background:${catHex}22; color:${catHex};">${t.Category}</span>` : ""}
             ${t.Priority ? `<span class="ticket-badge" style="background:${priorityColor(t.Priority)}22; color:${priorityColor(t.Priority)};">${t.Priority}</span>` : ""}
-            <span class="ticket-assignee">${t.Assignee ? t.Assignee : "Unassigned"}</span>
+            <span class="ticket-assignee">${assigneeNames.length ? assigneeNames.join(", ") : "Unassigned"}</span>
+            ${project ? `<span class="ticket-badge" style="background:#63bcbc22; color:#63bcbc;">📌 ${project.ProjectName}</span>` : ""}
             ${t.LastUpdated ? `<span class="ticket-timestamp">Updated ${t.LastUpdated}</span>` : ""}
           </div>
           ${t.ExternalName ? `<div class="ticket-notes-preview">Regarding: <strong>${t.ExternalName}</strong>${t.ExternalEmail ? ` (${t.ExternalEmail})` : ""}</div>` : ""}
           ${t.Notes ? `<div class="ticket-notes-preview">${t.Notes.replace(/</g, "&lt;")}</div>` : ""}
         </div>
         <div class="ticket-actions">
-          ${!t.Assignee ? `<button type="button" class="ticket-action-btn claim" data-claim-id="${t.TicketID}">Claim</button>` : ""}
+          ${!assigneeNames.length ? `<button type="button" class="ticket-action-btn claim" data-claim-id="${t.TicketID}">Claim</button>` : ""}
           <button type="button" class="ticket-action-btn convert" data-update-toggle-id="${t.TicketID}">Update</button>
           <button type="button" class="ticket-action-btn convert" data-convert-task-id="${t.TicketID}">→ Task</button>
           <button type="button" class="ticket-action-btn convert" data-convert-project-id="${t.TicketID}">→ Project</button>
@@ -3988,8 +4056,12 @@ function buildTicketCardHtml(t) {
           <textarea class="notes-textarea ticket-notes-input" data-ticket-id="${t.TicketID}">${(t.Notes || "").replace(/</g, "&lt;")}</textarea>
         </div>
         <div class="field">
-          <label>Reassign To <span class="field-hint">(hand it off to someone else)</span></label>
-          <select class="ticket-reassign-select" data-ticket-id="${t.TicketID}">${assigneeOptions}</select>
+          <label>Reassign To <span class="field-hint">(one or more)</span></label>
+          <div class="assignee-checklist ticket-reassign-checklist" data-ticket-id="${t.TicketID}">${buildAssigneeChecklistHtml(assigneeNames)}</div>
+        </div>
+        <div class="field">
+          <label>Attach to a Project <span class="field-hint">(optional — stays a ticket, still shows here, until Complete)</span></label>
+          ${activeProjectsByCategory || `<div class="empty-state" style="padding:8px 0;">No active projects yet.</div>`}
         </div>
         <button type="button" class="submit-btn ticket-update-save-btn" data-ticket-id="${t.TicketID}">Save Update</button>
       </div>
@@ -3997,7 +4069,29 @@ function buildTicketCardHtml(t) {
   `;
 }
 
-async function createTicket(title, category, priority, assignee, notes, externalName, externalEmail) {
+function renderNtkProjectPills() {
+  const wrap = document.getElementById("ntkProjectPills");
+  const html = CATEGORIES.map(cat => {
+    const catProjects = projects.filter(p => p.Category === cat.key && p.Status === "Active");
+    if (!catProjects.length) return "";
+    return `
+      <div class="ticket-project-cat-label" style="color:${cat.hex}">${cat.key}</div>
+      <div class="ticket-project-pills">
+        ${catProjects.map(p => `<button type="button" class="ticket-project-pill ntk-project-pill" data-project-id="${p.ProjectID}" data-active="false">${p.ProjectName}</button>`).join("")}
+      </div>
+    `;
+  }).join("");
+  wrap.innerHTML = html || `<div class="empty-state" style="padding:8px 0;">No active projects yet.</div>`;
+  wrap.querySelectorAll(".ntk-project-pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      const nowActive = pill.dataset.active !== "true";
+      wrap.querySelectorAll(".ntk-project-pill").forEach(p => p.dataset.active = "false");
+      pill.dataset.active = nowActive;
+    });
+  });
+}
+
+async function createTicket(title, category, priority, assignee, notes, externalName, externalEmail, projectId) {
   const ticketId = "tk" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   const createdDate = dateToStr(new Date());
   const newTicket = {
@@ -4015,6 +4109,7 @@ async function createTicket(title, category, priority, assignee, notes, external
     CreatedDate: createdDate,
     ExternalName: externalName || "",
     ExternalEmail: externalEmail || "",
+    ProjectID: projectId || "",
   };
   tickets.push(newTicket);
 
@@ -4026,7 +4121,7 @@ async function createTicket(title, category, priority, assignee, notes, external
         body: JSON.stringify({
           action: "createTicket", ticketId, title, category: category || "", priority: priority || "",
           assignee: assignee || "", notes: notes || "", createdBy: selectedEmployee, createdDate,
-          externalName: externalName || "", externalEmail: externalEmail || "",
+          externalName: externalName || "", externalEmail: externalEmail || "", projectId: projectId || "",
         }),
       });
     } catch (err) {}
@@ -4129,11 +4224,12 @@ async function completeTicket(ticketId) {
   renderTickets();
 }
 
-async function updateTicketDetails(ticketId, notes, assignee) {
+async function updateTicketDetails(ticketId, notes, assignee, projectId) {
   const t = tickets.find(x => x.TicketID === ticketId);
   if (t) {
     t.Notes = notes;
     t.Assignee = assignee;
+    t.ProjectID = projectId || "";
     t.LastUpdated = nowTimestampLocal();
   }
 
@@ -4148,6 +4244,11 @@ async function updateTicketDetails(ticketId, notes, assignee) {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({ action: "updateTicketAssignee", ticketId, assignee }),
+      });
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "updateTicketProject", ticketId, projectId: projectId || "" }),
       });
     } catch (err) {}
   }
