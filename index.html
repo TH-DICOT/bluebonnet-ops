@@ -42,11 +42,20 @@ body {
   flex-direction: column;
   align-items: stretch;
   gap: 4px;
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
 }
-.top-tabs-brand { font-family: 'DM Serif Display', serif; font-size: 17px; flex-shrink: 0; }
-.quick-log-btns { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+.top-tabs-brand {
+  font-family: 'DM Serif Display', serif;
+  font-size: 32px;
+  font-style: italic;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #63bcbc 0%, #D95C84 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 0.5px;
+}
+.quick-log-btns { display: flex; flex-direction: row; gap: 10px; flex-shrink: 0; margin-top: 8px; }
 .quick-log-btn {
   background: var(--emp-accent, #63bcbc);
   color: #050F23;
@@ -60,21 +69,23 @@ body {
 }
 .quick-log-btn:hover { filter: brightness(1.1); }
 .top-tabs-brand-sub { font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--dim); font-weight: 500; }
-.top-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+.top-tabs { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 16px; }
 .top-tab-item {
   background: transparent;
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   color: var(--muted);
-  border-radius: 20px;
-  padding: 8px 18px;
-  font-size: 14px;
+  border-radius: 24px;
+  padding: 12px 24px;
+  font-size: 17px;
   font-weight: 700;
   cursor: pointer;
+  transition: transform 0.1s;
 }
+.top-tab-item:hover:not(.active) { transform: translateY(-1px); }
 .top-tab-item.active { background: #63bcbc; color: #050F23; border-color: transparent; }
 .top-tab-item:hover:not(.active) { border-color: #63bcbc; color: #63bcbc; }
 
-.top-tabs-header-row { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; }
+.top-tabs-header-row { display: flex; flex-direction: column; align-items: flex-start; }
 .tab-row-group { display: flex; flex-direction: row; align-items: center; gap: 16px; margin-bottom: 12px; flex-wrap: wrap; }
 .tab-row-group:last-child { margin-bottom: 0; }
 .tab-row-label {
@@ -86,35 +97,44 @@ body {
   flex-shrink: 0;
 }
 
-.hidden-badge {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  color: var(--dim);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  margin-left: auto;
-  opacity: 0.55;
-  margin: 8px;
-  user-select: none;
-}
-.hidden-badge:hover { opacity: 0.9; }
+.brand-hr-trigger { cursor: pointer; user-select: none; }
 
 /* ---------- Main ---------- */
-main { flex: 1; padding: 40px 48px 80px; max-width: 1200px; margin: 0 auto; width: 100%; }
+main { flex: 1; padding: 24px 48px 80px; max-width: 1600px; margin: 0 auto; width: 100%; }
 main.board-active { max-width: none; }
 .view { display: none; }
 .view.active { display: block; }
-header { margin-bottom: 24px; }
+header { margin-bottom: 24px; text-align: center; }
 h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; }
 .page-eyebrow { font-size: 14px; letter-spacing: 1.5px; color: var(--muted); margin-top: 6px; text-transform: uppercase; }
 .section-label { font-size: 14px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; font-weight: 600; margin: 8px 0 12px; }
+
+.ticket-title-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+.ticket-new-btn {
+  background: #63bcbc;
+  color: #050F23;
+  border: none;
+  border-radius: 10px;
+  padding: 13px 22px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.ticket-new-btn:hover { filter: brightness(1.1); }
+.ticket-invite-btn {
+  background: linear-gradient(135deg, #9454D4 0%, #D454D4 100%);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 13px 22px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(148,84,212,0.35);
+}
+.ticket-invite-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
 
 .instructions-card {
   background: var(--card);
@@ -645,20 +665,39 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
 .kanban-tile-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
 .kanban-tile-meta { font-size: 14px; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
 
-.project-board-tile {
-  background: rgba(5,15,35,0.6);
-  border: 1px solid var(--border);
+.todoist-board { display: flex; gap: 20px; align-items: flex-start; margin-top: 8px; }
+.todoist-sidebar { width: 340px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; }
+.todoist-sidebar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
   border-radius: 8px;
-  margin-bottom: 10px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
-  overflow: hidden;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--muted);
 }
-.project-board-tile.drag-over { border-color: #63bcbc; background: rgba(99,188,188,0.08); }
-.project-board-tile-head { padding: 12px 14px; cursor: pointer; }
-.project-board-tile-name { font-size: 14px; font-weight: 700; display: block; margin-bottom: 4px; }
-.project-board-tile-meta { font-size: 13px; color: var(--muted); }
-.project-board-tile-body { display: none; padding: 0 14px 14px; }
-.project-board-tile[data-open="true"] .project-board-tile-body { display: block; }
+.todoist-sidebar-row:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+.todoist-sidebar-row[data-active="true"] { background: rgba(99,188,188,0.12); color: var(--text); }
+.todoist-sidebar-row.drag-over { background: rgba(99,188,188,0.22); }
+.todoist-sidebar-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+.todoist-sidebar-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.todoist-sidebar-count { font-size: 14px; color: var(--dim); font-weight: 700; }
+
+.todoist-detail {
+  flex: 1;
+  min-width: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.todoist-detail-header { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 8px; }
+.todoist-detail-title { font-size: 20px; font-weight: 700; }
+.todoist-detail-actions { margin-left: auto; display: flex; gap: 8px; }
+.todoist-task-list { margin-top: 16px; }
 
 /* ---------- Projects (drag tasks into) ---------- */
 .unassigned-tray {
@@ -1261,30 +1300,20 @@ td.muted { color: var(--muted); }
 <div class="top-tabs-bar">
 <div class="top-tabs-inner">
   <div class="top-tabs-header-row">
-    <div class="top-tabs-brand">HR Task Tracker</div>
-    <div class="hidden-badge" id="bossBadge" title="">HR</div>
-  </div>
-
-  <div class="tab-row-group">
-    <button type="button" class="quick-log-btn" id="quickLogTaskBtn">+ Log Task</button>
-    <div class="tab-row-label">Your Views</div>
-    <div class="top-tabs">
-      <button type="button" class="top-tab-item" data-view="my-tickets">My Tickets</button>
-      <button type="button" class="top-tab-item active" data-view="log">My Tasks</button>
-      <button type="button" class="top-tab-item" data-view="my-board">My Project Board</button>
-      <button type="button" class="top-tab-item" data-view="index">Index</button>
+    <div class="top-tabs-brand"><span class="brand-hr-trigger" id="bossBadge" title="">HR</span> Task Tracker</div>
+    <div class="quick-log-btns">
+      <button type="button" class="quick-log-btn" id="quickLogTaskBtn">+ Log a Task</button>
+      <button type="button" class="quick-log-btn" id="quickLogTicketBtn">+ Log a Ticket</button>
     </div>
   </div>
 
-  <div class="tab-row-group">
-    <button type="button" class="quick-log-btn" id="quickLogTicketBtn">+ Log Ticket</button>
-    <div class="tab-row-label">Team Views</div>
-    <div class="top-tabs">
-      <button type="button" class="top-tab-item" data-view="tickets">Tickets</button>
-      <button type="button" class="top-tab-item" data-view="board">Team Project Board</button>
-      <button type="button" class="top-tab-item" data-view="todos">Recurring Templates</button>
-      <button type="button" class="top-tab-item" data-view="overview">Data</button>
-    </div>
+  <div class="top-tabs">
+    <button type="button" class="top-tab-item" data-view="index">📖 Index</button>
+    <button type="button" class="top-tab-item active" data-view="tickets">🎫 Tickets</button>
+    <button type="button" class="top-tab-item" data-view="board">📌 Project Bulletin Board</button>
+    <button type="button" class="top-tab-item" data-view="log">📅 My Calendar</button>
+    <button type="button" class="top-tab-item" data-view="todos">🔁 Recurring Items</button>
+    <button type="button" class="top-tab-item" id="dataTabBtn" data-view="overview" style="display:none;">📊 Data</button>
   </div>
 </div><!-- /top-tabs-inner -->
 </div><!-- /top-tabs-bar -->
@@ -1303,22 +1332,22 @@ td.muted { color: var(--muted); }
     </div>
 
     <div class="section-label" style="margin-top:28px;">Your Views (tabs, above)</div>
-    <div class="todo-card"><div><div class="todo-card-name">My Tasks</div><div class="todo-card-meta">Log time, see your day on the calendar, and view every task assigned to you or anyone else on the team.</div></div></div>
+    <div class="todo-card"><div><div class="todo-card-name">My Calendar</div><div class="todo-card-meta">Log time, see your day on the calendar, and view every task assigned to you or anyone else on the team.</div></div></div>
     <div class="todo-card"><div><div class="todo-card-name">My Project Board</div><div class="todo-card-meta">Only the projects you're actually involved in — created by you, or with a task assigned to you.</div></div></div>
     <div class="todo-card"><div><div class="todo-card-name">My Tickets</div><div class="todo-card-meta">Tickets assigned to you or that you created. You can add a new one right from here.</div></div></div>
 
     <div class="section-label" style="margin-top:28px;">Team Views (top row)</div>
     <div class="todo-card"><div><div class="todo-card-name">Team Project Board</div><div class="todo-card-meta">Every project on the team, filterable by status. Open one to see and edit its tasks.</div></div></div>
     <div class="todo-card"><div><div class="todo-card-name">Tickets</div><div class="todo-card-meta">The full open-ticket queue — claim one, or convert it into a real Task or Project.</div></div></div>
-    <div class="todo-card"><div><div class="todo-card-name">Recurring Templates</div><div class="todo-card-meta">Set up something once (like "Birthday cards — El Paso"), and it spawns a real task automatically each month.</div></div></div>
-    <div class="todo-card"><div><div class="todo-card-name">Data</div><div class="todo-card-meta">Team-wide stats, plus a breakdown by employee and by category.</div></div></div>
+    <div class="todo-card"><div><div class="todo-card-name">Recurring Items</div><div class="todo-card-meta">Set up something once (like "Birthday cards — El Paso"), and it spawns a real task automatically each month.</div></div></div>
+    <div class="todo-card"><div><div class="todo-card-name">Data</div><div class="todo-card-meta">Team-wide stats, plus a breakdown by employee and by category. Only visible after entering Maintenance Access.</div></div></div>
   </div>
 
   <!-- LOG TASK VIEW -->
-  <div class="view active" id="view-log">
+  <div class="view" id="view-log">
     <header>
-      <h1>My Tasks</h1>
-      <div class="page-eyebrow">Task Tracker</div>
+      <h1>My Calendar</h1>
+      <div class="page-eyebrow">Log Time · See Your Week</div>
     </header>
 
     <div class="instructions-card">
@@ -1551,61 +1580,10 @@ td.muted { color: var(--muted); }
     <div id="othersActiveList"></div>
   </div>
 
-  <!-- MY PROJECT BOARD VIEW (personal - only projects relevant to me) -->
-  <div class="view" id="view-my-board">
-    <header>
-      <h1>My Project Board</h1>
-      <div class="page-eyebrow">Just the Projects You're In</div>
-    </header>
-
-    <div class="instructions-card">
-      <strong>How this works:</strong> Shows projects you created, or projects with at least one task assigned to you. For the full team view, see Project Board in the sidebar.
-    </div>
-
-    <div id="myProjectBoardList" style="margin-top:20px;"></div>
-  </div>
-
-  <!-- MY TICKETS VIEW (personal - only tickets relevant to me) -->
-  <div class="view" id="view-my-tickets">
-    <header>
-      <h1>My Tickets</h1>
-      <div class="page-eyebrow">Assigned to You, or Created by You</div>
-    </header>
-
-    <button class="submit-btn" id="newMyTicketBtn" style="max-width:220px;">+ New Ticket</button>
-
-    <div class="entry-card" id="newMyTicketForm" style="display:none; max-width:560px; margin-top:16px;">
-      <div class="field">
-        <label>Title</label>
-        <input type="text" id="mtkTitle" placeholder="e.g. Build a Radiologist position" />
-      </div>
-      <div class="field-row" style="grid-template-columns: 1fr 1fr; margin-bottom:18px;">
-        <div class="field">
-          <label>Category <span class="field-hint">(optional)</span></label>
-          <select id="mtkCategory"></select>
-        </div>
-        <div class="field">
-          <label>Priority <span class="field-hint">(optional)</span></label>
-          <select id="mtkPriority">
-            <option value="">— none —</option>
-            <option value="Low">Low</option>
-            <option value="Normal">Normal</option>
-            <option value="High">High</option>
-            <option value="Urgent">Urgent</option>
-          </select>
-        </div>
-      </div>
-      <button class="submit-btn" id="mtkCreateBtn">Create Ticket</button>
-    </div>
-
-    <div class="section-label" style="margin-top:28px;">Your Open Tickets</div>
-    <div id="myTicketsList"></div>
-  </div>
-
   <!-- TO-DOS VIEW (recurring templates that spawn a Task each month) -->
   <div class="view" id="view-todos">
     <header>
-      <h1>Recurring Templates</h1>
+      <h1>Recurring Items</h1>
       <div class="page-eyebrow">Spawn a Task Each Month</div>
     </header>
 
@@ -1649,17 +1627,19 @@ td.muted { color: var(--muted); }
   </div>
 
   <!-- TICKETS VIEW -->
-  <div class="view" id="view-tickets">
-    <header>
-      <h1>Tickets</h1>
-      <div class="page-eyebrow">Requests Waiting to Become Real Work</div>
-    </header>
-
-    <div class="instructions-card">
-      <strong>How this works:</strong> A ticket is a quick flag for something that needs to happen — no date, no owner required yet. Anyone can claim an open ticket, and converting it turns it into a real Task or Project, ready to track.
+  <div class="view active" id="view-tickets">
+    <div class="ticket-title-row">
+      <button class="ticket-new-btn" id="newTicketBtn">+ New Ticket</button>
+      <header style="margin-bottom:0; flex:1;">
+        <h1>Tickets</h1>
+        <div class="page-eyebrow">Requests Waiting to Become Real Work</div>
+      </header>
+      <button class="ticket-invite-btn" id="newInviteBtn">✉ Invite External Person</button>
     </div>
 
-    <button class="submit-btn" id="newTicketBtn" style="max-width:220px;">+ New Ticket</button>
+    <div class="instructions-card" style="margin-top:24px;">
+      <strong>How this works:</strong> A ticket is a quick flag for something that needs to happen — no date, no owner required yet. Anyone can claim an open ticket, and converting it turns it into a real Task or Project, ready to track.
+    </div>
 
     <div class="entry-card" id="newTicketForm" style="display:none; max-width:560px; margin-top:16px;">
       <div class="field">
@@ -1686,10 +1666,55 @@ td.muted { color: var(--muted); }
         <label>Assignee <span class="field-hint">(optional — leave unassigned if unsure)</span></label>
         <select id="ntkAssignee"></select>
       </div>
+      <div class="field-row" style="grid-template-columns: 1fr 1fr; margin-bottom:0;">
+        <div class="field">
+          <label>External Contact <span class="field-hint">(optional)</span></label>
+          <input type="text" id="ntkExternalName" placeholder="e.g. Tyler Hare" />
+        </div>
+        <div class="field">
+          <label>Their Email <span class="field-hint">(optional)</span></label>
+          <input type="text" id="ntkExternalEmail" placeholder="hilda@example.com" />
+        </div>
+      </div>
       <button class="submit-btn" id="ntkCreateBtn">Create Ticket</button>
     </div>
 
-    <div class="section-label" style="margin-top:28px;">Open Tickets</div>
+    <div class="entry-card" id="newInviteForm" style="display:none; max-width:560px; margin-top:16px;">
+      <div class="instructions-card" style="margin-bottom:16px;">
+        This creates a link that lets someone outside the team submit their own ticket — no login needed. If you give their email, it gets sent to them automatically; otherwise you'll get a link to copy and send yourself. It stops working once it's used or expires.
+      </div>
+      <div class="field">
+        <label>Their Name</label>
+        <input type="text" id="invName" placeholder="e.g. Tyler Hare" />
+      </div>
+      <div class="field">
+        <label>Their Email <span class="field-hint">(optional)</span></label>
+        <input type="text" id="invEmail" placeholder="hilda@example.com" />
+      </div>
+      <div class="field">
+        <label>Link Expires In</label>
+        <select id="invExpiry">
+          <option value="24">24 hours</option>
+          <option value="72" selected>3 days</option>
+          <option value="168">7 days</option>
+        </select>
+      </div>
+      <button class="submit-btn" id="invCreateBtn">Generate Link</button>
+      <div id="invResultWrap" style="display:none; margin-top:16px;">
+        <div class="form-msg ok" id="invResultSentNote" style="display:none; margin-bottom:8px;">Emailed to them automatically. You can also copy the link below as a backup.</div>
+        <div class="field">
+          <label>Share This Link</label>
+          <input type="text" id="invResultLink" readonly onclick="this.select()" />
+        </div>
+        <button type="button" class="cancel-btn" id="invCopyBtn" style="margin-top:0;">Copy Link</button>
+      </div>
+    </div>
+
+    <div class="board-filter-row" style="margin-top:20px;">
+      <button type="button" class="filter-pill" id="ticketsMineOnlyPill" data-active="false">Mine Only</button>
+    </div>
+
+    <div class="section-label" style="margin-top:20px;">Open Tickets</div>
     <div id="ticketsList"></div>
 
     <div class="section-label" style="margin-top:28px;">Closed / Completed / Converted <span class="field-hint">(click to expand)</span></div>
@@ -1699,8 +1724,8 @@ td.muted { color: var(--muted); }
   <!-- KANBAN BOARD VIEW -->
   <div class="view" id="view-board">
     <header>
-      <h1>Team Project Board</h1>
-      <div class="page-eyebrow">Click a Project to Open Its Tasks</div>
+      <h1>Project Bulletin Board</h1>
+      <div class="page-eyebrow">Pick a Project, See Its Tasks</div>
     </header>
 
     <button class="submit-btn" id="newBoardProjectBtn" style="max-width:220px;">+ New Project</button>
@@ -1725,13 +1750,15 @@ td.muted { color: var(--muted); }
       <button type="button" class="filter-pill" data-status="Pending" data-active="true">Pending</button>
       <button type="button" class="filter-pill" data-status="Active" data-active="true">Active</button>
       <button type="button" class="filter-pill" data-status="Completed" data-active="true">Completed</button>
+      <button type="button" class="filter-pill" id="boardMineOnlyPill" data-active="false" style="margin-left:auto;">Mine Only</button>
     </div>
 
-    <div class="section-label" style="margin-top:24px;">Unassigned Tasks <span class="field-hint">(drag one onto a project below to assign it)</span></div>
-    <div class="unassigned-tray" id="unassignedTasksTray"></div>
-
-    <div class="section-label" style="margin-top:24px;">Projects</div>
-    <div id="projectBoardList" style="margin-top:16px;"></div>
+    <div class="todoist-board">
+      <div class="todoist-sidebar" id="projectSidebarList"></div>
+      <div class="todoist-detail" id="projectDetailPanel">
+        <div class="empty-state">Pick a project on the left to see its tasks.</div>
+      </div>
+    </div>
   </div>
 
 
@@ -2032,6 +2059,7 @@ function init() {
   // Hidden maintenance badge
   document.getElementById("bossBadge").addEventListener("click", () => {
     if (isBossAuthed()) {
+      document.getElementById("dataTabBtn").style.display = "";
       switchView("view-boss", null);
       renderBossView();
       return;
@@ -2041,6 +2069,7 @@ function init() {
     document.getElementById("pwError").textContent = "";
     document.getElementById("pwInput").focus();
   });
+  if (isBossAuthed()) document.getElementById("dataTabBtn").style.display = "";
   document.getElementById("pwSubmit").addEventListener("click", checkPassword);
   document.getElementById("pwInput").addEventListener("keydown", e => {
     if (e.key === "Enter") checkPassword();
@@ -2144,20 +2173,7 @@ function init() {
     document.getElementById("newBoardProjectForm").style.display = "none";
   });
 
-  const unassignedTray = document.getElementById("unassignedTasksTray");
-  unassignedTray.addEventListener("dragover", e => {
-    e.preventDefault();
-    unassignedTray.classList.add("drag-over");
-  });
-  unassignedTray.addEventListener("dragleave", () => unassignedTray.classList.remove("drag-over"));
-  unassignedTray.addEventListener("drop", e => {
-    e.preventDefault();
-    unassignedTray.classList.remove("drag-over");
-    const taskId = e.dataTransfer.getData("text/plain");
-    if (taskId) reassignTaskProject(taskId, "");
-  });
-
-  document.querySelectorAll("#boardFilterRow .filter-pill").forEach(pill => {
+  document.querySelectorAll("#boardFilterRow .filter-pill:not(#boardMineOnlyPill)").forEach(pill => {
     pill.addEventListener("click", () => {
       const status = pill.dataset.status;
       const nowActive = pill.dataset.active !== "true";
@@ -2166,6 +2182,20 @@ function init() {
       else boardStatusFilters.delete(status);
       renderKanbanBoard();
     });
+  });
+
+  document.getElementById("boardMineOnlyPill").addEventListener("click", () => {
+    const pill = document.getElementById("boardMineOnlyPill");
+    boardShowMineOnly = pill.dataset.active !== "true";
+    pill.dataset.active = boardShowMineOnly;
+    renderKanbanBoard();
+  });
+
+  document.getElementById("ticketsMineOnlyPill").addEventListener("click", () => {
+    const pill = document.getElementById("ticketsMineOnlyPill");
+    ticketsShowMineOnly = pill.dataset.active !== "true";
+    pill.dataset.active = ticketsShowMineOnly;
+    renderTickets();
   });
 
   document.getElementById("projYesBtn").addEventListener("click", () => {
@@ -2227,32 +2257,37 @@ function init() {
     const category = document.getElementById("ntkCategory").value;
     const priority = document.getElementById("ntkPriority").value;
     const assignee = document.getElementById("ntkAssignee").value;
+    const externalName = document.getElementById("ntkExternalName").value.trim();
+    const externalEmail = document.getElementById("ntkExternalEmail").value.trim();
     if (!title) {
       alert("Enter a title for this ticket.");
       return;
     }
-    createTicket(title, category, priority, assignee);
+    createTicket(title, category, priority, assignee, "", externalName, externalEmail);
     document.getElementById("ntkTitle").value = "";
+    document.getElementById("ntkExternalName").value = "";
+    document.getElementById("ntkExternalEmail").value = "";
     document.getElementById("newTicketForm").style.display = "none";
   });
 
-  document.getElementById("mtkCategory").innerHTML = `<option value="">— none —</option>` +
-    CATEGORIES.map(c => `<option value="${c.key}">${c.key}</option>`).join("");
-  document.getElementById("newMyTicketBtn").addEventListener("click", () => {
-    const form = document.getElementById("newMyTicketForm");
+  document.getElementById("newInviteBtn").addEventListener("click", () => {
+    const form = document.getElementById("newInviteForm");
     form.style.display = form.style.display === "none" ? "block" : "none";
   });
-  document.getElementById("mtkCreateBtn").addEventListener("click", () => {
-    const title = document.getElementById("mtkTitle").value.trim();
-    const category = document.getElementById("mtkCategory").value;
-    const priority = document.getElementById("mtkPriority").value;
-    if (!title) {
-      alert("Enter a title for this ticket.");
+  document.getElementById("invCreateBtn").addEventListener("click", () => {
+    const name = document.getElementById("invName").value.trim();
+    const email = document.getElementById("invEmail").value.trim();
+    const hours = Number(document.getElementById("invExpiry").value);
+    if (!name) {
+      alert("Enter their name first.");
       return;
     }
-    createTicket(title, category, priority, selectedEmployee);
-    document.getElementById("mtkTitle").value = "";
-    document.getElementById("newMyTicketForm").style.display = "none";
+    createTicketInvite(name, email, hours);
+  });
+  document.getElementById("invCopyBtn").addEventListener("click", () => {
+    const input = document.getElementById("invResultLink");
+    input.select();
+    navigator.clipboard.writeText(input.value).catch(() => {});
   });
 
   document.getElementById("calPrevDay").addEventListener("click", () => {
@@ -2411,6 +2446,7 @@ function checkPassword() {
   if (BOSS_PASSWORDS.includes(val)) {
     setBossAuthed();
     closePwOverlay();
+    document.getElementById("dataTabBtn").style.display = "";
     switchView("view-boss", null);
     renderBossView();
   } else {
@@ -3032,8 +3068,6 @@ function renderAll() {
   renderCalendar();
   renderToDos();
   renderTickets();
-  renderMyProjectBoard();
-  renderMyTickets();
   if (typeof renderBossView === "function" && isBossAuthed()) renderBossView();
 }
 
@@ -3217,94 +3251,158 @@ function closeEditEventModal() {
   editingEventId = null;
 }
 
-let expandedProjectTiles = new Set();
 let boardStatusFilters = new Set(["Pending", "Active", "Completed"]);
 
-function buildProjectBoardTile(p) {
+let selectedBoardProjectId = null; // null = nothing picked yet, "" = Unassigned, else a real ProjectID
+
+function buildSidebarRow(idValue, name, color, count, isUnassigned) {
+  const row = document.createElement("div");
+  row.className = "todoist-sidebar-row";
+  row.dataset.projectId = idValue;
+  row.dataset.active = selectedBoardProjectId === idValue;
+  row.innerHTML = `
+    <span class="todoist-sidebar-dot" style="background:${color}"></span>
+    <span class="todoist-sidebar-name">${name}</span>
+    <span class="todoist-sidebar-count">${count}</span>
+  `;
+  row.addEventListener("click", () => {
+    selectedBoardProjectId = idValue;
+    renderKanbanBoard();
+  });
+  row.addEventListener("dragover", e => {
+    e.preventDefault();
+    row.classList.add("drag-over");
+  });
+  row.addEventListener("dragleave", () => row.classList.remove("drag-over"));
+  row.addEventListener("drop", e => {
+    e.preventDefault();
+    row.classList.remove("drag-over");
+    const taskId = e.dataTransfer.getData("text/plain");
+    if (taskId) reassignTaskProject(taskId, isUnassigned ? "" : idValue);
+  });
+  return row;
+}
+
+function renderKanbanBoard() {
+  const sidebar = document.getElementById("projectSidebarList");
+  const detail = document.getElementById("projectDetailPanel");
+  sidebar.innerHTML = "";
+
+  let matching = projects.filter(p => boardStatusFilters.has(p.Status));
+  if (boardShowMineOnly) {
+    const mineIds = new Set(getMyProjects().map(p => p.ProjectID));
+    matching = matching.filter(p => mineIds.has(p.ProjectID));
+  }
+
+  const unassignedCount = tasks.filter(t => !t.ProjectID).length;
+  sidebar.appendChild(buildSidebarRow("", "Unassigned", "var(--dim)", unassignedCount, true));
+
+  if (!matching.length) {
+    const msg = document.createElement("div");
+    msg.className = "empty-state";
+    msg.style.padding = "12px 4px";
+    msg.textContent = boardShowMineOnly ? "No projects of yours match right now." : "No projects match the selected filters.";
+    sidebar.appendChild(msg);
+  } else {
+    matching.forEach(p => {
+      const count = tasks.filter(t => t.ProjectID === p.ProjectID).length;
+      sidebar.appendChild(buildSidebarRow(p.ProjectID, p.ProjectName, catColor(p.Category), count, false));
+    });
+  }
+
+  // Keep a valid selection — if what was selected got filtered out, fall back to Unassigned
+  if (selectedBoardProjectId && selectedBoardProjectId !== "" && !matching.some(p => p.ProjectID === selectedBoardProjectId)) {
+    selectedBoardProjectId = "";
+    sidebar.querySelectorAll(".todoist-sidebar-row").forEach(r => {
+      r.dataset.active = r.dataset.projectId === "";
+    });
+  }
+
+  if (selectedBoardProjectId === null) {
+    detail.innerHTML = `<div class="empty-state">Pick a project on the left to see its tasks.</div>`;
+    return;
+  }
+
+  renderProjectDetailPanel(detail);
+}
+
+function renderProjectDetailPanel(detail) {
+  if (selectedBoardProjectId === "") {
+    const unassignedTasks = tasks.filter(t => !t.ProjectID);
+    detail.innerHTML = `
+      <div class="todoist-detail-header">
+        <div class="todoist-detail-title" style="color:var(--dim)">Unassigned</div>
+      </div>
+      <div class="todoist-task-list" id="boardTaskListWrap"></div>
+    `;
+    const wrap = detail.querySelector("#boardTaskListWrap");
+    if (!unassignedTasks.length) {
+      wrap.innerHTML = `<div class="empty-state">Nothing unassigned right now.</div>`;
+    } else {
+      unassignedTasks.forEach(t => wrap.appendChild(buildTaskCard(t)));
+    }
+    return;
+  }
+
+  const p = projects.find(x => x.ProjectID === selectedBoardProjectId);
+  if (!p) {
+    selectedBoardProjectId = null;
+    detail.innerHTML = `<div class="empty-state">Pick a project on the left to see its tasks.</div>`;
+    return;
+  }
+
   const color = catColor(p.Category);
   const projTasks = tasks.filter(t => t.ProjectID === p.ProjectID);
 
-  const tile = document.createElement("div");
-  tile.className = "project-board-tile";
-  tile.dataset.projectId = p.ProjectID;
-  tile.dataset.open = expandedProjectTiles.has(p.ProjectID) ? "true" : "false";
-  tile.style.borderLeft = `3px solid ${color}`;
-
-  tile.innerHTML = `
-    <div class="project-board-tile-head">
-      <span class="project-board-tile-name" style="color:${color}">${p.ProjectName || ""}</span>
-      <span class="project-board-tile-meta">${projTasks.length} task${projTasks.length === 1 ? "" : "s"}</span>
+  detail.innerHTML = `
+    <div class="todoist-detail-header">
+      <div class="todoist-detail-title" style="color:${color}">${p.ProjectName || ""}</div>
+      <div class="todoist-detail-actions">
+        <button type="button" class="todo-pause-btn" id="boardDetailEditBtn">Edit</button>
+        <button type="button" class="todo-delete-btn" id="boardDetailDeleteBtn">Delete Project</button>
+      </div>
     </div>
-    <div class="project-board-tile-body">
-      <div class="status-picker" style="margin-bottom:16px;">
-        <button type="button" class="status-btn board-status-btn" data-status="Pending" data-active="${p.Status === "Pending"}">Pending</button>
-        <button type="button" class="status-btn board-status-btn" data-status="Active" data-active="${p.Status === "Active"}">Active</button>
-        <button type="button" class="status-btn board-status-btn" data-status="Completed" data-active="${p.Status === "Completed"}">Completed</button>
-      </div>
-
-      <div class="todo-card-actions" style="margin-bottom:16px;">
-        <button type="button" class="todo-pause-btn project-board-edit-btn">Edit</button>
-        <button type="button" class="todo-delete-btn project-board-delete-btn">Delete Project</button>
-      </div>
-
-      <div class="todo-edit-panel project-board-edit-panel" style="display:none;">
-        <div class="field">
-          <label>Project Name</label>
-          <input type="text" class="board-edit-name" value="${(p.ProjectName || "").replace(/"/g, "&quot;")}" />
-        </div>
-        <div class="field">
-          <label>Category</label>
-          <select class="board-edit-category"></select>
-        </div>
-        <button type="button" class="submit-btn board-edit-save-btn" style="margin-top:8px;">Save Changes</button>
-      </div>
-
-      <div class="section-label" style="margin-top:0;">Tasks</div>
-      <div class="project-board-tasks"></div>
-      <button type="button" class="new-project-toggle-btn project-board-add-task-btn" style="margin-top:14px;">+ Add Task</button>
-
-      ${projTasks.length === 1 ? `<button type="button" class="new-project-toggle-btn project-board-convert-task-btn" style="margin-top:10px;">Convert to a Single Task Instead</button>` : ""}
+    <div class="status-picker" style="margin-bottom:16px; max-width:400px;">
+      <button type="button" class="status-btn" id="boardDetailStatusPending" data-active="${p.Status === "Pending"}">Pending</button>
+      <button type="button" class="status-btn" id="boardDetailStatusActive" data-active="${p.Status === "Active"}">Active</button>
+      <button type="button" class="status-btn" id="boardDetailStatusCompleted" data-active="${p.Status === "Completed"}">Completed</button>
     </div>
+    <div class="todo-edit-panel" id="boardDetailEditPanel" style="display:none;">
+      <div class="field">
+        <label>Project Name</label>
+        <input type="text" id="boardEditName" value="${(p.ProjectName || "").replace(/"/g, "&quot;")}" />
+      </div>
+      <div class="field">
+        <label>Category</label>
+        <select id="boardEditCategory"></select>
+      </div>
+      <button type="button" class="submit-btn" id="boardDetailSaveBtn" style="margin-top:8px;">Save Changes</button>
+    </div>
+    <div class="todoist-task-list" id="boardTaskListWrap"></div>
+    <button type="button" class="new-project-toggle-btn" id="boardDetailAddTaskBtn" style="margin-top:14px;">+ Add Task</button>
+    ${projTasks.length === 1 ? `<button type="button" class="new-project-toggle-btn" id="boardDetailConvertBtn" style="margin-top:10px;">Convert to a Single Task Instead</button>` : ""}
   `;
 
-  tile.querySelector(".project-board-tile-head").addEventListener("click", () => {
-    const nowOpen = tile.dataset.open !== "true";
-    tile.dataset.open = nowOpen ? "true" : "false";
-    if (nowOpen) expandedProjectTiles.add(p.ProjectID);
-    else expandedProjectTiles.delete(p.ProjectID);
+  const taskListWrap = detail.querySelector("#boardTaskListWrap");
+  if (!projTasks.length) {
+    taskListWrap.innerHTML = `<div class="empty-state" style="padding:10px 0;">No tasks in this project yet.</div>`;
+  } else {
+    projTasks.forEach(t => taskListWrap.appendChild(buildTaskCard(t)));
+  }
+
+  ["Pending", "Active", "Completed"].forEach(status => {
+    detail.querySelector("#boardDetailStatus" + status).addEventListener("click", () => moveProjectStatus(p.ProjectID, status));
   });
 
-  tile.addEventListener("dragover", e => {
-    e.preventDefault();
-    tile.classList.add("drag-over");
-  });
-  tile.addEventListener("dragleave", () => tile.classList.remove("drag-over"));
-  tile.addEventListener("drop", e => {
-    e.preventDefault();
-    e.stopPropagation();
-    tile.classList.remove("drag-over");
-    const taskId = e.dataTransfer.getData("text/plain");
-    if (taskId) reassignTaskProject(taskId, p.ProjectID);
-  });
-
-  tile.querySelectorAll(".board-status-btn").forEach(btn => {
-    btn.addEventListener("click", e => {
-      e.stopPropagation();
-      moveProjectStatus(p.ProjectID, btn.dataset.status);
-    });
-  });
-
-  const editPanel = tile.querySelector(".project-board-edit-panel");
-  const editCategorySel = tile.querySelector(".board-edit-category");
+  const editPanel = detail.querySelector("#boardDetailEditPanel");
+  const editCategorySel = detail.querySelector("#boardEditCategory");
   editCategorySel.innerHTML = CATEGORIES.map(c => `<option value="${c.key}" ${c.key === p.Category ? "selected" : ""}>${c.key}</option>`).join("");
 
-  tile.querySelector(".project-board-edit-btn").addEventListener("click", e => {
-    e.stopPropagation();
+  detail.querySelector("#boardDetailEditBtn").addEventListener("click", () => {
     editPanel.style.display = editPanel.style.display === "none" ? "block" : "none";
   });
-  tile.querySelector(".board-edit-save-btn").addEventListener("click", e => {
-    e.stopPropagation();
-    const newName = tile.querySelector(".board-edit-name").value.trim();
+  detail.querySelector("#boardDetailSaveBtn").addEventListener("click", () => {
+    const newName = detail.querySelector("#boardEditName").value.trim();
     const newCategory = editCategorySel.value;
     if (!newName) {
       alert("Project name can't be empty.");
@@ -3313,71 +3411,13 @@ function buildProjectBoardTile(p) {
     updateProjectDetails(p.ProjectID, newName, newCategory);
     editPanel.style.display = "none";
   });
-  tile.querySelector(".project-board-delete-btn").addEventListener("click", e => {
-    e.stopPropagation();
+  detail.querySelector("#boardDetailDeleteBtn").addEventListener("click", () => {
     deleteProject(p.ProjectID, p.ProjectName);
   });
+  detail.querySelector("#boardDetailAddTaskBtn").addEventListener("click", () => addTaskToProject(p.ProjectID));
 
-  const tasksWrap = tile.querySelector(".project-board-tasks");
-  if (!projTasks.length) {
-    tasksWrap.innerHTML = `<div class="empty-state" style="padding:10px 0;">No tasks in this project yet.</div>`;
-  } else {
-    projTasks.forEach(t => tasksWrap.appendChild(buildTaskCard(t)));
-  }
-
-  tile.querySelector(".project-board-add-task-btn").addEventListener("click", e => {
-    e.stopPropagation();
-    addTaskToProject(p.ProjectID);
-  });
-
-  const convertBtn = tile.querySelector(".project-board-convert-task-btn");
-  if (convertBtn) {
-    convertBtn.addEventListener("click", e => {
-      e.stopPropagation();
-      convertProjectToTask(p.ProjectID);
-    });
-  }
-
-  return tile;
-}
-
-function renderKanbanBoard() {
-  const list = document.getElementById("projectBoardList");
-  list.innerHTML = "";
-
-  const matching = projects.filter(p => boardStatusFilters.has(p.Status));
-  if (!matching.length) {
-    list.innerHTML = `<div class="empty-state">No projects match the selected filters.</div>`;
-  } else {
-    matching.forEach(p => list.appendChild(buildProjectBoardTile(p)));
-  }
-
-  const tray = document.getElementById("unassignedTasksTray");
-  const unassignedTasks = tasks.filter(t => !t.ProjectID);
-  tray.innerHTML = "";
-  if (!unassignedTasks.length) {
-    tray.innerHTML = `<div class="empty-state">Nothing unassigned right now.</div>`;
-  } else {
-    unassignedTasks.forEach(t => tray.appendChild(buildUnassignedTaskTile(t)));
-  }
-}
-
-function buildUnassignedTaskTile(t) {
-  const color = catColor(t.Category);
-  const tile = document.createElement("div");
-  tile.className = "kanban-tile";
-  tile.draggable = true;
-  tile.dataset.taskId = t.TaskID;
-  tile.innerHTML = `
-    <div class="kanban-tile-name" style="color:${color}">${t.TaskName || ""}</div>
-    <div class="kanban-tile-meta"><span>${t.Category || ""}</span><span>${taskOwner(t) || ""}</span></div>
-  `;
-  tile.addEventListener("dragstart", e => {
-    tile.classList.add("dragging");
-    e.dataTransfer.setData("text/plain", t.TaskID);
-  });
-  tile.addEventListener("dragend", () => tile.classList.remove("dragging"));
-  return tile;
+  const convertBtn = detail.querySelector("#boardDetailConvertBtn");
+  if (convertBtn) convertBtn.addEventListener("click", () => convertProjectToTask(p.ProjectID));
 }
 
 function addTaskToProject(projectId) {
@@ -3847,10 +3887,11 @@ function priorityColor(priority) {
 
 function renderTickets() {
   const openList = document.getElementById("ticketsList");
-  const open = tickets.filter(t => t.Status === "Open");
+  let open = tickets.filter(t => t.Status === "Open");
+  if (ticketsShowMineOnly) open = open.filter(t => getMyTickets().includes(t));
   openList.innerHTML = open.length
     ? open.map(t => buildTicketCardHtml(t)).join("")
-    : `<div class="empty-state">No open tickets right now.</div>`;
+    : `<div class="empty-state">${ticketsShowMineOnly ? "Nothing assigned to or created by you right now." : "No open tickets right now."}</div>`;
 
   const historyList = document.getElementById("ticketsHistoryList");
   const history = tickets.filter(t => t.Status !== "Open");
@@ -3898,7 +3939,7 @@ function wireTicketCardActions(container) {
   });
 }
 
-/* ---------- Personal views: My Project Board, My Tickets ---------- */
+/* ---------- "Mine Only" filter helpers, shared by Tickets and Project Board ---------- */
 function getMyProjects() {
   return projects.filter(p => {
     const hasMyTask = tasks.some(t => t.ProjectID === p.ProjectID && isAssignedTo(t, selectedEmployee));
@@ -3906,32 +3947,12 @@ function getMyProjects() {
   });
 }
 
-function renderMyProjectBoard() {
-  const list = document.getElementById("myProjectBoardList");
-  if (!list) return;
-  list.innerHTML = "";
-  const mine = getMyProjects();
-  if (!mine.length) {
-    list.innerHTML = `<div class="empty-state">Nothing yet — projects you create, or get assigned a task in, show up here.</div>`;
-    return;
-  }
-  mine.forEach(p => list.appendChild(buildProjectBoardTile(p)));
-}
-
 function getMyTickets() {
-  return tickets.filter(t => t.Status === "Open" && (t.Assignee === selectedEmployee || t.CreatedBy === selectedEmployee));
+  return tickets.filter(t => t.Assignee === selectedEmployee || t.CreatedBy === selectedEmployee);
 }
 
-function renderMyTickets() {
-  const list = document.getElementById("myTicketsList");
-  if (!list) return;
-  const mine = getMyTickets();
-  list.innerHTML = mine.length
-    ? mine.map(t => buildTicketCardHtml(t)).join("")
-    : `<div class="empty-state">Nothing here yet.</div>`;
-
-  wireTicketCardActions(list);
-}
+let ticketsShowMineOnly = false;
+let boardShowMineOnly = false;
 
 function buildTicketCardHtml(t) {
   const catHex = t.Category ? catColor(t.Category) : "";
@@ -3949,6 +3970,7 @@ function buildTicketCardHtml(t) {
             <span class="ticket-assignee">${t.Assignee ? t.Assignee : "Unassigned"}</span>
             ${t.LastUpdated ? `<span class="ticket-timestamp">Updated ${t.LastUpdated}</span>` : ""}
           </div>
+          ${t.ExternalName ? `<div class="ticket-notes-preview">Regarding: <strong>${t.ExternalName}</strong>${t.ExternalEmail ? ` (${t.ExternalEmail})` : ""}</div>` : ""}
           ${t.Notes ? `<div class="ticket-notes-preview">${t.Notes.replace(/</g, "&lt;")}</div>` : ""}
         </div>
         <div class="ticket-actions">
@@ -3975,7 +3997,7 @@ function buildTicketCardHtml(t) {
   `;
 }
 
-async function createTicket(title, category, priority, assignee, notes) {
+async function createTicket(title, category, priority, assignee, notes, externalName, externalEmail) {
   const ticketId = "tk" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   const createdDate = dateToStr(new Date());
   const newTicket = {
@@ -3991,6 +4013,8 @@ async function createTicket(title, category, priority, assignee, notes) {
     ConvertedID: "",
     CreatedBy: selectedEmployee,
     CreatedDate: createdDate,
+    ExternalName: externalName || "",
+    ExternalEmail: externalEmail || "",
   };
   tickets.push(newTicket);
 
@@ -4002,6 +4026,7 @@ async function createTicket(title, category, priority, assignee, notes) {
         body: JSON.stringify({
           action: "createTicket", ticketId, title, category: category || "", priority: priority || "",
           assignee: assignee || "", notes: notes || "", createdBy: selectedEmployee, createdDate,
+          externalName: externalName || "", externalEmail: externalEmail || "",
         }),
       });
     } catch (err) {}
@@ -4046,7 +4071,43 @@ async function closeTicket(ticketId) {
     } catch (err) {}
   }
   renderTickets();
-  renderMyTickets();
+}
+
+function getSiteBasePath() {
+  let href = window.location.href.split("?")[0].split("#")[0];
+  if (href.endsWith("index.html")) href = href.slice(0, -"index.html".length);
+  if (!href.endsWith("/")) href += "/";
+  return href;
+}
+
+async function createTicketInvite(name, email, hours) {
+  const inviteId = "inv" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const token = Date.now().toString(36) + Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10);
+  const expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
+  const createdDate = dateToStr(new Date());
+  const link = getSiteBasePath() + "external_ticket.html?token=" + token;
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "createTicketInvite", inviteId, token, externalName: name, externalEmail: email,
+          expiresAt, createdBy: selectedEmployee, createdDate, inviteLink: link,
+        }),
+      });
+    } catch (err) {
+      alert("Something went wrong creating the invite. Try again.");
+      return;
+    }
+  }
+
+  document.getElementById("invResultLink").value = link;
+  document.getElementById("invResultWrap").style.display = "block";
+  document.getElementById("invResultSentNote").style.display = email ? "block" : "none";
+  document.getElementById("invName").value = "";
+  document.getElementById("invEmail").value = "";
 }
 
 async function completeTicket(ticketId) {
@@ -4066,7 +4127,6 @@ async function completeTicket(ticketId) {
     } catch (err) {}
   }
   renderTickets();
-  renderMyTickets();
 }
 
 async function updateTicketDetails(ticketId, notes, assignee) {
@@ -4092,7 +4152,6 @@ async function updateTicketDetails(ticketId, notes, assignee) {
     } catch (err) {}
   }
   renderTickets();
-  renderMyTickets();
 }
 
 async function markTicketConverted(ticketId, convertedType, convertedId) {
