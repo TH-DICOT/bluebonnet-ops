@@ -1,0 +1,225 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Submit a Request</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap');
+
+:root {
+  --bg: #050F23;
+  --card: rgba(13,27,55,0.8);
+  --border: rgba(55,138,221,0.08);
+  --text: #EAF0FB;
+  --muted: #ADBEDD;
+  --dim: #7A8CB0;
+  --green: #1D9E75;
+  --accent: #63bcbc;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.wrap { width: 100%; max-width: 480px; }
+.brand { font-family: 'DM Serif Display', serif; font-size: 24px; text-align: center; margin-bottom: 8px; }
+.sub { font-size: 14px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); text-align: center; margin-bottom: 28px; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+.field { margin-bottom: 18px; }
+.field label { display: block; font-size: 14px; letter-spacing: 0.5px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+.field input, .field textarea {
+  width: 100%;
+  background: rgba(5,15,35,0.6);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 12px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+}
+.field textarea { min-height: 100px; resize: vertical; }
+.field input:focus, .field textarea:focus { outline: none; border-color: var(--accent); }
+.submit-btn {
+  width: 100%;
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: 8px;
+  padding: 14px 22px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  margin-top: 6px;
+}
+.submit-btn:hover { filter: brightness(1.1); }
+.submit-btn:disabled { opacity: 0.5; cursor: default; }
+.msg { font-size: 14px; margin-top: 14px; text-align: center; min-height: 16px; }
+.msg.ok { color: var(--green); }
+.msg.err { color: #D95C84; }
+.status-screen { text-align: center; padding: 20px 0; }
+.status-title { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+.status-body { color: var(--muted); font-size: 15px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="brand">HR Task Tracker</div>
+  <div class="sub">Submit a Request</div>
+
+  <div class="card" id="loadingCard">
+    <div class="status-screen">
+      <div class="status-title">Checking your link…</div>
+    </div>
+  </div>
+
+  <div class="card" id="invalidCard" style="display:none;">
+    <div class="status-screen">
+      <div class="status-title">This link isn't valid</div>
+      <div class="status-body" id="invalidReason">It may have expired or already been used. Reach out to whoever sent it to you for a new one.</div>
+    </div>
+  </div>
+
+  <div class="card" id="formCard" style="display:none;">
+    <div class="field">
+      <label>Your Name</label>
+      <input type="text" id="subName" />
+    </div>
+    <div class="field">
+      <label>Your Email <span style="text-transform:none; letter-spacing:0;">(optional)</span></label>
+      <input type="text" id="subEmail" />
+    </div>
+    <div class="field">
+      <label>What Do You Need?</label>
+      <input type="text" id="subTitle" placeholder="A short title" />
+    </div>
+    <div class="field">
+      <label>Details <span style="text-transform:none; letter-spacing:0;">(optional)</span></label>
+      <textarea id="subNotes" placeholder="Anything else that would help"></textarea>
+    </div>
+    <button class="submit-btn" id="subBtn">Submit</button>
+    <div class="msg" id="subMsg"></div>
+  </div>
+
+  <div class="card" id="doneCard" style="display:none;">
+    <div class="status-screen">
+      <div class="status-title">Thanks — it's submitted.</div>
+      <div class="status-body">Your request has been logged with the team.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyUZJY5ZCPF82fa7slgGYjRDoZVghXR9QJHusj9NM8ouyulRbj-PGIdIGq5qIeRcSoxYw/exec";
+
+function getToken() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("token") || "";
+}
+
+function showCard(id) {
+  ["loadingCard", "invalidCard", "formCard", "doneCard"].forEach(cardId => {
+    document.getElementById(cardId).style.display = cardId === id ? "block" : "none";
+  });
+}
+
+function dateToStr(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
+}
+
+async function init() {
+  const token = getToken();
+  if (!token) {
+    document.getElementById("invalidReason").textContent = "This link is missing its access code.";
+    showCard("invalidCard");
+    return;
+  }
+
+  try {
+    const res = await fetch(APPS_SCRIPT_URL + "?action=validateInvite&token=" + encodeURIComponent(token));
+    const data = await res.json();
+    if (!data.valid) {
+      document.getElementById("invalidReason").textContent = data.reason || "This link is no longer valid.";
+      showCard("invalidCard");
+      return;
+    }
+    if (data.externalName) document.getElementById("subName").value = data.externalName;
+    if (data.externalEmail) document.getElementById("subEmail").value = data.externalEmail;
+    showCard("formCard");
+  } catch (err) {
+    document.getElementById("invalidReason").textContent = "Couldn't check this link right now. Try again in a moment.";
+    showCard("invalidCard");
+  }
+}
+
+document.getElementById("subBtn").addEventListener("click", async () => {
+  const token = getToken();
+  const name = document.getElementById("subName").value.trim();
+  const email = document.getElementById("subEmail").value.trim();
+  const title = document.getElementById("subTitle").value.trim();
+  const notes = document.getElementById("subNotes").value.trim();
+  const msg = document.getElementById("subMsg");
+
+  if (!name || !title) {
+    msg.textContent = "Please fill in your name and what you need.";
+    msg.className = "msg err";
+    return;
+  }
+
+  const btn = document.getElementById("subBtn");
+  btn.disabled = true;
+  btn.textContent = "Submitting...";
+
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "submitExternalTicket",
+        token,
+        title,
+        notes,
+        externalName: name,
+        externalEmail: email,
+        createdDate: dateToStr(new Date()),
+      }),
+    });
+    const data = await res.json();
+    if (data.status === "ok") {
+      showCard("doneCard");
+    } else {
+      msg.textContent = data.message || "Something went wrong. Try again.";
+      msg.className = "msg err";
+      btn.disabled = false;
+      btn.textContent = "Submit";
+    }
+  } catch (err) {
+    msg.textContent = "Something went wrong. Try again.";
+    msg.className = "msg err";
+    btn.disabled = false;
+    btn.textContent = "Submit";
+  }
+});
+
+init();
+</script>
+</body>
+</html>
