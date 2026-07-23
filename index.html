@@ -427,10 +427,6 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
 .status-btn[data-status="Pending"][data-active="true"] { background: #C9A24D; color: #050F23; border-color: transparent; }
 .status-btn[data-status="Active"][data-active="true"] { background: #1D9E75; color: #050F23; border-color: transparent; }
 .status-btn[data-status="Completed"][data-active="true"] { background: #5A6A8F; color: #EAF0FB; border-color: transparent; }
-/* Task vs Ticket toggle on a recurring item — same pill shape as the status
-   picker, but keyed off data-type instead of data-status. */
-.ntd-type-btn[data-active="true"],
-.todo-edit-type-btn[data-active="true"] { background: #63bcbc; color: #050F23; border-color: transparent; }
 
 .yesno-picker { display: flex; gap: 8px; max-width: 220px; }
 .yesno-btn {
@@ -688,40 +684,6 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
 .kanban-tile-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
 .kanban-tile-meta { font-size: 14px; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
 
-.todoist-board { display: flex; gap: 20px; align-items: flex-start; margin-top: 8px; }
-.todoist-sidebar { width: 340px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; }
-.todoist-sidebar-category-label {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  padding: 14px 12px 4px;
-}
-.todoist-sidebar-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--muted);
-}
-.todoist-sidebar-row:hover { background: rgba(255,255,255,0.04); color: var(--text); }
-.todoist-sidebar-row[data-active="true"] { background: rgba(99,188,188,0.12); color: var(--text); }
-.todoist-sidebar-row.drag-over { background: rgba(99,188,188,0.22); }
-.todoist-sidebar-twisty {
-  width: 14px;
-  flex-shrink: 0;
-  font-size: 11px;
-  color: var(--dim);
-  text-align: center;
-  user-select: none;
-}
-.todoist-sidebar-twisty:hover { color: var(--text); }
-.todoist-sidebar-twisty-empty { visibility: hidden; }
-.todoist-sidebar-row[data-nested="true"] { font-size: 15px; font-weight: 500; }
 .todoist-breadcrumb {
   font-size: 13px;
   font-weight: 600;
@@ -752,9 +714,432 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
 .subproject-chip-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 .subproject-chip-count { color: var(--dim); font-weight: 700; }
 .rollup-note { font-size: 13px; color: var(--dim); margin-bottom: 14px; }
-.todoist-sidebar-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
-.todoist-sidebar-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.todoist-sidebar-count { font-size: 14px; color: var(--dim); font-weight: 700; }
+
+/* ---------- PROJECT BULLETIN BOARD ----------
+   A literal board: one pinned card per category, laid out 3 across and 4
+   down so the twelve categories always sit in the same place. Muscle memory
+   beats a list that reshuffles itself every time something is added. */
+.bulletin {
+  margin-top: 20px;
+  padding: 24px 22px 26px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background-color: #0D1730;
+  /* Cork texture built from stacked dot gradients rather than an image, so
+     it stays crisp at any zoom and costs nothing to load. */
+  background-image:
+    radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    radial-gradient(rgba(255,255,255,0.028) 1px, transparent 1px);
+  background-size: 15px 15px, 9px 9px;
+  background-position: 0 0, 5px 7px;
+}
+.bulletin-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 1150px) { .bulletin-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 720px)  { .bulletin-grid { grid-template-columns: 1fr; } }
+
+.pin-card {
+  position: relative;
+  background: #16213A;
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--cat, #63bcbc);
+  border-radius: 10px;
+  padding: 22px 14px 14px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.38);
+  transform: rotate(var(--tilt, 0deg));
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+.pin-card:hover {
+  /* straightens and lifts, like picking a card off the cork to read it */
+  transform: rotate(0deg) translateY(-3px);
+  box-shadow: 0 14px 28px rgba(0,0,0,0.5);
+}
+.pin-card[data-empty="true"] { opacity: 0.4; }
+.pin-card[data-empty="true"]:hover { opacity: 1; }
+.pin-card::before {
+  content: "";
+  position: absolute;
+  top: -7px; left: 50%;
+  transform: translateX(-50%);
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  background: var(--cat, #63bcbc);
+  box-shadow: 0 0 0 3px #0D1730, 0 3px 5px rgba(0,0,0,0.55);
+}
+.pin-card-title {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--cat, #63bcbc);
+  line-height: 1.25;
+}
+.pin-card-sub { font-size: 12px; color: var(--dim); margin: 3px 0 12px; font-weight: 600; }
+.pin-proj {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.pin-proj:hover { background: rgba(255,255,255,0.07); color: var(--text); }
+.pin-proj.drag-over { background: rgba(99,188,188,0.28); color: var(--text); }
+.pin-proj[data-depth="1"] { padding-left: 18px; font-size: 13px; font-weight: 500; }
+.pin-proj[data-depth="2"] { padding-left: 30px; font-size: 13px; font-weight: 500; }
+.pin-proj[data-depth="3"] { padding-left: 42px; font-size: 13px; font-weight: 500; }
+.pin-proj[data-done="true"] .pin-proj-name { text-decoration: line-through; opacity: 0.65; }
+.pin-proj-branch { color: var(--dim); font-size: 11px; flex-shrink: 0; }
+.pin-proj-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pin-proj-count { font-size: 12px; color: var(--dim); font-weight: 700; flex-shrink: 0; }
+.pin-card-empty { font-size: 13px; color: var(--dim); padding: 4px 8px 8px; }
+.pin-card-add {
+  margin-top: 10px;
+  width: 100%;
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--dim);
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pin-card-add:hover { border-color: var(--cat, #63bcbc); color: var(--cat, #63bcbc); }
+
+/* Unassigned work isn't a category, so it doesn't get a slot in the grid —
+   it's the scrap note pinned across the top until someone files it. */
+.loose-note {
+  position: relative;
+  margin-bottom: 22px;
+  padding: 16px 18px;
+  border-radius: 10px;
+  border: 1px dashed #C9A24D;
+  background: rgba(201, 162, 77, 0.09);
+}
+.loose-note.drag-over { background: rgba(201, 162, 77, 0.22); }
+.loose-note-title {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #C9A24D;
+  margin-bottom: 4px;
+}
+.loose-note-hint { font-size: 12px; color: var(--dim); margin-bottom: 12px; }
+.loose-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.loose-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: grab;
+}
+.loose-chip:hover { color: var(--text); border-color: #C9A24D; }
+.loose-chip[data-open="true"] {
+  background: rgba(201, 162, 77, 0.2);
+  border-color: #C9A24D;
+  color: var(--text);
+}
+/* The opened task drops out of the pill row into a panel underneath, so the
+   pills stay a single scannable line however long the notes run. */
+.loose-detail-box {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(201, 162, 77, 0.45);
+}
+.loose-chip-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pin-card { transform: none; transition: none; }
+  .pin-card:hover { transform: none; }
+}
+
+/* ---------- ATTACHMENTS ---------- */
+.attach-block { margin-top: 20px; }
+.attach-list { display: flex; flex-direction: column; gap: 6px; }
+.attach-empty { font-size: 13px; color: var(--dim); padding: 2px 0; }
+.attach-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+}
+.attach-name {
+  flex: 1;
+  color: #63bcbc;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.attach-name:hover { text-decoration: underline; }
+.attach-meta { font-size: 12px; color: var(--dim); flex-shrink: 0; }
+.attach-remove {
+  background: transparent;
+  border: none;
+  color: var(--dim);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+.attach-remove:hover { color: #D95C84; }
+.attach-actions { display: flex; align-items: center; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+.attach-upload-btn {
+  display: inline-block;
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--muted);
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.attach-upload-btn:hover { border-color: #63bcbc; color: #63bcbc; }
+.attach-status { font-size: 12px; font-weight: 600; color: var(--dim); }
+.attach-status[data-state="working"] { color: #63bcbc; }
+.attach-status[data-state="error"] { color: #D95C84; }
+
+/* ---------- TICKET BOARD (Jira-style) ---------- */
+.ticket-toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.ticket-search {
+  flex: 1;
+  min-width: 220px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-family: inherit;
+}
+.ticket-search::placeholder { color: var(--dim); }
+.ticket-filter-select {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+}
+.ticket-board {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+  align-items: start;
+}
+@media (max-width: 1100px) { .ticket-board { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px)  { .ticket-board { grid-template-columns: 1fr; } }
+
+.ticket-col {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 10px 14px;
+  min-height: 120px;
+}
+.ticket-col.drag-over { background: rgba(99,188,188,0.14); border-color: #63bcbc; }
+.ticket-col-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.ticket-col-dot { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+.ticket-col-count { margin-left: auto; color: var(--dim); }
+.ticket-col-empty { font-size: 12px; color: var(--dim); padding: 6px 4px; }
+
+.tkt {
+  background: #16213A;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--tkt-cat, var(--border));
+  border-radius: 8px;
+  padding: 11px 12px;
+  margin-bottom: 9px;
+  cursor: pointer;
+}
+.tkt:hover { border-color: #63bcbc; }
+.tkt.dragging { opacity: 0.45; }
+.tkt-key-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.tkt-key {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--dim);
+  letter-spacing: 0.4px;
+}
+.tkt-prio { margin-left: auto; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+.tkt-title { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.35; }
+.tkt-foot { display: flex; align-items: center; gap: 6px; margin-top: 9px; flex-wrap: wrap; }
+.tkt-chip {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.07);
+  color: var(--dim);
+}
+.tkt-who { margin-left: auto; display: flex; gap: -4px; }
+.tkt-avatar {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 800;
+  color: #050F23;
+  margin-left: -6px;
+  border: 2px solid #16213A;
+}
+.tkt-comment-count { font-size: 11px; color: var(--dim); font-weight: 700; }
+
+/* Detail modal */
+.tkt-detail-key {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--dim);
+  letter-spacing: 0.5px;
+}
+.tkt-detail-title { font-size: 22px; font-weight: 700; color: var(--text); margin: 4px 0 14px; }
+.tkt-detail-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.tkt-field-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--dim); font-weight: 700; margin-bottom: 4px; }
+.tkt-field-value { font-size: 14px; color: var(--text); font-weight: 600; }
+.tkt-status-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; }
+.tkt-status-btn {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--muted);
+  border-radius: 20px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.tkt-status-btn[data-active="true"] { color: #050F23; border-color: transparent; }
+
+.tkt-comments { margin-top: 6px; }
+.tkt-comment {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+.tkt-comment-body { flex: 1; }
+.tkt-comment-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 3px; }
+.tkt-comment-author { font-size: 13px; font-weight: 700; color: var(--text); }
+.tkt-comment-when { font-size: 11px; color: var(--dim); }
+.tkt-comment-text { font-size: 14px; color: var(--muted); line-height: 1.5; white-space: pre-wrap; }
+.tkt-comment-del { background: none; border: none; color: var(--dim); cursor: pointer; font-size: 15px; padding: 0 4px; }
+.tkt-comment-del:hover { color: #D95C84; }
+.tkt-comment-empty { font-size: 13px; color: var(--dim); padding: 10px 0; }
+
+/* ---------- NEW TICKET FORM ----------
+   Given the whole screen instead of a 560px column: the thing you're actually
+   writing gets the room, and the metadata sits in a quiet rail beside it. */
+.tkt-create-box {
+  max-width: 940px;
+  width: 100%;
+}
+.tkt-create-head { margin-bottom: 22px; padding-right: 40px; }
+.tkt-create-eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 10px;
+}
+.tkt-create-title-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--border);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 26px;
+  font-weight: 700;
+  padding: 6px 0 12px;
+  outline: none;
+}
+.tkt-create-title-input::placeholder { color: var(--dim); font-weight: 600; }
+.tkt-create-title-input:focus { border-bottom-color: #63bcbc; }
+
+.tkt-create-grid {
+  display: grid;
+  grid-template-columns: 1.45fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+@media (max-width: 800px) { .tkt-create-grid { grid-template-columns: 1fr; gap: 20px; } }
+
+.tkt-create-side {
+  background: rgba(255,255,255,0.035);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 16px;
+}
+.tkt-create-desc { min-height: 150px; }
+
+/* External contact is the rare case, so it stays folded away until needed. */
+.tkt-create-disclosure {
+  background: none;
+  border: none;
+  color: var(--dim);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 6px 0;
+}
+.tkt-create-disclosure:hover { color: #63bcbc; }
+
+.tkt-create-foot {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 26px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
 
 .todoist-detail {
   flex: 1;
@@ -1591,7 +1976,7 @@ td.muted { color: var(--muted); }
           <input type="number" id="fHoursDirect" step="0.25" min="0" placeholder="e.g. 1.5" class="hours-direct-input" />
 
           <div class="field" id="newTaskFields2" style="margin-top:6px;">
-            <label>Files <span class="field-hint">(link to a file already in your Shared Drive — no upload)</span></label>
+            <label>Files <span class="field-hint">(paste a link now — or upload real files from the task card after saving)</span></label>
             <input type="text" id="fAttachmentLink" placeholder="Paste a link..." />
           </div>
 
@@ -1680,11 +2065,11 @@ td.muted { color: var(--muted); }
   <div class="view" id="view-todos">
     <header>
       <h1>Recurring Items</h1>
-      <div class="page-eyebrow">Set It Once, It Shows Up Every Month</div>
+      <div class="page-eyebrow">Set It Once, It Shows Up On Schedule</div>
     </header>
 
     <div class="instructions-card">
-      <strong>How this works:</strong> Set something up once with a name, a category, and a day of the month. Each month on that day it creates itself for real — either as a task or as a ticket in the queue, whichever you pick — and you can file it inside a project or sub-project.
+      <strong>How this works:</strong> Set something up once with a name, a category, and a day of the month. On its day — a day of the month, or a day of the week — it drops into the ticket queue automatically. You can file it inside a project or sub-project. When someone completes that ticket, it turns into a task with the time logged against it.
     </div>
 
     <button class="submit-btn" id="newToDoBtn" style="max-width:340px;">+ Schedule a Recurring Task/Ticket</button>
@@ -1694,21 +2079,25 @@ td.muted { color: var(--muted); }
         <label>Name</label>
         <input type="text" id="ntdName" placeholder="e.g. Birthday cards - El Paso" />
       </div>
+      <div class="field">
+        <label>Repeats</label>
+        <div class="status-picker" id="ntdFreqPicker">
+          <button type="button" class="status-btn ntd-freq-btn" data-freq="Monthly" data-active="true">Monthly</button>
+          <button type="button" class="status-btn ntd-freq-btn" data-freq="Weekly" data-active="false">Weekly</button>
+        </div>
+      </div>
       <div class="field-row" style="grid-template-columns: 1fr 1fr; margin-bottom:18px;">
         <div class="field">
           <label>Category</label>
           <select id="ntdCategory"></select>
         </div>
-        <div class="field">
+        <div class="field" id="ntdDayOfMonthField">
           <label>Day of Month</label>
           <select id="ntdDayOfMonth"></select>
         </div>
-      </div>
-      <div class="field">
-        <label>Creates A</label>
-        <div class="status-picker" id="ntdTypePicker">
-          <button type="button" class="status-btn ntd-type-btn" data-type="Task" data-active="true">Task</button>
-          <button type="button" class="status-btn ntd-type-btn" data-type="Ticket" data-active="false">Ticket</button>
+        <div class="field" id="ntdDayOfWeekField" style="display:none;">
+          <label>Day of Week</label>
+          <select id="ntdDayOfWeek"></select>
         </div>
       </div>
       <div class="field">
@@ -1735,55 +2124,79 @@ td.muted { color: var(--muted); }
       <button class="ticket-new-btn" id="newTicketBtn">+ New Ticket</button>
       <header style="margin-bottom:0; flex:1;">
         <h1>Tickets</h1>
-        <div class="page-eyebrow">Requests Waiting to Become Real Work</div>
+        <div class="page-eyebrow">The Queue</div>
       </header>
       <button class="ticket-invite-btn" id="newInviteBtn">✉ Invite External Person</button>
     </div>
 
     <div class="instructions-card" style="margin-top:24px;">
-      <strong>How this works:</strong> A ticket is a quick flag for something that needs to happen — no date, no owner required yet. Anyone can claim an open ticket, and converting it turns it into a real Task or Project, ready to track.
+      <strong>How this works:</strong> Every ticket gets a key like HR-142. Drag it across the board as work moves — To Do, In Progress, Blocked, Done. Click any ticket to open it: fields, files, and a comment thread the whole team can add to. Dragging to Done asks for time and a project, then files it as completed work.
     </div>
 
-    <div class="entry-card" id="newTicketForm" style="display:none; max-width:560px; margin-top:16px;">
-      <div class="field">
-        <label>Title</label>
-        <input type="text" id="ntkTitle" placeholder="e.g. Build a Radiologist position" />
-      </div>
-      <div class="field-row" style="grid-template-columns: 1fr 1fr; margin-bottom:18px;">
-        <div class="field">
-          <label>Category <span class="field-hint">(optional)</span></label>
-          <select id="ntkCategory"></select>
+    <div class="modal-overlay" id="newTicketOverlay" style="display:none;">
+      <div class="modal-box tkt-create-box">
+        <button type="button" class="modal-close-btn" id="newTicketClose">&times;</button>
+
+        <div class="tkt-create-head">
+          <div class="tkt-create-eyebrow">New Ticket</div>
+          <input type="text" id="ntkTitle" class="tkt-create-title-input" placeholder="What needs to happen?" autocomplete="off" />
         </div>
-        <div class="field">
-          <label>Priority <span class="field-hint">(optional)</span></label>
-          <select id="ntkPriority">
-            <option value="">— none —</option>
-            <option value="Low">Low</option>
-            <option value="Normal">Normal</option>
-            <option value="High">High</option>
-            <option value="Urgent">Urgent</option>
-          </select>
+
+        <div class="tkt-create-grid">
+          <div class="tkt-create-main">
+            <div class="field">
+              <label>Description</label>
+              <textarea id="ntkNotes" class="notes-textarea tkt-create-desc" placeholder="Any detail worth having up front — context, links, who asked for it."></textarea>
+            </div>
+
+            <button type="button" class="tkt-create-disclosure" id="ntkExternalToggle">
+              <span id="ntkExternalCaret">▸</span> This came from someone outside the team
+            </button>
+            <div id="ntkExternalFields" style="display:none;">
+              <div class="field-row" style="grid-template-columns: 1fr 1fr; margin-bottom:0;">
+                <div class="field">
+                  <label>Their Name</label>
+                  <input type="text" id="ntkExternalName" placeholder="e.g. Tyler Hare" />
+                </div>
+                <div class="field">
+                  <label>Their Email</label>
+                  <input type="text" id="ntkExternalEmail" placeholder="thare@dicotexas.com" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tkt-create-side">
+            <div class="field">
+              <label>Category</label>
+              <select id="ntkCategory"></select>
+            </div>
+            <div class="field">
+              <label>Priority</label>
+              <select id="ntkPriority">
+                <option value="">— none —</option>
+                <option value="Low">Low</option>
+                <option value="Normal">Normal</option>
+                <option value="High">High</option>
+                <option value="Urgent">Urgent</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Project <span class="field-hint">(optional)</span></label>
+              <select id="ntkProject"></select>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <label>Assignees</label>
+              <div class="assignee-checklist" id="ntkAssigneeChecklist"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tkt-create-foot">
+          <button type="button" class="cancel-btn" id="ntkCancelBtn" style="margin:0;">Cancel</button>
+          <button class="submit-btn" id="ntkCreateBtn" style="max-width:200px; margin:0;">Create Ticket</button>
         </div>
       </div>
-      <div class="field">
-        <label>Assignee <span class="field-hint">(optional, one or more)</span></label>
-        <div class="assignee-checklist" id="ntkAssigneeChecklist"></div>
-      </div>
-      <div class="field-row" style="grid-template-columns: 1fr 1fr; margin-bottom:0;">
-        <div class="field">
-          <label>External Contact <span class="field-hint">(optional)</span></label>
-          <input type="text" id="ntkExternalName" placeholder="e.g. Tyler Hare" />
-        </div>
-        <div class="field">
-          <label>Their Email <span class="field-hint">(optional)</span></label>
-          <input type="text" id="ntkExternalEmail" placeholder="thare@dicotexas.com" />
-        </div>
-      </div>
-      <div class="field">
-        <label>Attach to a Project <span class="field-hint">(optional — stays a ticket until Complete)</span></label>
-        <div id="ntkProjectPills"></div>
-      </div>
-      <button class="submit-btn" id="ntkCreateBtn">Create Ticket</button>
     </div>
 
     <div class="entry-card" id="newInviteForm" style="display:none; max-width:560px; margin-top:16px;">
@@ -1817,22 +2230,86 @@ td.muted { color: var(--muted); }
       </div>
     </div>
 
-    <div class="board-filter-row" style="margin-top:20px;">
+    <div class="ticket-toolbar" style="margin-top:20px;">
+      <input type="text" id="ticketSearch" class="ticket-search" placeholder="Search key, title, notes, person..." />
+      <select id="ticketFilterAssignee" class="ticket-filter-select"></select>
+      <select id="ticketFilterPriority" class="ticket-filter-select">
+        <option value="">Any priority</option>
+        <option value="Urgent">Urgent</option>
+        <option value="High">High</option>
+        <option value="Normal">Normal</option>
+        <option value="Low">Low</option>
+      </select>
+      <select id="ticketFilterCategory" class="ticket-filter-select"></select>
+      <select id="ticketSort" class="ticket-filter-select">
+        <option value="priority">Sort: Priority</option>
+        <option value="newest">Sort: Newest</option>
+        <option value="oldest">Sort: Oldest</option>
+        <option value="key">Sort: Key</option>
+        <option value="title">Sort: Title</option>
+      </select>
       <button type="button" class="filter-pill" id="ticketsMineOnlyPill" data-active="false">Mine Only</button>
+      <button type="button" class="filter-pill" id="ticketsClearFiltersPill">Clear</button>
     </div>
 
-    <div class="section-label" style="margin-top:20px;">Open Tickets</div>
-    <div id="ticketsList"></div>
+    <div class="ticket-board" id="ticketBoard"></div>
+
+    <div class="modal-overlay" id="completeTicketModalOverlay" style="display:none;">
+      <div class="modal-box" style="max-width:420px;">
+        <button type="button" class="modal-close-btn" id="completeTicketModalClose">&times;</button>
+        <div class="tile-card" style="margin-bottom:0;">
+          <div class="section-label" style="margin-top:0;">Completing This Ticket</div>
+          <div class="todo-card-name" id="completeTicketTitle" style="margin-bottom:4px;"></div>
+          <div class="rollup-note">This becomes a completed task, and the time below gets logged against it.</div>
+          <div class="field">
+            <label>Goes Into <span class="field-hint">(every completed ticket lands in a project)</span></label>
+            <select id="completeTicketProject"></select>
+          </div>
+          <div id="completeTicketNewProjectFields" style="display:none;">
+            <div class="field">
+              <label>New Project Name</label>
+              <input type="text" id="completeTicketNewProjectName" placeholder="e.g. Radiologist Requisition" />
+            </div>
+            <div class="field">
+              <label>Sits Inside <span class="field-hint">(optional — nest it in a bigger bucket)</span></label>
+              <select id="completeTicketNewProjectParent"></select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Date Worked</label>
+            <input type="date" id="completeTicketDate" />
+          </div>
+          <div class="field-row" style="grid-template-columns: 1fr 1fr; margin-bottom:0;">
+            <div class="field">
+              <label>Hours</label>
+              <input type="number" id="completeTicketHours" min="0" max="24" step="1" value="0" />
+            </div>
+            <div class="field">
+              <label>Minutes</label>
+              <input type="number" id="completeTicketMins" min="0" max="59" step="5" value="30" />
+            </div>
+          </div>
+          <button class="submit-btn" id="completeTicketSaveBtn" style="margin-top:16px;">Complete &amp; Log Time</button>
+        </div>
+      </div>
+    </div>
 
     <div class="section-label" style="margin-top:28px;">Closed / Completed / Converted <span class="field-hint">(click to expand)</span></div>
     <div id="ticketsHistoryList"></div>
+
+    <div class="modal-overlay" id="ticketDetailOverlay" style="display:none;">
+      <div class="modal-box" style="max-width:720px;">
+        <button type="button" class="modal-close-btn" id="ticketDetailClose">&times;</button>
+        <div id="ticketDetailBody"></div>
+      </div>
+    </div>
   </div>
 
   <!-- KANBAN BOARD VIEW -->
   <div class="view" id="view-board">
     <header>
       <h1>Project Bulletin Board</h1>
-      <div class="page-eyebrow">Pick a Project, See Its Tasks</div>
+      <div class="page-eyebrow">Every Category, Every Project, One Wall</div>
     </header>
 
     <button class="submit-btn" id="newBoardProjectBtn" style="max-width:220px;">+ New Project</button>
@@ -1857,13 +2334,19 @@ td.muted { color: var(--muted); }
       <button type="button" class="filter-pill" data-status="Pending" data-active="true">Pending</button>
       <button type="button" class="filter-pill" data-status="Active" data-active="true">Active</button>
       <button type="button" class="filter-pill" data-status="Completed" data-active="true">Completed</button>
+      <button type="button" class="filter-pill" id="boardHideEmptyPill" data-active="false">Hide Empty Categories</button>
       <button type="button" class="filter-pill" id="boardMineOnlyPill" data-active="false" style="margin-left:auto;">Mine Only</button>
     </div>
 
-    <div class="todoist-board">
-      <div class="todoist-sidebar" id="projectSidebarList"></div>
-      <div class="todoist-detail" id="projectDetailPanel">
-        <div class="empty-state">Pick a project on the left to see its tasks.</div>
+    <div class="bulletin">
+      <div id="bulletinLoose"></div>
+      <div class="bulletin-grid" id="bulletinGrid"></div>
+    </div>
+
+    <div class="modal-overlay" id="projectDetailOverlay" style="display:none;">
+      <div class="modal-box" style="max-width:760px;">
+        <button type="button" class="modal-close-btn" id="projectDetailClose">&times;</button>
+        <div class="todoist-detail" id="projectDetailPanel"></div>
       </div>
     </div>
   </div>
@@ -2106,6 +2589,8 @@ const BOSS_PASSWORDS = ["LT", "TH"]; // Larry Thomas or Tyler Hare — either wo
 const BOSS_SESSION_MINUTES = 120; // how long access stays unlocked before it asks again
 
 let projects = [];       // one row per project: ProjectID, ProjectName, Category, Status, CreatedBy, CreatedDate
+let comments = [];      // ticket comment thread: CommentID, TicketID, Author, Body, CreatedAt
+let attachments = [];   // uploaded files: AttachmentID, ParentType, ParentID, FileName, FileURL, FileID, UploadedBy, UploadedDate
 let todos = [];          // recurring templates: ToDoID, ToDoName, Category, ProjectID, DayOfMonth, Status, LastGeneratedMonth, CreatedBy, CreatedDate
 let tickets = [];        // TicketID, Title, Category, Priority, Assignee, Status, ConvertedType, ConvertedID, CreatedBy, CreatedDate
 let convertingTicketId = null; // set while converting a ticket into a Task, so submitEntry knows to mark it converted
@@ -2298,11 +2783,62 @@ function init() {
     renderKanbanBoard();
   });
 
+  document.getElementById("boardHideEmptyPill").addEventListener("click", () => {
+    const pill = document.getElementById("boardHideEmptyPill");
+    boardHideEmpty = pill.dataset.active !== "true";
+    pill.dataset.active = boardHideEmpty;
+    renderKanbanBoard();
+  });
+
+  document.getElementById("projectDetailClose").addEventListener("click", closeProjectDetail);
+  document.getElementById("projectDetailOverlay").addEventListener("click", e => {
+    if (e.target.id === "projectDetailOverlay") closeProjectDetail();
+  });
+
   document.getElementById("ticketsMineOnlyPill").addEventListener("click", () => {
     const pill = document.getElementById("ticketsMineOnlyPill");
     ticketsShowMineOnly = pill.dataset.active !== "true";
     pill.dataset.active = ticketsShowMineOnly;
     renderTickets();
+  });
+
+  document.getElementById("ticketSearch").addEventListener("input", e => {
+    ticketSearchText = e.target.value.trim().toLowerCase();
+    renderTickets();
+  });
+  document.getElementById("ticketFilterAssignee").addEventListener("change", e => {
+    ticketFilterAssignee = e.target.value;
+    renderTickets();
+  });
+  document.getElementById("ticketFilterPriority").addEventListener("change", e => {
+    ticketFilterPriority = e.target.value;
+    renderTickets();
+  });
+  document.getElementById("ticketFilterCategory").addEventListener("change", e => {
+    ticketFilterCategory = e.target.value;
+    renderTickets();
+  });
+  document.getElementById("ticketSort").addEventListener("change", e => {
+    ticketSortMode = e.target.value;
+    renderTickets();
+  });
+  document.getElementById("ticketsClearFiltersPill").addEventListener("click", () => {
+    ticketSearchText = "";
+    ticketFilterAssignee = "";
+    ticketFilterPriority = "";
+    ticketFilterCategory = "";
+    ticketsShowMineOnly = false;
+    document.getElementById("ticketSearch").value = "";
+    document.getElementById("ticketFilterAssignee").value = "";
+    document.getElementById("ticketFilterPriority").value = "";
+    document.getElementById("ticketFilterCategory").value = "";
+    document.getElementById("ticketsMineOnlyPill").dataset.active = "false";
+    renderTickets();
+  });
+
+  document.getElementById("ticketDetailClose").addEventListener("click", closeTicketDetail);
+  document.getElementById("ticketDetailOverlay").addEventListener("click", e => {
+    if (e.target.id === "ticketDetailOverlay") closeTicketDetail();
   });
 
   document.getElementById("projYesBtn").addEventListener("click", () => {
@@ -2328,33 +2864,44 @@ function init() {
   let dayOptionsHtml = "";
   for (let d = 1; d <= 28; d++) dayOptionsHtml += `<option value="${d}">${d}</option>`;
   document.getElementById("ntdDayOfMonth").innerHTML = dayOptionsHtml;
-  document.querySelectorAll(".ntd-type-btn").forEach(btn => {
+  document.getElementById("ntdDayOfWeek").innerHTML =
+    WEEKDAYS.map(d => `<option value="${d}">${d}</option>`).join("");
+
+  // Monthly and weekly need different day pickers, so only the relevant one
+  // is on screen at a time.
+  document.querySelectorAll(".ntd-freq-btn").forEach(btn => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".ntd-type-btn").forEach(b => (b.dataset.active = "false"));
+      document.querySelectorAll(".ntd-freq-btn").forEach(b => (b.dataset.active = "false"));
       btn.dataset.active = "true";
+      const weekly = btn.dataset.freq === "Weekly";
+      document.getElementById("ntdDayOfMonthField").style.display = weekly ? "none" : "";
+      document.getElementById("ntdDayOfWeekField").style.display = weekly ? "" : "none";
     });
   });
+  // Only show projects belonging to the category that's currently picked —
+  // otherwise the list is every project in the company.
+  document.getElementById("ntdCategory").addEventListener("change", refreshNtdProjectOptions);
   document.getElementById("newToDoBtn").addEventListener("click", () => {
     const form = document.getElementById("newToDoForm");
     form.style.display = form.style.display === "none" ? "block" : "none";
-    document.getElementById("ntdProject").innerHTML = `<option value="">— none —</option>` +
-      projectOptionsHtml("");
+    refreshNtdProjectOptions();
     document.getElementById("ntdAssigneeChecklist").innerHTML = buildAssigneeChecklistHtml([selectedEmployee]);
   });
   document.getElementById("ntdCreateBtn").addEventListener("click", () => {
     const name = document.getElementById("ntdName").value.trim();
     const category = document.getElementById("ntdCategory").value;
     const dayOfMonth = document.getElementById("ntdDayOfMonth").value;
+    const activeFreq = document.querySelector('.ntd-freq-btn[data-active="true"]');
+    const frequency = activeFreq ? activeFreq.dataset.freq : "Monthly";
+    const dayOfWeek = document.getElementById("ntdDayOfWeek").value;
     const projectId = document.getElementById("ntdProject").value;
-    const activeType = document.querySelector('.ntd-type-btn[data-active="true"]');
-    const itemType = activeType ? activeType.dataset.type : "Task";
     const checkedAssignees = getCheckedAssignees(document.getElementById("ntdAssigneeChecklist"));
     const assignee = checkedAssignees.length ? checkedAssignees.join(", ") : selectedEmployee;
     if (!name) {
       alert("Give this recurring item a name.");
       return;
     }
-    createToDo(name, category, dayOfMonth, projectId, assignee, itemType);
+    createToDo(name, category, dayOfMonth, projectId, assignee, frequency, dayOfWeek);
     document.getElementById("ntdName").value = "";
     document.getElementById("newToDoForm").style.display = "none";
   });
@@ -2362,30 +2909,38 @@ function init() {
   document.getElementById("ntkCategory").innerHTML = `<option value="">— none —</option>` +
     CATEGORIES.map(c => `<option value="${c.key}">${c.key}</option>`).join("");
   document.getElementById("ntkAssigneeChecklist").innerHTML = buildAssigneeChecklistHtml([]);
-  document.getElementById("newTicketBtn").addEventListener("click", () => {
-    const form = document.getElementById("newTicketForm");
-    form.style.display = form.style.display === "none" ? "block" : "none";
-    renderNtkProjectPills();
+
+  // Project list follows the chosen category, so it's a short list instead of
+  // every project in the company.
+  document.getElementById("ntkCategory").addEventListener("change", refreshNtkProjectOptions);
+  document.getElementById("newTicketBtn").addEventListener("click", openNewTicketModal);
+  document.getElementById("newTicketClose").addEventListener("click", closeNewTicketModal);
+  document.getElementById("ntkCancelBtn").addEventListener("click", closeNewTicketModal);
+  document.getElementById("newTicketOverlay").addEventListener("click", e => {
+    if (e.target.id === "newTicketOverlay") closeNewTicketModal();
+  });
+  document.getElementById("ntkExternalToggle").addEventListener("click", () => {
+    const fields = document.getElementById("ntkExternalFields");
+    const open = fields.style.display === "none";
+    fields.style.display = open ? "block" : "none";
+    document.getElementById("ntkExternalCaret").textContent = open ? "▾" : "▸";
   });
   document.getElementById("ntkCreateBtn").addEventListener("click", () => {
     const title = document.getElementById("ntkTitle").value.trim();
     const category = document.getElementById("ntkCategory").value;
     const priority = document.getElementById("ntkPriority").value;
+    const notes = document.getElementById("ntkNotes").value.trim();
     const assignee = getCheckedAssignees(document.getElementById("ntkAssigneeChecklist")).join(", ");
     const externalName = document.getElementById("ntkExternalName").value.trim();
     const externalEmail = document.getElementById("ntkExternalEmail").value.trim();
-    const activePill = document.querySelector('.ntk-project-pill[data-active="true"]');
-    const projectId = activePill ? activePill.dataset.projectId : "";
+    const projectId = document.getElementById("ntkProject").value;
     if (!title) {
-      alert("Enter a title for this ticket.");
+      alert("Give the ticket a title before creating it.");
+      document.getElementById("ntkTitle").focus();
       return;
     }
-    createTicket(title, category, priority, assignee, "", externalName, externalEmail, projectId);
-    document.getElementById("ntkTitle").value = "";
-    document.getElementById("ntkExternalName").value = "";
-    document.getElementById("ntkExternalEmail").value = "";
-    document.getElementById("ntkAssigneeChecklist").innerHTML = buildAssigneeChecklistHtml([]);
-    document.getElementById("newTicketForm").style.display = "none";
+    createTicket(title, category, priority, assignee, notes, externalName, externalEmail, projectId);
+    closeNewTicketModal();
   });
 
   document.getElementById("newInviteBtn").addEventListener("click", () => {
@@ -2440,6 +2995,13 @@ function init() {
     createTicket(title, category, priority, assignee);
     closeQuickTicketModal();
   });
+
+  document.getElementById("completeTicketModalClose").addEventListener("click", closeCompleteTicketModal);
+  document.getElementById("completeTicketModalOverlay").addEventListener("click", e => {
+    if (e.target.id === "completeTicketModalOverlay") closeCompleteTicketModal();
+  });
+  document.getElementById("completeTicketSaveBtn").addEventListener("click", confirmCompleteTicket);
+  document.getElementById("completeTicketProject").addEventListener("change", syncCompleteTicketProjectFields);
 
   document.getElementById("editEventModalClose").addEventListener("click", closeEditEventModal);
   document.getElementById("editEventModalOverlay").addEventListener("click", e => {
@@ -2873,23 +3435,33 @@ async function loadTasksAndEvents() {
     taskEvents = [];
     todos = [];
     tickets = [];
+    attachments = [];
+    comments = [];
     rebuildDerivedEntries();
     renderAll();
     return;
   }
   try {
-    const [projectsRes, tasksRes, eventsRes, todosRes, ticketsRes] = await Promise.all([
+    const [projectsRes, tasksRes, eventsRes, todosRes, ticketsRes, attachmentsRes, commentsRes] = await Promise.all([
       fetch(APPS_SCRIPT_URL + "?sheet=projects"),
       fetch(APPS_SCRIPT_URL + "?sheet=tasks"),
       fetch(APPS_SCRIPT_URL + "?sheet=events"),
       fetch(APPS_SCRIPT_URL + "?sheet=todos"),
       fetch(APPS_SCRIPT_URL + "?sheet=tickets"),
+      fetch(APPS_SCRIPT_URL + "?sheet=attachments"),
+      fetch(APPS_SCRIPT_URL + "?sheet=comments"),
     ]);
     projects = await projectsRes.json();
     tasks = await tasksRes.json();
     taskEvents = await eventsRes.json();
     todos = await todosRes.json();
     tickets = await ticketsRes.json();
+    // An older deployment without the Attachments tab returns an error object
+    // rather than a list — treat that as "no files yet" instead of breaking.
+    const loadedAttachments = await attachmentsRes.json();
+    attachments = Array.isArray(loadedAttachments) ? loadedAttachments : [];
+    const loadedComments = await commentsRes.json();
+    comments = Array.isArray(loadedComments) ? loadedComments : [];
   } catch (err) {
     // keep whatever was already loaded
   }
@@ -2903,9 +3475,48 @@ async function loadTasksAndEvents() {
 // auto-converted them), which arrives here as a full ISO timestamp and would
 // never match a plain "2026-07" — that's what made recurring items fire
 // again on every single app open.
+// Monday-first, matching how a work week actually reads.
+const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+// ISO week number, Monday-start. Weekly items are stamped with this instead
+// of a month, in the same LastGeneratedMonth cell — one column, two kinds of
+// period key, so nothing new is needed in the Sheet to track "already ran".
+function isoWeekKey(d) {
+  const dt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = dt.getUTCDay() || 7;
+  dt.setUTCDate(dt.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(dt.getUTCFullYear(), 0, 1));
+  const week = Math.ceil(((dt - yearStart) / 86400000 + 1) / 7);
+  return `${dt.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
+}
+
+// 1 = Monday ... 7 = Sunday
+function isoDayIndex(d) {
+  return d.getDay() || 7;
+}
+
+function isWeekly(t) {
+  return String(t.Frequency || "Monthly") === "Weekly";
+}
+
+// The Monday that starts the week containing this date.
+function startOfIsoWeek(d) {
+  const start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  start.setDate(start.getDate() - (isoDayIndex(d) - 1));
+  return start;
+}
+
+// How a recurring item describes itself in plain words.
+function recurrenceLabel(t) {
+  if (isWeekly(t)) return `Every ${t.DayOfWeek || "Monday"}`;
+  return `Day ${t.DayOfMonth} of each month`;
+}
+
 function monthKey(value) {
   if (!value) return "";
   const s = String(value).trim();
+  // Weekly items store "2026-W30" here — already a clean key, leave it alone.
+  if (/^\d{4}-W\d{2}$/i.test(s)) return s.toUpperCase();
   if (/^\d{4}-\d{2}$/.test(s)) return s;
   const isoDate = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (isoDate) {
@@ -2943,37 +3554,46 @@ async function checkAndGenerateToDos() {
 async function runToDoGeneration() {
   const now = new Date();
   const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const currentWeekStr = isoWeekKey(now);
   const todayOfMonth = now.getDate();
+  const todayIsoDay = isoDayIndex(now);
+  const weekStartStr = dateToStr(startOfIsoWeek(now));
   const todayStr = dateToStr(now);
 
   for (const t of todos) {
     if (t.Status !== "Active") continue;
-    if (monthKey(t.LastGeneratedMonth) === currentMonthStr) continue;
-    if (todayOfMonth < Number(t.DayOfMonth)) continue;
+
+    const weekly = isWeekly(t);
+    // One column holds whichever period key applies, so the "already ran"
+    // check is the same shape either way.
+    const currentPeriod = weekly ? currentWeekStr : currentMonthStr;
+    if (monthKey(t.LastGeneratedMonth) === currentPeriod) continue;
+
+    if (weekly) {
+      const targetDay = WEEKDAYS.indexOf(t.DayOfWeek || "Monday") + 1;
+      if (todayIsoDay < targetDay) continue;
+    } else {
+      if (todayOfMonth < Number(t.DayOfMonth)) continue;
+    }
 
     // Safety net: even if the flag above didn't stick for some reason, don't
     // create a second copy of something this template already produced this
-    // month. Cheap insurance against ever seeing duplicates again.
-    const makesTicket = String(t.ItemType || "Task") === "Ticket";
-    const alreadyThere = makesTicket
-      ? tickets.some(existing =>
-          existing.Title === t.ToDoName &&
-          String(existing.ProjectID || "") === String(t.ProjectID || "") &&
-          monthKey(cleanDate(existing.CreatedDate)) === currentMonthStr
-        )
-      : tasks.some(existing =>
-          existing.TaskName === t.ToDoName &&
-          String(existing.ProjectID || "") === String(t.ProjectID || "") &&
-          monthKey(cleanDate(existing.CreatedDate)) === currentMonthStr
-        );
+    // period. Cheap insurance against ever seeing duplicates again.
+    const alreadyThere = tickets.some(existing => {
+      if (existing.Title !== t.ToDoName) return false;
+      if (String(existing.ProjectID || "") !== String(t.ProjectID || "")) return false;
+      const made = cleanDate(existing.CreatedDate);
+      // Weekly can't use a month key, so compare against this week's Monday.
+      return weekly ? made >= weekStartStr : monthKey(made) === currentMonthStr;
+    });
     if (alreadyThere) {
-      t.LastGeneratedMonth = currentMonthStr;
+      t.LastGeneratedMonth = currentPeriod;
       if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
         try {
           await fetch(APPS_SCRIPT_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "markToDoGenerated", toDoId: t.ToDoID, lastGeneratedMonth: currentMonthStr }),
+            body: JSON.stringify({ action: "markToDoGenerated", toDoId: t.ToDoID, lastGeneratedMonth: currentPeriod }),
           });
         } catch (err) {
           // it'll try again next load
@@ -2983,11 +3603,10 @@ async function runToDoGeneration() {
     }
 
     const assignee = t.Assignee || t.CreatedBy;
-    const wantsTicket = String(t.ItemType || "Task") === "Ticket";
 
-    if (wantsTicket) {
-      // Lands in the ticket queue instead of becoming a task. It still carries
-      // the project, so a recurring ticket can sit inside a sub-project.
+    {
+      // Recurring items land in the ticket queue. They carry the project, so a
+      // recurring ticket can sit inside a sub-project.
       const ticketId = "tk" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
       tickets.push({
         TicketID: ticketId,
@@ -3006,7 +3625,7 @@ async function runToDoGeneration() {
         ExternalEmail: "",
         ProjectID: t.ProjectID || "",
       });
-      t.LastGeneratedMonth = currentMonthStr;
+      t.LastGeneratedMonth = currentPeriod;
 
       if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
         try {
@@ -3022,51 +3641,13 @@ async function runToDoGeneration() {
           await fetch(APPS_SCRIPT_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "markToDoGenerated", toDoId: t.ToDoID, lastGeneratedMonth: currentMonthStr }),
+            body: JSON.stringify({ action: "markToDoGenerated", toDoId: t.ToDoID, lastGeneratedMonth: currentPeriod }),
           });
         } catch (err) {
           // if this fails, it'll just retry next time the app loads
         }
       }
       continue;
-    }
-
-    const taskId = "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-    const newTask = {
-      TaskID: taskId,
-      TaskName: t.ToDoName,
-      ProjectID: t.ProjectID || "",
-      Category: t.Category,
-      Status: "Pending",
-      Notes: "",
-      Assignee: assignee,
-      DueDate: "",
-      AttachmentLink: "",
-      CreatedBy: t.CreatedBy,
-      CreatedDate: todayStr,
-    };
-    tasks.push(newTask);
-    t.LastGeneratedMonth = currentMonthStr;
-
-    if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
-      try {
-        await fetch(APPS_SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({
-            action: "createTask", taskId, taskName: t.ToDoName, projectId: t.ProjectID || "",
-            category: t.Category, status: "Pending", notes: "", assignee: assignee,
-            dueDate: "", attachmentLink: "", createdBy: t.CreatedBy, createdDate: todayStr,
-          }),
-        });
-        await fetch(APPS_SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "markToDoGenerated", toDoId: t.ToDoID, lastGeneratedMonth: currentMonthStr }),
-        });
-      } catch (err) {
-        // if this fails, it'll just retry next time the app loads
-      }
     }
   }
 }
@@ -3514,8 +4095,6 @@ let selectedBoardProjectId = null; // null = nothing picked yet, "" = Unassigned
    Tasks still attach to a single ProjectID — they can hang off
    any level of the tree, not just the bottom one.
    --------------------------------------------------------- */
-let expandedProjectIds = new Set();
-
 function projectById(id) {
   return projects.find(p => p.ProjectID === id) || null;
 }
@@ -3589,7 +4168,15 @@ function projectOptionsHtml(selectedId, opts) {
   const o = opts || {};
   const pool = o.includeCompleted ? projects.slice() : projects.filter(p => p.Status !== "Completed");
   const skip = new Set(o.excludeIds || []);
-  const usable = pool.filter(p => !skip.has(p.ProjectID));
+  let usable = pool.filter(p => !skip.has(p.ProjectID));
+
+  // Narrow to one category when asked. Whatever is already selected stays in
+  // the list regardless, so switching category never silently drops a pick
+  // that was made on purpose.
+  if (o.category) {
+    usable = usable.filter(p => p.Category === o.category || p.ProjectID === selectedId);
+  }
+
   const emitted = new Set();
   const out = [];
   const optionFor = (p, label) =>
@@ -3616,40 +4203,34 @@ function projectOptionsHtml(selectedId, opts) {
   return out.join("");
 }
 
-function buildSidebarRow(idValue, name, color, count, isUnassigned, opts) {
-  const o = opts || {};
-  const depth = o.depth || 0;
+// ---------- THE BOARD ----------
+// One pinned card per category, twelve of them, always in the same slot.
+// Projects live inside their category's card, nested exactly as they nest.
+
+let boardHideEmpty = false;
+
+// Which unfiled task is currently opened up on the scrap note.
+let expandedLooseTaskId = null;
+
+// A fixed, repeatable tilt per slot so the board looks hand-pinned but never
+// jumps around between renders.
+const PIN_TILTS = ["-0.55deg", "0.4deg", "-0.25deg", "0.6deg", "-0.45deg", "0.3deg"];
+
+function buildProjectRow(p, depth, pool) {
   const row = document.createElement("div");
-  row.className = "todoist-sidebar-row";
-  row.dataset.projectId = idValue;
-  row.dataset.active = selectedBoardProjectId === idValue;
-  if (depth) row.dataset.nested = "true";
-  row.style.paddingLeft = 16 + depth * 20 + "px";
+  row.className = "pin-proj";
+  row.dataset.depth = Math.min(depth, 3);
+  row.dataset.done = p.Status === "Completed";
+  row.title = projectPath(p.ProjectID);
 
-  const twisty = o.hasChildren
-    ? `<span class="todoist-sidebar-twisty" data-twisty="1">${o.expanded ? "▾" : "▸"}</span>`
-    : `<span class="todoist-sidebar-twisty todoist-sidebar-twisty-empty"></span>`;
-
+  const count = tasksInProject(p.ProjectID, true).length;
   row.innerHTML = `
-    ${twisty}
-    <span class="todoist-sidebar-dot" style="background:${color}"></span>
-    <span class="todoist-sidebar-name">${name}</span>
-    <span class="todoist-sidebar-count">${count}</span>
+    ${depth ? `<span class="pin-proj-branch">└</span>` : ""}
+    <span class="pin-proj-name">${p.ProjectName || ""}</span>
+    <span class="pin-proj-count">${count}</span>
   `;
-  row.addEventListener("click", e => {
-    // Clicking the little arrow only folds or unfolds — it shouldn't yank you
-    // over to a different project.
-    if (e.target.dataset && e.target.dataset.twisty) {
-      e.stopPropagation();
-      if (expandedProjectIds.has(idValue)) expandedProjectIds.delete(idValue);
-      else expandedProjectIds.add(idValue);
-      renderKanbanBoard();
-      return;
-    }
-    selectedBoardProjectId = idValue;
-    if (o.hasChildren) expandedProjectIds.add(idValue);
-    renderKanbanBoard();
-  });
+
+  row.addEventListener("click", () => openProjectDetail(p.ProjectID));
   row.addEventListener("dragover", e => {
     e.preventDefault();
     row.classList.add("drag-over");
@@ -3659,29 +4240,145 @@ function buildSidebarRow(idValue, name, color, count, isUnassigned, opts) {
     e.preventDefault();
     row.classList.remove("drag-over");
     const taskId = e.dataTransfer.getData("text/plain");
-    if (taskId) reassignTaskProject(taskId, isUnassigned ? "" : idValue);
+    if (taskId) reassignTaskProject(taskId, p.ProjectID);
   });
   return row;
 }
 
-// Draws one project and, if it's unfolded, everything nested under it.
 function appendProjectBranch(container, p, pool, depth) {
-  const kids = pool.filter(c => parentIdOf(c) === p.ProjectID);
-  const expanded = expandedProjectIds.has(p.ProjectID);
-  container.appendChild(
-    buildSidebarRow(p.ProjectID, p.ProjectName, catColor(p.Category), tasksInProject(p.ProjectID, true).length, false, {
-      depth,
-      hasChildren: kids.length > 0,
-      expanded,
-    })
-  );
-  if (expanded) kids.forEach(k => appendProjectBranch(container, k, pool, depth + 1));
+  container.appendChild(buildProjectRow(p, depth, pool));
+  pool
+    .filter(c => parentIdOf(c) === p.ProjectID)
+    .forEach(c => appendProjectBranch(container, c, pool, depth + 1));
+}
+
+function buildCategoryCard(cat, catProjects, slot) {
+  const card = document.createElement("div");
+  card.className = "pin-card";
+  card.style.setProperty("--cat", cat.hex);
+  card.style.setProperty("--tilt", PIN_TILTS[slot % PIN_TILTS.length]);
+  card.dataset.empty = catProjects.length === 0;
+
+  const taskTotal = catProjects.reduce((n, p) => n + tasksInProject(p.ProjectID, false).length, 0);
+  const projWord = catProjects.length === 1 ? "project" : "projects";
+  const taskWord = taskTotal === 1 ? "task" : "tasks";
+
+  const head = document.createElement("div");
+  head.innerHTML = `
+    <div class="pin-card-title">${cat.key}</div>
+    <div class="pin-card-sub">${catProjects.length} ${projWord} · ${taskTotal} ${taskWord}</div>
+  `;
+  card.appendChild(head);
+
+  if (!catProjects.length) {
+    const empty = document.createElement("div");
+    empty.className = "pin-card-empty";
+    empty.textContent = "Nothing pinned here yet.";
+    card.appendChild(empty);
+  } else {
+    // Sub-projects sit under their parent. A project whose parent isn't on
+    // this card (different category, or filtered out) anchors its own row.
+    const roots = catProjects.filter(p => !catProjects.some(x => x.ProjectID === parentIdOf(p)));
+    roots.forEach(p => appendProjectBranch(card, p, catProjects, 0));
+  }
+
+  const addBtn = document.createElement("button");
+  addBtn.type = "button";
+  addBtn.className = "pin-card-add";
+  addBtn.textContent = "+ Pin a project here";
+  addBtn.addEventListener("click", () => createProjectInCategory(cat.key));
+  card.appendChild(addBtn);
+
+  return card;
+}
+
+function renderLooseEnds(container) {
+  const loose = tasks.filter(t => !t.ProjectID);
+  container.className = "loose-note";
+  container.innerHTML = `
+    <div class="loose-note-title">Unfiled · ${loose.length}</div>
+    <div class="loose-note-hint">Tasks that don't belong to a project yet. Click one to open it, or drag it onto a card to file it.</div>
+    <div class="loose-chips" id="looseChips"></div>
+    <div id="looseDetail"></div>
+  `;
+
+  const chips = container.querySelector("#looseChips");
+  const detail = container.querySelector("#looseDetail");
+
+  // If the open task got filed or deleted elsewhere, drop the selection
+  // rather than leaving an empty panel hanging open.
+  if (expandedLooseTaskId && !loose.some(t => t.TaskID === expandedLooseTaskId)) {
+    expandedLooseTaskId = null;
+  }
+
+  if (!loose.length) {
+    chips.innerHTML = `<div class="pin-card-empty" style="padding:0;">Nothing loose — everything's filed.</div>`;
+  } else {
+    loose.forEach(t => {
+      const chip = document.createElement("div");
+      chip.className = "loose-chip";
+      chip.draggable = true;
+      chip.title = t.TaskName;
+      chip.dataset.open = expandedLooseTaskId === t.TaskID;
+      chip.innerHTML = `
+        <span class="loose-chip-dot" style="background:${catColor(t.Category)}"></span>
+        ${t.TaskName || ""}
+      `;
+      chip.addEventListener("dragstart", e => e.dataTransfer.setData("text/plain", t.TaskID));
+      chip.addEventListener("click", () => {
+        // Clicking the open one closes it again — the pill is the toggle.
+        expandedLooseTaskId = expandedLooseTaskId === t.TaskID ? null : t.TaskID;
+        if (expandedLooseTaskId) expandedTaskCards.add(t.TaskID);
+        renderKanbanBoard();
+      });
+      chips.appendChild(chip);
+    });
+  }
+
+  if (expandedLooseTaskId) {
+    const t = tasks.find(x => x.TaskID === expandedLooseTaskId);
+    if (t) {
+      const box = document.createElement("div");
+      box.className = "loose-detail-box";
+      box.appendChild(buildTaskCard(t));
+      detail.appendChild(box);
+    }
+  }
+
+  // Dropping a task back here pulls it out of whatever project it was in.
+  // Bound once — this container survives re-renders, so re-attaching every
+  // time would stack up duplicate handlers and fire the drop repeatedly.
+  if (!container.dataset.dropBound) {
+    container.dataset.dropBound = "1";
+    container.addEventListener("dragover", e => {
+      e.preventDefault();
+      container.classList.add("drag-over");
+    });
+    container.addEventListener("dragleave", () => container.classList.remove("drag-over"));
+    container.addEventListener("drop", e => {
+      e.preventDefault();
+      container.classList.remove("drag-over");
+      const taskId = e.dataTransfer.getData("text/plain");
+      if (taskId) reassignTaskProject(taskId, "");
+    });
+  }
+}
+
+function openProjectDetail(projectId) {
+  selectedBoardProjectId = projectId;
+  document.getElementById("projectDetailOverlay").style.display = "flex";
+  renderProjectDetailPanel(document.getElementById("projectDetailPanel"));
+}
+
+function closeProjectDetail() {
+  document.getElementById("projectDetailOverlay").style.display = "none";
+  selectedBoardProjectId = null;
 }
 
 function renderKanbanBoard() {
-  const sidebar = document.getElementById("projectSidebarList");
-  const detail = document.getElementById("projectDetailPanel");
-  sidebar.innerHTML = "";
+  const grid = document.getElementById("bulletinGrid");
+  const loose = document.getElementById("bulletinLoose");
+  if (!grid || !loose) return;
 
   let matching = projects.filter(p => boardStatusFilters.has(p.Status));
   if (boardShowMineOnly) {
@@ -3695,86 +4392,36 @@ function renderKanbanBoard() {
   matching.forEach(p => projectAncestors(p.ProjectID).forEach(a => visibleIds.add(a.ProjectID)));
   const visible = projects.filter(p => visibleIds.has(p.ProjectID));
 
-  const unassignedCount = tasks.filter(t => !t.ProjectID).length;
-  sidebar.appendChild(buildSidebarRow("", "Unassigned", "var(--dim)", unassignedCount, true, {}));
+  renderLooseEnds(loose);
 
-  // Finished buckets drop into their own section at the bottom, so a year of
-  // hired candidates doesn't bury the work you're actually doing.
-  const live = visible.filter(p => p.Status !== "Completed");
-  const done = visible.filter(p => p.Status === "Completed");
+  grid.innerHTML = "";
+  let shown = 0;
+  CATEGORIES.forEach((cat, i) => {
+    const catProjects = visible.filter(p => p.Category === cat.key);
+    if (boardHideEmpty && !catProjects.length) return;
+    grid.appendChild(buildCategoryCard(cat, catProjects, i));
+    shown++;
+  });
 
-  if (!visible.length) {
-    const msg = document.createElement("div");
-    msg.className = "empty-state";
-    msg.style.padding = "12px 4px";
-    msg.textContent = boardShowMineOnly ? "No projects of yours match right now." : "No projects match the selected filters.";
-    sidebar.appendChild(msg);
-  } else {
-    // Only projects whose parent isn't showing anchor a category heading —
-    // everything else gets drawn underneath its own parent instead.
-    const isRootIn = (p, pool) => !pool.some(x => x.ProjectID === parentIdOf(p));
+  if (!shown) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">Nothing matches those filters. Try turning one back on.</div>`;
+  }
 
-    CATEGORIES.forEach(cat => {
-      const roots = live.filter(p => p.Category === cat.key && isRootIn(p, live));
-      if (!roots.length) return;
-
-      const label = document.createElement("div");
-      label.className = "todoist-sidebar-category-label";
-      label.style.color = cat.hex;
-      label.textContent = cat.key;
-      sidebar.appendChild(label);
-
-      roots.forEach(p => appendProjectBranch(sidebar, p, live, 0));
-    });
-
-    if (done.length) {
-      const label = document.createElement("div");
-      label.className = "todoist-sidebar-category-label";
-      label.style.color = "var(--dim)";
-      label.textContent = `Completed (${done.length})`;
-      sidebar.appendChild(label);
-      done.filter(p => isRootIn(p, done)).forEach(p => appendProjectBranch(sidebar, p, done, 0));
+  // If the open project got filtered away or deleted, close the card rather
+  // than leaving a stale panel sitting on screen.
+  if (selectedBoardProjectId) {
+    if (projectById(selectedBoardProjectId)) {
+      renderProjectDetailPanel(document.getElementById("projectDetailPanel"));
+    } else {
+      closeProjectDetail();
     }
   }
-
-  // Keep a valid selection — if what was selected got filtered out, fall back to Unassigned
-  if (selectedBoardProjectId && selectedBoardProjectId !== "" && !visible.some(p => p.ProjectID === selectedBoardProjectId)) {
-    selectedBoardProjectId = "";
-    sidebar.querySelectorAll(".todoist-sidebar-row").forEach(r => {
-      r.dataset.active = r.dataset.projectId === "";
-    });
-  }
-
-  if (selectedBoardProjectId === null) {
-    detail.innerHTML = `<div class="empty-state">Pick a project on the left to see its tasks.</div>`;
-    return;
-  }
-
-  renderProjectDetailPanel(detail);
 }
 
 function renderProjectDetailPanel(detail) {
-  if (selectedBoardProjectId === "") {
-    const unassignedTasks = tasks.filter(t => !t.ProjectID);
-    detail.innerHTML = `
-      <div class="todoist-detail-header">
-        <div class="todoist-detail-title" style="color:var(--dim)">Unassigned</div>
-      </div>
-      <div class="todoist-task-list" id="boardTaskListWrap"></div>
-    `;
-    const wrap = detail.querySelector("#boardTaskListWrap");
-    if (!unassignedTasks.length) {
-      wrap.innerHTML = `<div class="empty-state">Nothing unassigned right now.</div>`;
-    } else {
-      unassignedTasks.forEach(t => wrap.appendChild(buildTaskCard(t)));
-    }
-    return;
-  }
-
   const p = projects.find(x => x.ProjectID === selectedBoardProjectId);
   if (!p) {
-    selectedBoardProjectId = null;
-    detail.innerHTML = `<div class="empty-state">Pick a project on the left to see its tasks.</div>`;
+    closeProjectDetail();
     return;
   }
 
@@ -3845,12 +4492,7 @@ function renderProjectDetailPanel(detail) {
 
   // Breadcrumb links and sub-project chips both just jump the board
   detail.querySelectorAll("[data-jump]").forEach(el => {
-    el.addEventListener("click", () => {
-      selectedBoardProjectId = el.dataset.jump;
-      expandedProjectIds.add(el.dataset.jump);
-      projectAncestors(el.dataset.jump).forEach(a => expandedProjectIds.add(a.ProjectID));
-      renderKanbanBoard();
-    });
+    el.addEventListener("click", () => openProjectDetail(el.dataset.jump));
   });
 
   const taskListWrap = detail.querySelector("#boardTaskListWrap");
@@ -3895,10 +4537,16 @@ function renderProjectDetailPanel(detail) {
     updateProjectDetails(p.ProjectID, newName, newCategory, newParent);
     editPanel.style.display = "none";
   });
-  detail.querySelector("#boardDetailDeleteBtn").addEventListener("click", () => {
-    deleteProject(p.ProjectID, p.ProjectName);
+  detail.querySelector("#boardDetailDeleteBtn").addEventListener("click", async () => {
+    const targetId = p.ProjectID;
+    await deleteProject(targetId, p.ProjectName);
+    if (!projectById(targetId)) closeProjectDetail();
   });
-  detail.querySelector("#boardDetailAddTaskBtn").addEventListener("click", () => addTaskToProject(p.ProjectID));
+  detail.querySelector("#boardDetailAddTaskBtn").addEventListener("click", () => {
+    const targetId = p.ProjectID;
+    closeProjectDetail();
+    addTaskToProject(targetId);
+  });
   detail.querySelector("#boardDetailAddSubBtn").addEventListener("click", () => createSubProject(p.ProjectID));
 
   const convertBtn = detail.querySelector("#boardDetailConvertBtn");
@@ -3964,6 +4612,42 @@ async function updateProjectDetails(projectId, newName, newCategory, newParentId
   renderAll();
 }
 
+// Pinning a project straight onto a category card — the fast path, versus
+// the full form at the top of the board.
+async function createProjectInCategory(category) {
+  const name = prompt(`New project in ${category} — what's it called?`);
+  if (name === null) return;
+  const trimmed = name.trim();
+  if (!trimmed) return;
+
+  const projectId = "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const createdDate = dateToStr(new Date());
+  projects.push({
+    ProjectID: projectId,
+    ProjectName: trimmed,
+    Category: category,
+    Status: "Active",
+    Notes: "",
+    CreatedBy: selectedEmployee,
+    CreatedDate: createdDate,
+    ParentProjectID: "",
+  });
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "createProject", projectId, projectName: trimmed, category,
+          status: "Active", notes: "", createdBy: selectedEmployee, createdDate, parentProjectId: "",
+        }),
+      });
+    } catch (err) {}
+  }
+  renderAll();
+}
+
 // Creates a new bucket nested inside an existing one — e.g. a candidate
 // inside Hiring. It inherits the parent's category so the board stays
 // colour-consistent, and you can change that afterwards from Edit.
@@ -3988,7 +4672,6 @@ async function createSubProject(parentProjectId) {
     ParentProjectID: parentProjectId,
   };
   projects.push(newProject);
-  expandedProjectIds.add(parentProjectId);
   selectedBoardProjectId = projectId;
 
   if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
@@ -4252,8 +4935,6 @@ function renderToDos() {
 
 function buildToDoCard(t) {
   const color = catColor(t.Category);
-  const isTicket = String(t.ItemType || "Task") === "Ticket";
-  const typeLabel = isTicket ? "🎫 Creates a ticket" : "📋 Creates a task";
   const projectLabel = t.ProjectID && projectById(t.ProjectID) ? ` · ${projectPath(t.ProjectID)}` : "";
   const nextStatus = t.Status === "Active" ? "Paused" : "Active";
   const pauseLabel = t.Status === "Active" ? "Pause" : "Resume";
@@ -4264,7 +4945,7 @@ function buildToDoCard(t) {
     <div class="todo-card" style="border-left:3px solid ${color}">
       <div>
         <div class="todo-card-name" style="color:${color}">${t.ToDoName}</div>
-        <div class="todo-card-meta">${typeLabel} · ${t.Category} · Day ${t.DayOfMonth} of each month${projectLabel}${t.Assignee ? ` · Assigned to ${t.Assignee}` : ""}</div>
+        <div class="todo-card-meta">🎫 ${t.Category} · ${recurrenceLabel(t)}${projectLabel}${t.Assignee ? ` · Assigned to ${t.Assignee}` : ""}</div>
       </div>
       <div class="todo-card-actions">
         <button type="button" class="todo-pause-btn todo-edit-btn" id="toDoEditBtn-${t.ToDoID}">Edit</button>
@@ -4273,21 +4954,25 @@ function buildToDoCard(t) {
       </div>
     </div>
     <div class="todo-edit-panel" id="toDoEditPanel-${t.ToDoID}" style="display:none;">
+      <div class="field">
+        <label>Repeats</label>
+        <div class="status-picker">
+          <button type="button" class="status-btn todo-edit-freq-btn" data-freq="Monthly" data-active="${!weekly}">Monthly</button>
+          <button type="button" class="status-btn todo-edit-freq-btn" data-freq="Weekly" data-active="${weekly}">Weekly</button>
+        </div>
+      </div>
       <div class="field-row" style="grid-template-columns: 1fr 1fr; margin-bottom:14px;">
         <div class="field">
           <label>Category</label>
           <select class="todo-edit-category"></select>
         </div>
-        <div class="field">
+        <div class="field todo-edit-day-month-field" style="display:${weekly ? "none" : "block"};">
           <label>Day of Month</label>
           <select class="todo-edit-day"></select>
         </div>
-      </div>
-      <div class="field">
-        <label>Creates A</label>
-        <div class="status-picker">
-          <button type="button" class="status-btn todo-edit-type-btn" data-type="Task" data-active="${!isTicket}">Task</button>
-          <button type="button" class="status-btn todo-edit-type-btn" data-type="Ticket" data-active="${isTicket}">Ticket</button>
+        <div class="field todo-edit-day-week-field" style="display:${weekly ? "block" : "none"};">
+          <label>Day of Week</label>
+          <select class="todo-edit-dow"></select>
         </div>
       </div>
       <div class="field">
@@ -4319,17 +5004,34 @@ function buildToDoCard(t) {
   for (let d = 1; d <= 28; d++) dayHtml += `<option value="${d}" ${String(d) === String(t.DayOfMonth) ? "selected" : ""}>${d}</option>`;
   daySel.innerHTML = dayHtml;
 
-  const projSel = wrap.querySelector(".todo-edit-project");
-  projSel.innerHTML = `<option value="">— none —</option>` +
-    projectOptionsHtml(t.ProjectID);
+  const dowSel = wrap.querySelector(".todo-edit-dow");
+  dowSel.innerHTML = WEEKDAYS.map(
+    d => `<option value="${d}" ${d === (t.DayOfWeek || "Monday") ? "selected" : ""}>${d}</option>`
+  ).join("");
 
-  const typeBtns = wrap.querySelectorAll(".todo-edit-type-btn");
-  typeBtns.forEach(btn => {
+  const freqBtns = wrap.querySelectorAll(".todo-edit-freq-btn");
+  const monthField = wrap.querySelector(".todo-edit-day-month-field");
+  const weekField = wrap.querySelector(".todo-edit-day-week-field");
+  freqBtns.forEach(btn => {
     btn.addEventListener("click", () => {
-      typeBtns.forEach(b => (b.dataset.active = "false"));
+      freqBtns.forEach(b => (b.dataset.active = "false"));
       btn.dataset.active = "true";
+      const nowWeekly = btn.dataset.freq === "Weekly";
+      monthField.style.display = nowWeekly ? "none" : "block";
+      weekField.style.display = nowWeekly ? "block" : "none";
     });
   });
+
+  const projSel = wrap.querySelector(".todo-edit-project");
+  const fillProjects = () => {
+    const keep = projSel.value || t.ProjectID || "";
+    const stillValid = projects.some(p => p.ProjectID === keep && p.Category === catSel.value);
+    projSel.innerHTML =
+      `<option value="">— none —</option>` +
+      projectOptionsHtml(stillValid ? keep : "", { category: catSel.value });
+  };
+  fillProjects();
+  catSel.addEventListener("change", fillProjects);
 
   const assigneeChecklist = wrap.querySelector(".todo-edit-assignee");
   assigneeChecklist.innerHTML = buildAssigneeChecklistHtml(parseAssignees(t.Assignee));
@@ -4340,13 +5042,19 @@ function buildToDoCard(t) {
       alert("Pick at least one person.");
       return;
     }
-    const activeType = wrap.querySelector('.todo-edit-type-btn[data-active="true"]');
+    const activeFreq = wrap.querySelector('.todo-edit-freq-btn[data-active="true"]');
+    const newFreq = activeFreq ? activeFreq.dataset.freq : "Monthly";
+    // Switching cadence clears the "already ran" stamp — the old month key
+    // means nothing to a weekly schedule, and vice versa.
+    const cadenceChanged = newFreq !== (t.Frequency || "Monthly");
     updateToDoDetails(t.ToDoID, {
       category: catSel.value,
       dayOfMonth: daySel.value,
+      dayOfWeek: dowSel.value,
+      frequency: newFreq,
       projectId: projSel.value,
       assignee: checked.join(", "),
-      itemType: activeType ? activeType.dataset.type : "Task",
+      ...(cadenceChanged ? { lastGeneratedMonth: "" } : {}),
     });
     editPanel.style.display = "none";
   });
@@ -4354,10 +5062,25 @@ function buildToDoCard(t) {
   return wrap;
 }
 
-async function createToDo(name, category, dayOfMonth, projectId, assignee, itemType) {
+// Rebuilds the recurring form's Project dropdown so it only offers projects
+// in the category that's selected. Keeps the current pick if it still fits.
+function refreshNtdProjectOptions() {
+  const catSel = document.getElementById("ntdCategory");
+  const projSel = document.getElementById("ntdProject");
+  if (!catSel || !projSel) return;
+  const keep = projSel.value;
+  const stillValid = projects.some(p => p.ProjectID === keep && p.Category === catSel.value);
+  projSel.innerHTML =
+    `<option value="">— none —</option>` +
+    projectOptionsHtml(stillValid ? keep : "", { category: catSel.value });
+}
+
+async function createToDo(name, category, dayOfMonth, projectId, assignee, frequency, dayOfWeek) {
   const toDoId = "td" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   const createdDate = dateToStr(new Date());
-  const type = itemType === "Ticket" ? "Ticket" : "Task";
+  // Recurring items always come back as tickets — they land in the queue and
+  // become a task with logged time once someone completes them.
+  const type = "Ticket";
   const newToDo = {
     ToDoID: toDoId,
     ToDoName: name,
@@ -4370,6 +5093,8 @@ async function createToDo(name, category, dayOfMonth, projectId, assignee, itemT
     CreatedBy: selectedEmployee,
     CreatedDate: createdDate,
     ItemType: type,
+    Frequency: frequency === "Weekly" ? "Weekly" : "Monthly",
+    DayOfWeek: dayOfWeek || "Monday",
   };
   todos.push(newToDo);
 
@@ -4382,6 +5107,8 @@ async function createToDo(name, category, dayOfMonth, projectId, assignee, itemT
           action: "createToDo", toDoId, toDoName: name, category, projectId: projectId || "",
           dayOfMonth, assignee: assignee || selectedEmployee, status: "Active", lastGeneratedMonth: "", createdBy: selectedEmployee, createdDate,
           itemType: type,
+          frequency: frequency === "Weekly" ? "Weekly" : "Monthly",
+          dayOfWeek: dayOfWeek || "Monday",
         }),
       });
     } catch (err) {}
@@ -4397,6 +5124,9 @@ async function updateToDoDetails(toDoId, changes) {
     if (changes.projectId !== undefined) t.ProjectID = changes.projectId;
     if (changes.assignee !== undefined) t.Assignee = changes.assignee;
     if (changes.itemType !== undefined) t.ItemType = changes.itemType;
+    if (changes.frequency !== undefined) t.Frequency = changes.frequency;
+    if (changes.dayOfWeek !== undefined) t.DayOfWeek = changes.dayOfWeek;
+    if (changes.lastGeneratedMonth !== undefined) t.LastGeneratedMonth = changes.lastGeneratedMonth;
   }
 
   if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
@@ -4455,70 +5185,6 @@ function priorityColor(priority) {
   return "";
 }
 
-function renderTickets() {
-  const openList = document.getElementById("ticketsList");
-  let open = tickets.filter(t => t.Status === "Open");
-  if (ticketsShowMineOnly) open = open.filter(t => getMyTickets().includes(t));
-  openList.innerHTML = open.length
-    ? open.map(t => buildTicketCardHtml(t)).join("")
-    : `<div class="empty-state">${ticketsShowMineOnly ? "Nothing assigned to or created by you right now." : "No open tickets right now."}</div>`;
-
-  const historyList = document.getElementById("ticketsHistoryList");
-  const history = tickets.filter(t => t.Status !== "Open");
-  historyList.innerHTML = history.length
-    ? history.map(t => `
-        <div class="ticket-history-item">
-          <span>${t.Title}</span>
-          <span style="margin-left:auto;">${t.Status}${t.ConvertedType ? ` → ${t.ConvertedType}` : ""}</span>
-        </div>
-      `).join("")
-    : `<div class="empty-state">Nothing here yet.</div>`;
-
-  wireTicketCardActions(openList);
-}
-
-function wireTicketCardActions(container) {
-  container.querySelectorAll("[data-claim-id]").forEach(btn => {
-    btn.addEventListener("click", () => claimTicket(btn.dataset.claimId));
-  });
-  container.querySelectorAll("[data-convert-task-id]").forEach(btn => {
-    btn.addEventListener("click", () => convertTicketToTask(btn.dataset.convertTaskId));
-  });
-  container.querySelectorAll("[data-convert-project-id]").forEach(btn => {
-    btn.addEventListener("click", () => convertTicketToProject(btn.dataset.convertProjectId));
-  });
-  container.querySelectorAll("[data-close-id]").forEach(btn => {
-    btn.addEventListener("click", () => closeTicket(btn.dataset.closeId));
-  });
-  container.querySelectorAll("[data-complete-id]").forEach(btn => {
-    btn.addEventListener("click", () => completeTicket(btn.dataset.completeId));
-  });
-  container.querySelectorAll("[data-update-toggle-id]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const panel = document.getElementById("ticketUpdatePanel-" + btn.dataset.updateToggleId);
-      if (panel) panel.style.display = panel.style.display === "none" ? "block" : "none";
-    });
-  });
-  container.querySelectorAll(".ticket-project-pill").forEach(pill => {
-    pill.addEventListener("click", () => {
-      const ticketId = pill.dataset.ticketId;
-      const nowActive = pill.dataset.active !== "true";
-      container.querySelectorAll(`.ticket-project-pill[data-ticket-id="${ticketId}"]`).forEach(p => p.dataset.active = "false");
-      pill.dataset.active = nowActive;
-    });
-  });
-  container.querySelectorAll(".ticket-update-save-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const ticketId = btn.dataset.ticketId;
-      const notes = container.querySelector(`.ticket-notes-input[data-ticket-id="${ticketId}"]`).value.trim();
-      const checklist = container.querySelector(`.ticket-reassign-checklist[data-ticket-id="${ticketId}"]`);
-      const assignee = getCheckedAssignees(checklist).join(", ");
-      const activePill = container.querySelector(`.ticket-project-pill[data-ticket-id="${ticketId}"][data-active="true"]`);
-      const projectId = activePill ? activePill.dataset.projectId : "";
-      updateTicketDetails(ticketId, notes, assignee, projectId);
-    });
-  });
-}
 
 /* ---------- "Mine Only" filter helpers, shared by Tickets and Project Board ---------- */
 function getMyProjects() {
@@ -4535,96 +5201,532 @@ function getMyTickets() {
 let ticketsShowMineOnly = false;
 let boardShowMineOnly = false;
 
-function buildTicketCardHtml(t) {
-  const catHex = t.Category ? catColor(t.Category) : "";
-  const border = catHex || "var(--border)";
-  const assigneeNames = parseAssignees(t.Assignee);
-  const project = projects.find(p => p.ProjectID === t.ProjectID);
+/* =========================================================
+   TICKET BOARD
+   Four columns you drag across, readable keys, a comment
+   thread per ticket, and search/filter/sort over the queue.
+   ========================================================= */
+const TICKET_STATUSES = [
+  { key: "To Do",       hex: "#5A6A8F" },
+  { key: "In Progress", hex: "#63bcbc" },
+  { key: "Blocked",     hex: "#D45454" },
+  { key: "Done",        hex: "#1D9E75" },
+];
 
-  const activeProjectsByCategory = CATEGORIES.map(cat => {
-    const catProjects = projects.filter(p => p.Category === cat.key && p.Status === "Active");
-    if (!catProjects.length) return "";
-    return `
-      <div class="ticket-project-cat-label" style="color:${cat.hex}">${cat.key}</div>
-      <div class="ticket-project-pills">
-        ${catProjects.map(p => {
-          const parent = projectById(parentIdOf(p));
-          const label = parent ? `${parent.ProjectName} › ${p.ProjectName}` : p.ProjectName;
-          return `<button type="button" class="ticket-project-pill" data-ticket-id="${t.TicketID}" data-project-id="${p.ProjectID}" data-active="${p.ProjectID === t.ProjectID}" title="${projectPath(p.ProjectID)}">${label}</button>`;
-        }).join("")}
-      </div>
-    `;
-  }).join("");
+const PRIORITY_ORDER = { Urgent: 0, High: 1, Normal: 2, Low: 3, "": 4 };
 
-  return `
-    <div class="ticket-card-wrap">
-      <div class="ticket-card" style="border-left:3px solid ${border}">
-        <div>
-          <div class="ticket-title">${t.Title}</div>
-          <div class="ticket-meta-row">
-            ${t.Category ? `<span class="ticket-badge" style="background:${catHex}22; color:${catHex};">${t.Category}</span>` : ""}
-            ${t.Priority ? `<span class="ticket-badge" style="background:${priorityColor(t.Priority)}22; color:${priorityColor(t.Priority)};">${t.Priority}</span>` : ""}
-            <span class="ticket-assignee">${assigneeNames.length ? assigneeNames.join(", ") : "Unassigned"}</span>
-            ${project ? `<span class="ticket-badge" style="background:#63bcbc22; color:#63bcbc;">📌 ${project.ProjectName}</span>` : ""}
-            ${t.LastUpdated ? `<span class="ticket-timestamp">Updated ${t.LastUpdated}</span>` : ""}
-          </div>
-          ${t.ExternalName ? `<div class="ticket-notes-preview">Regarding: <strong>${t.ExternalName}</strong>${t.ExternalEmail ? ` (${t.ExternalEmail})` : ""}</div>` : ""}
-          ${t.Notes ? `<div class="ticket-notes-preview">${t.Notes.replace(/</g, "&lt;")}</div>` : ""}
-        </div>
-        <div class="ticket-actions">
-          ${!assigneeNames.length ? `<button type="button" class="ticket-action-btn claim" data-claim-id="${t.TicketID}">Claim</button>` : ""}
-          <button type="button" class="ticket-action-btn convert" data-update-toggle-id="${t.TicketID}">Update</button>
-          <button type="button" class="ticket-action-btn convert" data-convert-task-id="${t.TicketID}">→ Task</button>
-          <button type="button" class="ticket-action-btn convert" data-convert-project-id="${t.TicketID}">→ Project</button>
-          <button type="button" class="ticket-action-btn claim" data-complete-id="${t.TicketID}">Complete</button>
-          <button type="button" class="ticket-action-btn close" data-close-id="${t.TicketID}">Close</button>
-        </div>
-      </div>
-      <div class="ticket-update-panel" id="ticketUpdatePanel-${t.TicketID}" style="display:none;">
-        <div class="field">
-          <label>Notes / Update <span class="field-hint">(what's been done, what's next)</span></label>
-          <textarea class="notes-textarea ticket-notes-input" data-ticket-id="${t.TicketID}">${(t.Notes || "").replace(/</g, "&lt;")}</textarea>
-        </div>
-        <div class="field">
-          <label>Reassign To <span class="field-hint">(one or more)</span></label>
-          <div class="assignee-checklist ticket-reassign-checklist" data-ticket-id="${t.TicketID}">${buildAssigneeChecklistHtml(assigneeNames)}</div>
-        </div>
-        <div class="field">
-          <label>Attach to a Project <span class="field-hint">(optional — stays a ticket, still shows here, until Complete)</span></label>
-          ${activeProjectsByCategory || `<div class="empty-state" style="padding:8px 0;">No active projects yet.</div>`}
-        </div>
-        <button type="button" class="submit-btn ticket-update-save-btn" data-ticket-id="${t.TicketID}">Save Update</button>
-      </div>
-    </div>
-  `;
+let ticketSearchText = "";
+let ticketFilterAssignee = "";
+let ticketFilterPriority = "";
+let ticketFilterCategory = "";
+let ticketSortMode = "priority";
+let openTicketDetailId = null;
+
+// Tickets created before the board existed carry the old words. Map them on
+// read so nothing in the Sheet has to be edited by hand.
+function ticketStatus(t) {
+  const raw = String(t.Status || "").trim();
+  if (raw === "Open" || raw === "") return "To Do";
+  if (raw === "Completed") return "Done";
+  return raw;
 }
 
-function renderNtkProjectPills() {
-  const wrap = document.getElementById("ntkProjectPills");
-  const html = CATEGORIES.map(cat => {
-    const catProjects = projects.filter(p => p.Category === cat.key && p.Status === "Active");
-    if (!catProjects.length) return "";
-    return `
-      <div class="ticket-project-cat-label" style="color:${cat.hex}">${cat.key}</div>
-      <div class="ticket-project-pills">
-        ${catProjects.map(p => {
-          // A sub-project pill on its own is ambiguous, so show the bucket it
-          // lives in and put the whole path on hover.
-          const parent = projectById(parentIdOf(p));
-          const label = parent ? `${parent.ProjectName} › ${p.ProjectName}` : p.ProjectName;
-          return `<button type="button" class="ticket-project-pill ntk-project-pill" data-project-id="${p.ProjectID}" data-active="false" title="${projectPath(p.ProjectID)}">${label}</button>`;
-        }).join("")}
+function ticketKeyOf(t) {
+  return t.TicketKey || "—";
+}
+
+// Sorts keys the way people read them: HR-9 before HR-10, not after.
+function ticketKeyNumber(t) {
+  const match = /-(\d+)$/.exec(String(t.TicketKey || ""));
+  return match ? Number(match[1]) : 0;
+}
+
+function commentsFor(ticketId) {
+  return comments
+    .filter(c => String(c.TicketID) === String(ticketId))
+    .sort((a, b) => String(a.CreatedAt || "").localeCompare(String(b.CreatedAt || "")));
+}
+
+function initials(name) {
+  return String(name || "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(w => w[0].toUpperCase())
+    .join("");
+}
+
+function ticketMatchesFilters(t) {
+  if (ticketsShowMineOnly && !getMyTickets().includes(t)) return false;
+  if (ticketFilterPriority && t.Priority !== ticketFilterPriority) return false;
+  if (ticketFilterCategory && t.Category !== ticketFilterCategory) return false;
+  if (ticketFilterAssignee) {
+    if (ticketFilterAssignee === "__none__") {
+      if (parseAssignees(t.Assignee).length) return false;
+    } else if (!parseAssignees(t.Assignee).includes(ticketFilterAssignee)) {
+      return false;
+    }
+  }
+  if (ticketSearchText) {
+    // Search covers the key, the title, the notes, the people on it and the
+    // external contact — anything you'd plausibly remember about a ticket.
+    const haystack = [
+      t.TicketKey, t.Title, t.Notes, t.Assignee, t.ExternalName, t.ExternalEmail, t.Category,
+      commentsFor(t.TicketID).map(c => c.Body).join(" "),
+    ].join(" ").toLowerCase();
+    if (!haystack.includes(ticketSearchText)) return false;
+  }
+  return true;
+}
+
+function sortTickets(list) {
+  const sorted = list.slice();
+  if (ticketSortMode === "priority") {
+    sorted.sort((a, b) => {
+      const pa = PRIORITY_ORDER[a.Priority || ""] ?? 4;
+      const pb = PRIORITY_ORDER[b.Priority || ""] ?? 4;
+      return pa - pb || ticketKeyNumber(b) - ticketKeyNumber(a);
+    });
+  } else if (ticketSortMode === "newest") {
+    sorted.sort((a, b) => ticketKeyNumber(b) - ticketKeyNumber(a));
+  } else if (ticketSortMode === "oldest") {
+    sorted.sort((a, b) => ticketKeyNumber(a) - ticketKeyNumber(b));
+  } else if (ticketSortMode === "key") {
+    sorted.sort((a, b) => ticketKeyNumber(a) - ticketKeyNumber(b));
+  } else if (ticketSortMode === "title") {
+    sorted.sort((a, b) => String(a.Title || "").localeCompare(String(b.Title || "")));
+  }
+  return sorted;
+}
+
+function buildTicketTile(t) {
+  const tile = document.createElement("div");
+  tile.className = "tkt";
+  tile.draggable = true;
+  tile.dataset.ticketId = t.TicketID;
+  if (t.Category) tile.style.setProperty("--tkt-cat", catColor(t.Category));
+
+  const people = parseAssignees(t.Assignee);
+  const commentCount = commentsFor(t.TicketID).length;
+  const project = projects.find(p => p.ProjectID === t.ProjectID);
+
+  tile.innerHTML = `
+    <div class="tkt-key-row">
+      <span class="tkt-key">${ticketKeyOf(t)}</span>
+      ${t.Priority ? `<span class="tkt-prio" style="color:${priorityColor(t.Priority)}">${t.Priority}</span>` : ""}
+    </div>
+    <div class="tkt-title">${t.Title || ""}</div>
+    <div class="tkt-foot">
+      ${t.Category ? `<span class="tkt-chip" style="color:${catColor(t.Category)}">${t.Category}</span>` : ""}
+      ${project ? `<span class="tkt-chip">📌 ${project.ProjectName}</span>` : ""}
+      ${commentCount ? `<span class="tkt-comment-count">💬 ${commentCount}</span>` : ""}
+      <span class="tkt-who">
+        ${people.map(n => `<span class="tkt-avatar" style="background:${empColor(n)}" title="${n}">${initials(n)}</span>`).join("")}
+      </span>
+    </div>
+  `;
+
+  tile.addEventListener("click", () => openTicketDetail(t.TicketID));
+  tile.addEventListener("dragstart", e => {
+    tile.classList.add("dragging");
+    e.dataTransfer.setData("text/plain", "tkt:" + t.TicketID);
+  });
+  tile.addEventListener("dragend", () => tile.classList.remove("dragging"));
+  return tile;
+}
+
+function renderTickets() {
+  const board = document.getElementById("ticketBoard");
+  if (!board) return;
+
+  refreshTicketFilterOptions();
+
+  // Closed tickets are done with — they live in the history list, not on the
+  // board taking up a column.
+  const live = tickets.filter(t => ticketStatus(t) !== "Closed" && ticketMatchesFilters(t));
+
+  board.innerHTML = "";
+  TICKET_STATUSES.forEach(col => {
+    const inCol = sortTickets(live.filter(t => ticketStatus(t) === col.key));
+
+    const el = document.createElement("div");
+    el.className = "ticket-col";
+    el.dataset.status = col.key;
+    el.innerHTML = `
+      <div class="ticket-col-head">
+        <span class="ticket-col-dot" style="background:${col.hex}"></span>
+        ${col.key}
+        <span class="ticket-col-count">${inCol.length}</span>
       </div>
     `;
-  }).join("");
-  wrap.innerHTML = html || `<div class="empty-state" style="padding:8px 0;">No active projects yet.</div>`;
-  wrap.querySelectorAll(".ntk-project-pill").forEach(pill => {
-    pill.addEventListener("click", () => {
-      const nowActive = pill.dataset.active !== "true";
-      wrap.querySelectorAll(".ntk-project-pill").forEach(p => p.dataset.active = "false");
-      pill.dataset.active = nowActive;
+
+    if (!inCol.length) {
+      const empty = document.createElement("div");
+      empty.className = "ticket-col-empty";
+      empty.textContent = "Nothing here.";
+      el.appendChild(empty);
+    } else {
+      inCol.forEach(t => el.appendChild(buildTicketTile(t)));
+    }
+
+    el.addEventListener("dragover", e => {
+      e.preventDefault();
+      el.classList.add("drag-over");
+    });
+    el.addEventListener("dragleave", () => el.classList.remove("drag-over"));
+    el.addEventListener("drop", e => {
+      e.preventDefault();
+      el.classList.remove("drag-over");
+      const payload = e.dataTransfer.getData("text/plain");
+      if (!payload.startsWith("tkt:")) return;
+      moveTicketToStatus(payload.slice(4), col.key);
+    });
+
+    board.appendChild(el);
+  });
+
+  const historyList = document.getElementById("ticketsHistoryList");
+  const history = tickets.filter(t => ticketStatus(t) === "Closed");
+  historyList.innerHTML = history.length
+    ? history.map(t => `
+        <div class="ticket-history-item">
+          <span class="tkt-key">${ticketKeyOf(t)}</span>
+          <span style="margin-left:8px;">${t.Title}</span>
+          <span style="margin-left:auto;">${t.Status}${t.ConvertedType ? ` → ${t.ConvertedType}` : ""}</span>
+        </div>
+      `).join("")
+    : `<div class="empty-state">Nothing here yet.</div>`;
+
+  if (openTicketDetailId) renderTicketDetail();
+}
+
+function refreshTicketFilterOptions() {
+  const aSel = document.getElementById("ticketFilterAssignee");
+  if (aSel && aSel.dataset.built !== "1") {
+    aSel.dataset.built = "1";
+    aSel.innerHTML =
+      `<option value="">Anyone</option><option value="__none__">Unassigned</option>` +
+      EMPLOYEES.map(e => `<option value="${e.name}">${e.name}</option>`).join("");
+  }
+  const cSel = document.getElementById("ticketFilterCategory");
+  if (cSel && cSel.dataset.built !== "1") {
+    cSel.dataset.built = "1";
+    cSel.innerHTML =
+      `<option value="">Any category</option>` +
+      CATEGORIES.map(c => `<option value="${c.key}">${c.key}</option>`).join("");
+  }
+}
+
+// Dropping into Done runs the real completion flow — time and a project —
+// rather than silently marking it finished with no record of the work.
+async function moveTicketToStatus(ticketId, newStatus) {
+  const t = tickets.find(x => x.TicketID === ticketId);
+  if (!t || ticketStatus(t) === newStatus) return;
+
+  if (newStatus === "Done") {
+    completeTicket(ticketId);
+    return;
+  }
+
+  t.Status = newStatus;
+  t.LastUpdated = nowTimestampLocal();
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "updateTicketStatus", ticketId, status: newStatus }),
+      });
+    } catch (err) {}
+  }
+  renderTickets();
+}
+
+function openTicketDetail(ticketId) {
+  openTicketDetailId = ticketId;
+  document.getElementById("ticketDetailOverlay").style.display = "flex";
+  renderTicketDetail();
+}
+
+function closeTicketDetail() {
+  document.getElementById("ticketDetailOverlay").style.display = "none";
+  openTicketDetailId = null;
+}
+
+function renderTicketDetail() {
+  const body = document.getElementById("ticketDetailBody");
+  const t = tickets.find(x => x.TicketID === openTicketDetailId);
+  if (!t) {
+    closeTicketDetail();
+    return;
+  }
+
+  const status = ticketStatus(t);
+  const people = parseAssignees(t.Assignee);
+  const project = projects.find(p => p.ProjectID === t.ProjectID);
+  const thread = commentsFor(t.TicketID);
+
+  body.innerHTML = `
+    <div class="tkt-detail-key">${ticketKeyOf(t)}</div>
+    <div class="tkt-detail-title">${t.Title || ""}</div>
+
+    <div class="tkt-status-row">
+      ${TICKET_STATUSES.map(c => `
+        <button type="button" class="tkt-status-btn" data-set-status="${c.key}"
+          data-active="${c.key === status}"
+          style="${c.key === status ? `background:${c.hex}` : ""}">${c.key}</button>
+      `).join("")}
+      <button type="button" class="tkt-status-btn" data-set-status="Closed" data-active="${status === "Closed"}"
+        style="${status === "Closed" ? "background:#5A6A8F" : ""}">Closed</button>
+    </div>
+
+    <div class="tkt-detail-fields">
+      <div>
+        <div class="tkt-field-label">Assignee</div>
+        <div class="tkt-field-value">${people.length ? people.join(", ") : "Unassigned"}</div>
+      </div>
+      <div>
+        <div class="tkt-field-label">Priority</div>
+        <div class="tkt-field-value" style="color:${priorityColor(t.Priority)}">${t.Priority || "None"}</div>
+      </div>
+      <div>
+        <div class="tkt-field-label">Category</div>
+        <div class="tkt-field-value" style="color:${t.Category ? catColor(t.Category) : "var(--dim)"}">${t.Category || "None"}</div>
+      </div>
+      <div>
+        <div class="tkt-field-label">Project</div>
+        <div class="tkt-field-value">${project ? projectPath(project.ProjectID) : "None"}</div>
+      </div>
+      <div>
+        <div class="tkt-field-label">Reported By</div>
+        <div class="tkt-field-value">${t.CreatedBy || "—"}</div>
+      </div>
+      <div>
+        <div class="tkt-field-label">Created</div>
+        <div class="tkt-field-value">${cleanDate(t.CreatedDate) || "—"}</div>
+      </div>
+    </div>
+
+    ${t.ExternalName ? `<div class="rollup-note">Regarding <strong>${t.ExternalName}</strong>${t.ExternalEmail ? ` (${t.ExternalEmail})` : ""}</div>` : ""}
+
+    <div class="ticket-actions" style="margin-bottom:18px;">
+      ${!people.length ? `<button type="button" class="ticket-action-btn claim" id="tdClaim">Claim</button>` : ""}
+      <button type="button" class="ticket-action-btn convert" id="tdEdit">Edit Fields</button>
+      <button type="button" class="ticket-action-btn convert" id="tdProject">→ Project</button>
+      <button type="button" class="ticket-action-btn claim" id="tdComplete">Complete</button>
+    </div>
+
+    <div class="todo-edit-panel" id="tdEditPanel" style="display:none;">
+      <div class="field">
+        <label>Description / Notes</label>
+        <textarea class="notes-textarea" id="tdNotes">${(t.Notes || "").replace(/</g, "&lt;")}</textarea>
+      </div>
+      <div class="field">
+        <label>Priority</label>
+        <select id="tdPriority">
+          ${["", "Low", "Normal", "High", "Urgent"].map(p =>
+            `<option value="${p}" ${p === (t.Priority || "") ? "selected" : ""}>${p || "— none —"}</option>`).join("")}
+        </select>
+      </div>
+      <div class="field">
+        <label>Assignees</label>
+        <div class="assignee-checklist" id="tdAssignees"></div>
+      </div>
+      <div class="field">
+        <label>Project</label>
+        <select id="tdProjectSelect"></select>
+      </div>
+      <button type="button" class="submit-btn" id="tdSave" style="margin-top:8px;">Save Changes</button>
+    </div>
+
+    <div class="ticket-attachments" data-ticket-id="${t.TicketID}"></div>
+
+    <div class="section-label" style="margin-top:22px;">Activity</div>
+    <div class="tkt-comments" id="tdComments"></div>
+    <div class="field" style="margin-top:12px;">
+      <textarea class="notes-textarea" id="tdNewComment" placeholder="Add a comment..." style="min-height:70px;"></textarea>
+    </div>
+    <button type="button" class="submit-btn" id="tdAddComment" style="max-width:180px;">Comment</button>
+  `;
+
+  // Status buttons, including Closed which takes it off the board entirely
+  body.querySelectorAll("[data-set-status]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const target = btn.dataset.setStatus;
+      if (target === "Done") {
+        closeTicketDetail();
+        completeTicket(t.TicketID);
+        return;
+      }
+      moveTicketToStatus(t.TicketID, target);
     });
   });
+
+  const claimBtn = body.querySelector("#tdClaim");
+  if (claimBtn) claimBtn.addEventListener("click", () => claimTicket(t.TicketID));
+
+  body.querySelector("#tdProject").addEventListener("click", () => {
+    closeTicketDetail();
+    convertTicketToProject(t.TicketID);
+  });
+  body.querySelector("#tdComplete").addEventListener("click", () => {
+    closeTicketDetail();
+    completeTicket(t.TicketID);
+  });
+
+  const editPanel = body.querySelector("#tdEditPanel");
+  body.querySelector("#tdEdit").addEventListener("click", () => {
+    editPanel.style.display = editPanel.style.display === "none" ? "block" : "none";
+  });
+  body.querySelector("#tdAssignees").innerHTML = buildAssigneeChecklistHtml(people);
+  body.querySelector("#tdProjectSelect").innerHTML =
+    `<option value="">— none —</option>` + projectOptionsHtml(t.ProjectID || "");
+  body.querySelector("#tdSave").addEventListener("click", () => {
+    updateTicketFields(t.TicketID, {
+      notes: body.querySelector("#tdNotes").value,
+      priority: body.querySelector("#tdPriority").value,
+      assignee: getCheckedAssignees(body.querySelector("#tdAssignees")).join(", "),
+      projectId: body.querySelector("#tdProjectSelect").value,
+    });
+    editPanel.style.display = "none";
+  });
+
+  const attachMount = body.querySelector(".ticket-attachments");
+  if (attachMount) attachMount.appendChild(buildAttachmentsSection("Ticket", t.TicketID));
+
+  const thread_el = body.querySelector("#tdComments");
+  if (!thread.length) {
+    thread_el.innerHTML = `<div class="tkt-comment-empty">No comments yet. First one's yours.</div>`;
+  } else {
+    thread.forEach(c => {
+      const row = document.createElement("div");
+      row.className = "tkt-comment";
+      row.innerHTML = `
+        <span class="tkt-avatar" style="background:${empColor(c.Author)}" title="${c.Author}">${initials(c.Author)}</span>
+        <div class="tkt-comment-body">
+          <div class="tkt-comment-head">
+            <span class="tkt-comment-author">${c.Author || "Someone"}</span>
+            <span class="tkt-comment-when">${c.CreatedAt || ""}</span>
+          </div>
+          <div class="tkt-comment-text">${String(c.Body || "").replace(/</g, "&lt;")}</div>
+        </div>
+        ${c.Author === selectedEmployee ? `<button type="button" class="tkt-comment-del" title="Delete">×</button>` : ""}
+      `;
+      const del = row.querySelector(".tkt-comment-del");
+      if (del) del.addEventListener("click", () => deleteTicketComment(c.CommentID));
+      thread_el.appendChild(row);
+    });
+  }
+
+  body.querySelector("#tdAddComment").addEventListener("click", () => {
+    const input = body.querySelector("#tdNewComment");
+    const text = input.value.trim();
+    if (!text) return;
+    addTicketComment(t.TicketID, text);
+    input.value = "";
+  });
+}
+
+async function updateTicketFields(ticketId, changes) {
+  const t = tickets.find(x => x.TicketID === ticketId);
+  if (t) {
+    if (changes.notes !== undefined) t.Notes = changes.notes;
+    if (changes.priority !== undefined) t.Priority = changes.priority;
+    if (changes.assignee !== undefined) t.Assignee = changes.assignee;
+    if (changes.projectId !== undefined) t.ProjectID = changes.projectId;
+    t.LastUpdated = nowTimestampLocal();
+  }
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "updateTicket", ticketId,
+          notes: changes.notes, priority: changes.priority, assignee: changes.assignee,
+        }),
+      });
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "updateTicketProject", ticketId, projectId: changes.projectId || "" }),
+      });
+    } catch (err) {}
+  }
+  renderTickets();
+}
+
+async function addTicketComment(ticketId, text) {
+  const commentId = "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const createdAt = nowTimestampLocal();
+  comments.push({
+    CommentID: commentId,
+    TicketID: ticketId,
+    Author: selectedEmployee,
+    Body: text,
+    CreatedAt: createdAt,
+  });
+  renderTickets();
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "addTicketComment", commentId, ticketId, author: selectedEmployee, body: text }),
+      });
+    } catch (err) {}
+  }
+}
+
+async function deleteTicketComment(commentId) {
+  if (!confirm("Delete this comment?")) return;
+  comments = comments.filter(c => c.CommentID !== commentId);
+  renderTickets();
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "deleteTicketComment", commentId }),
+      });
+    } catch (err) {}
+  }
+}
+
+
+function openNewTicketModal() {
+  document.getElementById("ntkTitle").value = "";
+  document.getElementById("ntkNotes").value = "";
+  document.getElementById("ntkPriority").value = "";
+  document.getElementById("ntkExternalName").value = "";
+  document.getElementById("ntkExternalEmail").value = "";
+  document.getElementById("ntkExternalFields").style.display = "none";
+  document.getElementById("ntkExternalCaret").textContent = "▸";
+  document.getElementById("ntkAssigneeChecklist").innerHTML = buildAssigneeChecklistHtml([]);
+  refreshNtkProjectOptions();
+  document.getElementById("newTicketOverlay").style.display = "flex";
+  document.getElementById("ntkTitle").focus();
+}
+
+function closeNewTicketModal() {
+  document.getElementById("newTicketOverlay").style.display = "none";
+}
+
+// Replaces the old wall of pills — every project in every category, all on
+// screen at once — with a short list that follows the category you picked.
+function refreshNtkProjectOptions() {
+  const catSel = document.getElementById("ntkCategory");
+  const projSel = document.getElementById("ntkProject");
+  if (!catSel || !projSel) return;
+  const keep = projSel.value;
+  const stillValid = projects.some(p => p.ProjectID === keep && (!catSel.value || p.Category === catSel.value));
+  projSel.innerHTML =
+    `<option value="">— none —</option>` +
+    projectOptionsHtml(stillValid ? keep : "", catSel.value ? { category: catSel.value } : {});
 }
 
 async function createTicket(title, category, priority, assignee, notes, externalName, externalEmail, projectId) {
@@ -4636,7 +5738,7 @@ async function createTicket(title, category, priority, assignee, notes, external
     Category: category || "",
     Priority: priority || "",
     Assignee: assignee || "",
-    Status: "Open",
+    Status: "To Do",
     Notes: notes || "",
     LastUpdated: nowTimestampLocal(),
     ConvertedType: "",
@@ -4646,20 +5748,27 @@ async function createTicket(title, category, priority, assignee, notes, external
     ExternalName: externalName || "",
     ExternalEmail: externalEmail || "",
     ProjectID: projectId || "",
+    TicketKey: "",
   };
   tickets.push(newTicket);
+  renderTickets();
 
   if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
     try {
-      await fetch(APPS_SCRIPT_URL, {
+      const res = await fetch(APPS_SCRIPT_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
           action: "createTicket", ticketId, title, category: category || "", priority: priority || "",
           assignee: assignee || "", notes: notes || "", createdBy: selectedEmployee, createdDate,
           externalName: externalName || "", externalEmail: externalEmail || "", projectId: projectId || "",
+          status: "To Do",
         }),
       });
+      // The key is handed out by the backend, never guessed here — two people
+      // creating tickets at once would otherwise both claim the same number.
+      const result = await res.json();
+      if (result && result.ticketKey) newTicket.TicketKey = result.ticketKey;
     } catch (err) {}
   }
   renderTickets();
@@ -4741,23 +5850,191 @@ async function createTicketInvite(name, email, hours) {
   document.getElementById("invEmail").value = "";
 }
 
-async function completeTicket(ticketId) {
+// Completing a ticket doesn't just close it — the work that went into it
+// becomes a real, completed task with the time logged against it, so it shows
+// up in the calendar and in every hours total like any other work.
+let completingTicketId = null;
+
+function completeTicket(ticketId) {
   const t = tickets.find(x => x.TicketID === ticketId);
-  if (t) {
-    t.Status = "Completed";
-    t.LastUpdated = nowTimestampLocal();
+  if (!t) return;
+  completingTicketId = ticketId;
+  document.getElementById("completeTicketTitle").textContent = t.Title || "";
+  document.getElementById("completeTicketDate").value = dateToStr(new Date());
+  document.getElementById("completeTicketHours").value = 0;
+  document.getElementById("completeTicketMins").value = 30;
+
+  // Pre-selects whatever project the ticket was already tagged to, so the
+  // common case is just confirming what's on screen.
+  const projSel = document.getElementById("completeTicketProject");
+  projSel.innerHTML =
+    `<option value="">— pick a project —</option>` +
+    projectOptionsHtml(t.ProjectID || "") +
+    `<option value="__new__">+ Build a new project</option>`;
+  projSel.value = t.ProjectID || "";
+
+  document.getElementById("completeTicketNewProjectName").value = t.Title || "";
+  document.getElementById("completeTicketNewProjectParent").innerHTML =
+    `<option value="">— top level —</option>` + projectOptionsHtml("");
+  syncCompleteTicketProjectFields();
+
+  document.getElementById("completeTicketModalOverlay").style.display = "flex";
+}
+
+// The new-project fields only matter when you've chosen to build one.
+function syncCompleteTicketProjectFields() {
+  const isNew = document.getElementById("completeTicketProject").value === "__new__";
+  document.getElementById("completeTicketNewProjectFields").style.display = isNew ? "block" : "none";
+}
+
+function closeCompleteTicketModal() {
+  document.getElementById("completeTicketModalOverlay").style.display = "none";
+  completingTicketId = null;
+}
+
+async function confirmCompleteTicket() {
+  const ticketId = completingTicketId;
+  const t = tickets.find(x => x.TicketID === ticketId);
+  if (!t) return closeCompleteTicketModal();
+
+  const date = document.getElementById("completeTicketDate").value || dateToStr(new Date());
+  const hrs = Number(document.getElementById("completeTicketHours").value) || 0;
+  const mins = Number(document.getElementById("completeTicketMins").value) || 0;
+  const hours = hrs + mins / 60;
+
+  if (hours <= 0) {
+    alert("Put in how long this took before completing it — even a rough number.");
+    return;
   }
+
+  const projSel = document.getElementById("completeTicketProject");
+  const buildingNew = projSel.value === "__new__";
+  const newProjectName = document.getElementById("completeTicketNewProjectName").value.trim();
+
+  if (!projSel.value) {
+    alert("Pick the project this belongs in, or build a new one.");
+    return;
+  }
+  if (buildingNew && !newProjectName) {
+    alert("Give the new project a name.");
+    return;
+  }
+
+  const btn = document.getElementById("completeTicketSaveBtn");
+  btn.disabled = true;
+  btn.textContent = "Saving...";
+
+  const assignee = t.Assignee || selectedEmployee;
+  const category = t.Category || "";
+  let projectId = buildingNew ? "" : projSel.value;
+
+  // Build the project first, so the task has somewhere real to land.
+  if (buildingNew) {
+    projectId = "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const parentProjectId = document.getElementById("completeTicketNewProjectParent").value || "";
+    projects.push({
+      ProjectID: projectId,
+      ProjectName: newProjectName,
+      Category: category,
+      Status: "Active",
+      Notes: "",
+      CreatedBy: selectedEmployee,
+      CreatedDate: date,
+      ParentProjectID: parentProjectId,
+    });
+    if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+      try {
+        await fetch(APPS_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "createProject", projectId, projectName: newProjectName, category,
+            status: "Active", notes: "", createdBy: selectedEmployee, createdDate: date, parentProjectId,
+          }),
+        });
+      } catch (err) {}
+    }
+  }
+
+  const taskId = "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const eventId = "e" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+  tasks.push({
+    TaskID: taskId,
+    TaskName: t.Title,
+    ProjectID: projectId,
+    Category: category,
+    Status: "Completed",
+    Notes: t.Notes || "",
+    Assignee: assignee,
+    DueDate: "",
+    AttachmentLink: "",
+    CreatedBy: t.CreatedBy || selectedEmployee,
+    CreatedDate: date,
+  });
+
+  // Time gets logged as a plain duration rather than a start/end pair, since
+  // nobody knows what clock time they were working on a ticket after the fact.
+  taskEvents.push({
+    EventID: eventId,
+    TaskID: taskId,
+    Date: date,
+    StartTime: "",
+    EndTime: "",
+    Hours: hours,
+    Employee: selectedEmployee,
+  });
+
+  t.Status = "Done";
+  t.ConvertedType = "Task";
+  t.ConvertedID = taskId;
+  t.ProjectID = projectId;
+  t.LastUpdated = nowTimestampLocal();
 
   if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
     try {
       await fetch(APPS_SCRIPT_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "updateTicketStatus", ticketId, status: "Completed" }),
+        body: JSON.stringify({
+          action: "createTask", taskId, taskName: t.Title, projectId,
+          category, status: "Completed", notes: t.Notes || "", assignee,
+          dueDate: "", attachmentLink: "", createdBy: t.CreatedBy || selectedEmployee, createdDate: date,
+        }),
       });
-    } catch (err) {}
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "addEvent", eventId, taskId, date, startTime: "", endTime: "",
+          hours, employee: selectedEmployee,
+        }),
+      });
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "updateTicketStatus", ticketId, status: "Done" }),
+      });
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "markTicketConverted", ticketId, convertedType: "Task", convertedId: taskId }),
+      });
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "updateTicketProject", ticketId, projectId }),
+      });
+    } catch (err) {
+      // local state is already updated; a refresh will pick up the sync
+    }
   }
-  renderTickets();
+
+  btn.disabled = false;
+  btn.textContent = "Complete & Log Time";
+  closeCompleteTicketModal();
+  rebuildDerivedEntries();
+  renderAll();
 }
 
 async function updateTicketDetails(ticketId, notes, assignee, projectId) {
@@ -5046,6 +6323,158 @@ function formatShortDate(dateStr) {
   return `${parts[1]}/${parts[2]}`;
 }
 
+/* =========================================================
+   ATTACHMENTS — real file uploads, stored in Drive
+   The Sheet only ever holds a pointer; the file itself lives in the
+   "HR Task Tracker Attachments" folder and is shared with the team only.
+   ========================================================= */
+const MAX_ATTACHMENT_MB = 10;
+
+function attachmentsFor(parentType, parentId) {
+  return attachments.filter(
+    a => String(a.ParentType) === parentType && String(a.ParentID) === String(parentId)
+  );
+}
+
+function fileSizeLabel(bytes) {
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + " KB";
+  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+}
+
+// Builds the Files block that hangs off a task card or a ticket. Same markup
+// both places so files behave identically wherever you meet them.
+function buildAttachmentsSection(parentType, parentId) {
+  const wrap = document.createElement("div");
+  wrap.className = "attach-block";
+  const mine = attachmentsFor(parentType, parentId);
+
+  wrap.innerHTML = `
+    <div class="section-label" style="margin-top:0;">Files</div>
+    <div class="attach-list"></div>
+    <div class="attach-actions">
+      <label class="attach-upload-btn">
+        + Attach a file
+        <input type="file" class="attach-input" style="display:none;" />
+      </label>
+      <span class="attach-status"></span>
+    </div>
+  `;
+
+  const list = wrap.querySelector(".attach-list");
+  if (!mine.length) {
+    list.innerHTML = `<div class="attach-empty">No files yet.</div>`;
+  } else {
+    mine.forEach(a => {
+      const row = document.createElement("div");
+      row.className = "attach-row";
+      row.innerHTML = `
+        <a class="attach-name" href="${a.FileURL}" target="_blank" rel="noopener">📎 ${a.FileName}</a>
+        <span class="attach-meta">${a.UploadedBy || ""}${a.UploadedDate ? " · " + cleanDate(a.UploadedDate) : ""}</span>
+        <button type="button" class="attach-remove" title="Remove this file">×</button>
+      `;
+      row.querySelector(".attach-remove").addEventListener("click", e => {
+        e.stopPropagation();
+        deleteAttachment(a.AttachmentID, a.FileID, a.FileName);
+      });
+      list.appendChild(row);
+    });
+  }
+
+  const input = wrap.querySelector(".attach-input");
+  const status = wrap.querySelector(".attach-status");
+  input.addEventListener("click", e => e.stopPropagation());
+  input.addEventListener("change", () => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    uploadAttachment(file, parentType, parentId, status);
+    input.value = "";
+  });
+
+  return wrap;
+}
+
+async function uploadAttachment(file, parentType, parentId, statusEl) {
+  if (file.size > MAX_ATTACHMENT_MB * 1024 * 1024) {
+    statusEl.textContent = `That file is ${fileSizeLabel(file.size)} — the limit is ${MAX_ATTACHMENT_MB}MB.`;
+    statusEl.dataset.state = "error";
+    return;
+  }
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    statusEl.textContent = "Not connected to the backend, so there's nowhere to put it.";
+    statusEl.dataset.state = "error";
+    return;
+  }
+
+  statusEl.textContent = `Uploading ${file.name}...`;
+  statusEl.dataset.state = "working";
+
+  try {
+    const fileData = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result).split(",")[1]);
+      reader.onerror = () => reject(new Error("Couldn't read that file."));
+      reader.readAsDataURL(file);
+    });
+
+    const attachmentId = "a" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "uploadAttachment",
+        attachmentId,
+        parentType,
+        parentId,
+        fileName: file.name,
+        mimeType: file.type || "application/octet-stream",
+        fileData,
+        uploadedBy: selectedEmployee,
+        uploadedDate: dateToStr(new Date()),
+      }),
+    });
+    const result = await res.json();
+
+    if (!result || result.error) {
+      statusEl.textContent = result && result.error ? result.error : "Upload failed. Try again.";
+      statusEl.dataset.state = "error";
+      return;
+    }
+
+    attachments.push({
+      AttachmentID: attachmentId,
+      ParentType: parentType,
+      ParentID: parentId,
+      FileName: result.fileName || file.name,
+      FileURL: result.fileUrl,
+      FileID: result.fileId,
+      UploadedBy: selectedEmployee,
+      UploadedDate: dateToStr(new Date()),
+    });
+    renderAll();
+  } catch (err) {
+    statusEl.textContent = "Upload failed. Try again.";
+    statusEl.dataset.state = "error";
+  }
+}
+
+async function deleteAttachment(attachmentId, fileId, fileName) {
+  if (!confirm(`Remove "${fileName}"? It goes to the Drive bin, so it's recoverable for 30 days.`)) return;
+
+  attachments = attachments.filter(a => a.AttachmentID !== attachmentId);
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "deleteAttachment", attachmentId, fileId }),
+      });
+    } catch (err) {}
+  }
+  renderAll();
+}
+
 function buildTaskCard(t) {
   const color = catColor(t.Category);
   const hours = taskHours(t.TaskID);
@@ -5119,6 +6548,7 @@ function buildTaskCard(t) {
         <input type="number" step="0.25" min="0" class="card-add-hours" placeholder="Hours" />
         <button type="button" class="card-add-btn">+ Add Entry</button>
       </div>
+      <div class="card-attachments"></div>
       <div class="field" style="margin-top:20px;">
         <label>Notes</label>
         <textarea class="notes-textarea card-notes">${(t.Notes || "").replace(/</g, "&lt;")}</textarea>
@@ -5127,6 +6557,9 @@ function buildTaskCard(t) {
       <button type="button" class="new-project-toggle-btn card-delete-task-btn" style="margin-top:10px; border-color:#D95C84; color:#D95C84;">Delete This Task</button>
     </div>
   `;
+
+  const attachMount = card.querySelector(".card-attachments");
+  if (attachMount) attachMount.appendChild(buildAttachmentsSection("Task", t.TaskID));
 
   const assigneeChecklistEl = card.querySelector(".card-assignee-checklist");
   assigneeChecklistEl.innerHTML = buildAssigneeChecklistHtml(parseAssignees(taskOwner(t)));
