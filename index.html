@@ -1029,28 +1029,27 @@ details.instructions-card > summary:hover { color: var(--text); }
   font-family: inherit;
 }
 .ticket-board {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 14px;
   margin-top: 18px;
-  align-items: start;
 }
-@media (max-width: 1100px) { .ticket-board { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 640px)  { .ticket-board { grid-template-columns: 1fr; } }
 
+/* Each status is a full-width band you read top to bottom, rather than four
+   narrow columns competing for horizontal room. */
 .ticket-col {
   background: rgba(255,255,255,0.03);
   border: 1px solid var(--border);
+  border-left: 3px solid var(--col, var(--border));
   border-radius: 10px;
-  padding: 12px 10px 14px;
-  min-height: 120px;
+  padding: 12px 14px 14px;
 }
 .ticket-col.drag-over { background: rgba(99,188,188,0.14); border-color: #63bcbc; }
 .ticket-col-head {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 4px 10px;
+  gap: 9px;
+  padding: 0 2px 10px;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.8px;
@@ -1058,21 +1057,33 @@ details.instructions-card > summary:hover { color: var(--text); }
   color: var(--muted);
 }
 .ticket-col-dot { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
-.ticket-col-count { margin-left: auto; color: var(--dim); }
-.ticket-col-empty { font-size: 12px; color: var(--dim); padding: 6px 4px; }
+.ticket-col-count {
+  margin-left: auto;
+  color: var(--dim);
+  background: rgba(255,255,255,0.07);
+  border-radius: 10px;
+  padding: 2px 9px;
+  font-size: 11px;
+}
+.ticket-col-empty { font-size: 12px; color: var(--dim); padding: 4px 2px; }
 
 .tkt {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   background: #16213A;
   border: 1px solid var(--border);
   border-left: 3px solid var(--tkt-cat, var(--border));
   border-radius: 8px;
-  padding: 11px 12px;
-  margin-bottom: 9px;
+  padding: 11px 14px;
+  margin-bottom: 8px;
   cursor: pointer;
 }
+.tkt:last-child { margin-bottom: 0; }
 .tkt:hover { border-color: #63bcbc; }
 .tkt.dragging { opacity: 0.45; }
-.tkt-key-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+
+.tkt-lead { display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; min-width: 74px; }
 .tkt-key {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
@@ -1080,9 +1091,11 @@ details.instructions-card > summary:hover { color: var(--text); }
   color: var(--dim);
   letter-spacing: 0.4px;
 }
-.tkt-prio { margin-left: auto; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-.tkt-title { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.35; }
-.tkt-foot { display: flex; align-items: center; gap: 6px; margin-top: 9px; flex-wrap: wrap; }
+.tkt-prio { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.tkt-body { flex: 1; min-width: 0; }
+.tkt-title { font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.35; }
+.tkt-sub { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-top: 5px; }
 .tkt-chip {
   font-size: 10px;
   font-weight: 700;
@@ -1091,9 +1104,12 @@ details.instructions-card > summary:hover { color: var(--text); }
   background: rgba(255,255,255,0.07);
   color: var(--dim);
 }
-.tkt-who { margin-left: auto; display: flex; gap: -4px; }
+.tkt-comment-count { font-size: 11px; color: var(--dim); font-weight: 700; }
+
+.tkt-tail { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.tkt-who { display: flex; }
 .tkt-avatar {
-  width: 22px; height: 22px;
+  width: 24px; height: 24px;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 10px; font-weight: 800;
@@ -1101,7 +1117,11 @@ details.instructions-card > summary:hover { color: var(--text); }
   margin-left: -6px;
   border: 2px solid #16213A;
 }
-.tkt-comment-count { font-size: 11px; color: var(--dim); font-weight: 700; }
+
+@media (max-width: 720px) {
+  .tkt { flex-wrap: wrap; gap: 8px; }
+  .tkt-tail { width: 100%; justify-content: flex-start; }
+}
 
 /* Detail modal */
 .tkt-detail-key {
@@ -1351,10 +1371,9 @@ details.instructions-card > summary:hover { color: var(--text); }
 
 /* ---------- QUESTIONS & ANSWERS ---------- */
 .tkt-q {
-  margin-top: 8px;
-  padding: 5px 8px;
-  border-radius: 5px;
-  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
   font-weight: 700;
 }
 .tkt-q-open { background: rgba(201,162,77,0.16); color: #C9A24D; }
@@ -1421,6 +1440,22 @@ details.instructions-card > summary:hover { color: var(--text); }
   font-weight: 700;
   cursor: pointer;
 }
+.ticket-action-btn.ask {
+  background: transparent;
+  border: 1.5px solid #C9A24D;
+  color: #C9A24D;
+}
+.ticket-action-btn.ask:hover { background: #C9A24D; color: #050F23; }
+.tkt-danger {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 26px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+.tkt-danger-text { flex: 1; min-width: 220px; font-size: 12px; color: var(--dim); }
 .tkt-compose {
   margin-top: 16px;
   padding-top: 16px;
@@ -1444,6 +1479,7 @@ details.instructions-card > summary:hover { color: var(--text); }
   cursor: pointer;
 }
 .alert-ask { border-color: rgba(201,162,77,0.5); background: rgba(201,162,77,0.1); color: var(--text); }
+.alert-turn { border-color: rgba(99,188,188,0.55); background: rgba(99,188,188,0.12); color: var(--text); }
 .alert-answered { border-color: rgba(29,158,117,0.5); background: rgba(29,158,117,0.1); color: var(--text); }
 .alert-row:hover { filter: brightness(1.25); }
 .alert-tag {
@@ -1514,6 +1550,79 @@ details.instructions-card > summary:hover { color: var(--text); }
 .step-skip:hover { color: #C9A24D; }
 .step-del:hover { color: #D95C84; }
 
+.step-edit-row { display: flex; align-items: center; gap: 9px; margin-bottom: 7px; }
+.step-edit-num { width: 18px; flex-shrink: 0; text-align: center; font-size: 11px; font-weight: 800; color: var(--dim); }
+.step-edit-input {
+  flex: 1;
+  min-width: 0;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 9px 12px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+}
+.step-edit-who { display: flex; gap: 4px; flex-shrink: 0; }
+.step-avatar {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--dim);
+  font-family: inherit;
+  font-size: 9px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0;
+}
+.step-avatar:hover { border-color: var(--who); color: var(--who); }
+.step-avatar[data-on="true"] { background: var(--who); border-color: transparent; color: #050F23; }
+.step-edit-del {
+  background: none; border: none; color: var(--dim);
+  font-size: 17px; cursor: pointer; padding: 0 4px; flex-shrink: 0;
+}
+.step-edit-del:hover { color: #D95C84; }
+@media (max-width: 700px) {
+  .step-edit-row { flex-wrap: wrap; }
+  .step-edit-who { width: 100%; }
+}
+.ntk-step-row { display: flex; gap: 8px; margin-bottom: 7px; }
+.ntk-step-num {
+  width: 22px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; color: var(--dim);
+}
+.ntk-step-input {
+  flex: 1;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 9px 12px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+}
+.ntk-step-del {
+  background: none; border: none; color: var(--dim);
+  font-size: 17px; cursor: pointer; padding: 0 6px; flex-shrink: 0;
+}
+.ntk-step-del:hover { color: #D95C84; }
+.step-add-more {
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--dim);
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 4px;
+}
+.step-add-more:hover { border-color: #63bcbc; color: #63bcbc; }
 .step-add-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 .step-add-input {
   flex: 1;
@@ -1533,12 +1642,11 @@ details.instructions-card > summary:hover { color: var(--text); }
 }
 
 /* Tile summary */
-.tkt-steps { display: flex; align-items: center; gap: 7px; margin-top: 9px; }
-.tkt-steps-bar { flex: 1; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.1); overflow: hidden; }
+.tkt-steps { display: flex; align-items: center; gap: 9px; margin-top: 7px; }
+.tkt-steps-bar { width: 90px; flex-shrink: 0; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.1); overflow: hidden; }
 .tkt-steps-fill { height: 100%; background: #1D9E75; }
 .tkt-steps-text { font-size: 10px; font-weight: 800; color: var(--dim); flex-shrink: 0; }
 .tkt-next {
-  margin-top: 5px;
   font-size: 11px;
   color: var(--dim);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -2227,7 +2335,7 @@ td.muted { color: var(--muted); }
     </div>
   </div>
 
-  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 23, 2026 · 18:57</div>
+  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 23, 2026 · 19:33</div>
   <div id="sheetWarning" class="sheet-warning" style="display:none;"></div>
   <div id="renderWarning" class="sheet-warning" style="display:none;"></div>
 
@@ -2552,8 +2660,9 @@ td.muted { color: var(--muted); }
             </div>
 
             <div class="field">
-              <label>Steps <span class="field-hint">(optional — one per line. End a line with @Name to make it theirs.)</span></label>
-              <textarea class="notes-textarea" id="ntdSteps" style="min-height:110px;" placeholder="Pull the WorkProud report @Tyler Hare&#10;Upload and reconcile @Giselle Cartagena"></textarea>
+              <label>Steps <span class="field-hint">(optional — tap a circle to give a step to someone)</span></label>
+              <div id="ntdStepList"></div>
+              <button type="button" class="step-add-more" id="ntdAddStep">+ Add another step</button>
             </div>
 
             <div class="ntd-preview" id="ntdPreview"></div>
@@ -2635,6 +2744,12 @@ td.muted { color: var(--muted); }
             <div class="field">
               <label>Description</label>
               <textarea id="ntkNotes" class="notes-textarea tkt-create-desc" placeholder="Any detail worth having up front — context, links, who asked for it."></textarea>
+            </div>
+
+            <div class="field">
+              <label>Steps <span class="field-hint">(optional — tap a circle to give a step to someone)</span></label>
+              <div id="ntkStepList"></div>
+              <button type="button" class="step-add-more" id="ntkAddStep">+ Add another step</button>
             </div>
 
             <button type="button" class="tkt-create-disclosure" id="ntkExternalToggle">
@@ -2817,8 +2932,9 @@ td.muted { color: var(--muted); }
                 <input type="text" id="tplTitlePattern" placeholder="e.g. Offer letter — {candidate}" />
               </div>
               <div class="field">
-                <label>Steps <span class="field-hint">(one per line, in order)</span></label>
-                <textarea class="notes-textarea" id="tplSteps" style="min-height:170px;" placeholder="Confirm route — system or direct?&#10;Draft the offer letter&#10;Send for approval&#10;Send for signature"></textarea>
+                <label>Steps <span class="field-hint">(in order — tap a circle to give a step to someone)</span></label>
+                <div id="tplStepList"></div>
+                <button type="button" class="step-add-more" id="tplAddStep">+ Add another step</button>
               </div>
             </div>
 
@@ -3433,6 +3549,7 @@ function init() {
   document.getElementById("tplNewBtn").addEventListener("click", () => openTemplateEditor(null));
   document.getElementById("tplCancelBtn").addEventListener("click", closeTemplateEditor);
   document.getElementById("tplSaveBtn").addEventListener("click", saveTemplate);
+  document.getElementById("tplAddStep").addEventListener("click", () => addStepRow(document.getElementById("tplStepList")));
 
   document.getElementById("ticketDetailClose").addEventListener("click", closeTicketDetail);
   document.getElementById("ticketDetailOverlay").addEventListener("click", e => {
@@ -3483,6 +3600,7 @@ function init() {
     updateNtdPreview();
   });
   document.getElementById("ntdDayOfMonth").addEventListener("change", updateNtdPreview);
+  document.getElementById("ntdAddStep").addEventListener("click", () => addStepRow(document.getElementById("ntdStepList")));
   document.getElementById("ntdName").addEventListener("input", updateNtdPreview);
 
   // Only show projects belonging to the category that's currently picked —
@@ -3501,7 +3619,7 @@ function init() {
     const activeFreq = document.querySelector('.ntd-freq-btn[data-active="true"]');
     const frequency = activeFreq ? activeFreq.dataset.freq : "Monthly";
     const dayOfWeek = getSelectedDayPills(document.getElementById("ntdDayPills")).join(", ");
-    const steps = document.getElementById("ntdSteps").value;
+    const steps = stepListToText(getStepRows(document.getElementById("ntdStepList"), false));
     const projectId = document.getElementById("ntdProject").value;
     const checkedAssignees = getCheckedAssignees(document.getElementById("ntdAssigneeChecklist"));
     const assignee = checkedAssignees.length ? checkedAssignees.join(", ") : selectedEmployee;
@@ -3540,6 +3658,7 @@ function init() {
     closeNewTicketModal();
     useTemplate(id);
   });
+  document.getElementById("ntkAddStep").addEventListener("click", () => addStepRow(document.getElementById("ntkStepList")));
   document.getElementById("ntkExternalToggle").addEventListener("click", () => {
     const fields = document.getElementById("ntkExternalFields");
     const open = fields.style.display === "none";
@@ -3560,8 +3679,16 @@ function init() {
       document.getElementById("ntkTitle").focus();
       return;
     }
-    createTicket(title, category, priority, assignee, notes, externalName, externalEmail, projectId);
+    const steps = getStepRows(document.getElementById("ntkStepList"), false);
     closeNewTicketModal();
+    createTicket(title, category, priority, assignee, notes, externalName, externalEmail, projectId)
+      .then(async ticketId => {
+        // Steps go on after the ticket exists, in the order they were typed.
+        for (const step of steps) {
+          await addTicketStep(ticketId, step.body, step.assignee);
+          await new Promise(r => setTimeout(r, 12));
+        }
+      });
   });
 
   document.getElementById("newInviteBtn").addEventListener("click", () => {
@@ -5881,8 +6008,9 @@ function buildToDoCard(t) {
         <select class="todo-edit-project"></select>
       </div>
       <div class="field">
-        <label>Steps <span class="field-hint">(one per line — end with @Name to assign)</span></label>
-        <textarea class="notes-textarea todo-edit-steps" style="min-height:100px;"></textarea>
+        <label>Steps <span class="field-hint">(tap a circle to give a step to someone)</span></label>
+        <div class="todo-edit-steps"></div>
+        <button type="button" class="step-add-more todo-edit-addstep">+ Add another step</button>
       </div>
       <div class="field">
         <label>Assigned To</label>
@@ -5910,7 +6038,9 @@ function buildToDoCard(t) {
   daySel.innerHTML = dayHtml;
 
   const stepsBox = wrap.querySelector(".todo-edit-steps");
-  stepsBox.value = stepListToText(parseStepList(t.Steps));
+  const existingSteps = parseStepList(t.Steps);
+  setStepRows(stepsBox, existingSteps.length ? existingSteps : [{ body: "", assignee: "" }]);
+  wrap.querySelector(".todo-edit-addstep").addEventListener("click", () => addStepRow(stepsBox));
 
   const dowSel = wrap.querySelector(".todo-edit-dow");
   const currentDays = parseDays(t.DayOfWeek);
@@ -5970,7 +6100,7 @@ function buildToDoCard(t) {
       frequency: newFreq,
       projectId: projSel.value,
       assignee: checked.join(", "),
-      steps: stepsBox.value,
+      steps: stepListToText(getStepRows(stepsBox, false)),
       ...(cadenceChanged ? { lastGeneratedMonth: "" } : {}),
     });
     editPanel.style.display = "none";
@@ -5991,7 +6121,7 @@ function getSelectedDayPills(container) {
 
 function openNewToDoModal() {
   document.getElementById("ntdName").value = "";
-  document.getElementById("ntdSteps").value = "";
+  setStepRows(document.getElementById("ntdStepList"), [{ body: "", assignee: "" }]);
   document.querySelectorAll(".ntd-freq-btn").forEach(b => (b.dataset.active = b.dataset.freq === "Monthly"));
   document.getElementById("ntdDayOfMonthField").style.display = "";
   document.getElementById("ntdDayOfWeekField").style.display = "none";
@@ -6265,7 +6395,8 @@ function openTemplateEditor(templateId) {
   document.getElementById("tplName").value = tpl ? tpl.Name || "" : "";
   document.getElementById("tplDescription").value = tpl ? tpl.Description || "" : "";
   document.getElementById("tplTitlePattern").value = tpl ? tpl.TitlePattern || "" : "";
-  document.getElementById("tplSteps").value = tpl ? templateSteps(tpl).join("\n") : "";
+  setStepRows(document.getElementById("tplStepList"),
+    tpl ? parseStepList(tpl.Steps) : [{ body: "", assignee: "" }]);
   document.getElementById("tplCategory").innerHTML =
     `<option value="">— none —</option>` +
     CATEGORIES.map(c => `<option value="${c.key}" ${tpl && c.key === tpl.Category ? "selected" : ""}>${c.key}</option>`).join("");
@@ -6296,8 +6427,7 @@ async function saveTemplate() {
     return;
   }
 
-  const steps = document.getElementById("tplSteps").value
-    .split("\n").map(l => l.trim()).filter(Boolean).join("\n");
+  const steps = stepListToText(getStepRows(document.getElementById("tplStepList"), false));
 
   const templateId = editingTemplateId || ("tpl" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
   const stamp = nowTimestampLocal();
@@ -6608,6 +6738,19 @@ function answeredQuestionsFor(ticketId) {
 }
 
 // Questions waiting on you specifically — the thing you want to see first.
+// Steps that are yours AND are the next thing due on their ticket. Email can
+// be missed or filtered, so the handoff has to be visible in the app too.
+function stepsWaitingOnMe() {
+  const out = [];
+  tickets.forEach(t => {
+    const status = ticketStatus(t);
+    if (status === "Done" || status === "Closed") return;
+    const next = nextPendingStep(t.TicketID);
+    if (next && stepOwner(next) === selectedEmployee) out.push({ ticket: t, step: next });
+  });
+  return out;
+}
+
 function questionsForMe() {
   return comments.filter(c => isQuestion(c) && !isAnswered(c) && c.AskedOf === selectedEmployee);
 }
@@ -6720,23 +6863,29 @@ function buildTicketTile(t) {
     qBanner = `<div class="tkt-q tkt-q-done">Answered — ready to move</div>`;
   }
 
+  // Laid out as a wide row: identity on the left, status detail in the middle,
+  // people and age on the right — so a stack of these scans down cleanly.
   tile.innerHTML = `
-    <div class="tkt-key-row">
+    <div class="tkt-lead">
       <span class="tkt-key">${ticketKeyOf(t)}</span>
       ${t.Priority ? `<span class="tkt-prio" style="color:${priorityColor(t.Priority)}">${t.Priority}</span>` : ""}
     </div>
-    <div class="tkt-title">${t.Title || ""}</div>
-    ${qBanner}
-    ${t.WaitingOn && !openQs.length ? `<div class="tkt-q tkt-q-open">${t.WaitingOn}</div>` : ""}
-    ${prog.total ? `<div class="tkt-steps">
-      <div class="tkt-steps-bar"><div class="tkt-steps-fill" style="width:${Math.round((prog.settled / prog.total) * 100)}%"></div></div>
-      <span class="tkt-steps-text">${prog.settled}/${prog.total}</span>
+    <div class="tkt-body">
+      <div class="tkt-title">${t.Title || ""}</div>
+      <div class="tkt-sub">
+        ${t.Category ? `<span class="tkt-chip" style="color:${catColor(t.Category)}">${t.Category}</span>` : ""}
+        ${project ? `<span class="tkt-chip">${project.ProjectName}</span>` : ""}
+        ${commentCount ? `<span class="tkt-comment-count">${commentCount} note${commentCount === 1 ? "" : "s"}</span>` : ""}
+        ${qBanner}
+        ${t.WaitingOn && !openQs.length ? `<span class="tkt-q tkt-q-open">${t.WaitingOn}</span>` : ""}
+      </div>
+      ${prog.total ? `<div class="tkt-steps">
+        <div class="tkt-steps-bar"><div class="tkt-steps-fill" style="width:${Math.round((prog.settled / prog.total) * 100)}%"></div></div>
+        <span class="tkt-steps-text">${prog.settled}/${prog.total}</span>
+        ${nextStep ? `<span class="tkt-next">Next: ${nextStep.Body}</span>` : ""}
+      </div>` : ""}
     </div>
-    ${nextStep ? `<div class="tkt-next">Next: ${nextStep.Body}</div>` : ""}` : ""}
-    <div class="tkt-foot">
-      ${t.Category ? `<span class="tkt-chip" style="color:${catColor(t.Category)}">${t.Category}</span>` : ""}
-      ${project ? `<span class="tkt-chip">${project.ProjectName}</span>` : ""}
-      ${commentCount ? `<span class="tkt-comment-count">${commentCount} note${commentCount === 1 ? "" : "s"}</span>` : ""}
+    <div class="tkt-tail">
       ${sitting ? `<span class="tkt-age">${sitting}</span>` : ""}
       <span class="tkt-who">
         ${people.map(n => `<span class="tkt-avatar" style="background:${empColor(n)}" title="${n}">${initials(n)}</span>`).join("")}
@@ -6771,6 +6920,7 @@ function renderTickets() {
     const el = document.createElement("div");
     el.className = "ticket-col";
     el.dataset.status = col.key;
+    el.style.setProperty("--col", col.hex);
     el.innerHTML = `
       <div class="ticket-col-head">
         <span class="ticket-col-dot" style="background:${col.hex}"></span>
@@ -6831,6 +6981,13 @@ function renderTicketAlerts() {
   });
 
   const rows = [];
+  stepsWaitingOnMe().forEach(({ ticket, step }) => {
+    rows.push(`<button type="button" class="alert-row alert-turn" data-open-ticket="${ticket.TicketID}">
+      <span class="alert-tag">YOUR TURN</span>
+      <span class="alert-text">${step.Body} — on ${ticketKeyOf(ticket)} ${ticket.Title}</span>
+      <span class="alert-age">${agoLabel(ticket.StatusChangedAt || ticket.CreatedAt)}</span>
+    </button>`);
+  });
   mine.forEach(c => {
     const t = tickets.find(x => x.TicketID === c.TicketID);
     if (!t) return;
@@ -6987,6 +7144,7 @@ function renderTicketDetail() {
 
     <div class="ticket-actions" style="margin-bottom:18px;">
       ${!people.length ? `<button type="button" class="ticket-action-btn claim" id="tdClaim">Claim</button>` : ""}
+      <button type="button" class="ticket-action-btn ask" id="tdAskBtn">Ask a Question</button>
       <button type="button" class="ticket-action-btn convert" id="tdEdit">Edit Fields</button>
       <button type="button" class="ticket-action-btn convert" id="tdProject">→ Project</button>
       <button type="button" class="ticket-action-btn claim" id="tdComplete">Complete</button>
@@ -7015,12 +7173,11 @@ function renderTicketDetail() {
       <button type="button" class="submit-btn" id="tdSave" style="margin-top:8px;">Save Changes</button>
     </div>
 
-    <div class="ticket-attachments" data-ticket-id="${t.TicketID}"></div>
-
     <div class="section-label" style="margin-top:22px;">Steps</div>
     <div id="tdSteps"></div>
     <div class="step-add-row">
       <input type="text" id="tdNewStep" class="step-add-input" placeholder="Add a step..." />
+      <span class="step-edit-who" id="tdNewStepWho" data-assignee="">${stepAvatarsHtml("")}</span>
       <button type="button" class="step-add-btn" id="tdAddStep">Add</button>
       <select id="tdStepTemplate" class="ticket-filter-select">
         <option value="">Use a template…</option>
@@ -7055,6 +7212,14 @@ function renderTicketDetail() {
 
       <button type="button" class="submit-btn" id="tdAddComment" style="max-width:200px;">Post Comment</button>
     </div>
+
+    <div class="ticket-attachments" data-ticket-id="${t.TicketID}"></div>
+
+    ${stepsFor(t.TicketID).length ? "" : `
+    <div class="tkt-danger">
+      <div class="tkt-danger-text">Raised this by mistake? Nothing's been worked on it yet, so it can be removed cleanly.</div>
+      <button type="button" class="todo-delete-btn" id="tdDelete">Delete Ticket</button>
+    </div>`}
   `;
 
   // Status buttons, including Closed which takes it off the board entirely
@@ -7103,19 +7268,26 @@ function renderTicketDetail() {
   if (attachMount) attachMount.appendChild(buildAttachmentsSection("Ticket", t.TicketID));
 
   renderTicketSteps(body.querySelector("#tdSteps"), t);
-  body.querySelector("#tdAddStep").addEventListener("click", () => {
+  const newStepWho = body.querySelector("#tdNewStepWho");
+  newStepWho.querySelectorAll(".step-avatar").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const already = newStepWho.dataset.assignee === btn.dataset.name;
+      newStepWho.dataset.assignee = already ? "" : btn.dataset.name;
+      newStepWho.querySelectorAll(".step-avatar").forEach(b => {
+        b.dataset.on = !already && b.dataset.name === btn.dataset.name;
+      });
+    });
+  });
+  const submitNewStep = () => {
     const input = body.querySelector("#tdNewStep");
     const label = input.value.trim();
     if (!label) return;
-    addTicketStep(t.TicketID, label);
+    addTicketStep(t.TicketID, label, newStepWho.dataset.assignee || "");
     input.value = "";
-  });
+  };
+  body.querySelector("#tdAddStep").addEventListener("click", submitNewStep);
   body.querySelector("#tdNewStep").addEventListener("keydown", e => {
-    if (e.key !== "Enter") return;
-    const label = e.target.value.trim();
-    if (!label) return;
-    addTicketStep(t.TicketID, label);
-    e.target.value = "";
+    if (e.key === "Enter") submitNewStep();
   });
   body.querySelector("#tdStepTemplate").addEventListener("change", e => {
     const key = e.target.value;
@@ -7129,6 +7301,20 @@ function renderTicketDetail() {
   } else {
     thread.forEach(c => thread_el.appendChild(buildCommentRow(c, t)));
   }
+
+  // Shortcut for the toggle further down — jumps you there and switches it,
+  // so asking is one click from the top of the ticket.
+  body.querySelector("#tdAskBtn").addEventListener("click", () => {
+    const askToggle = body.querySelector('#tdComposeMode .seg-btn[data-mode="question"]');
+    if (askToggle) askToggle.click();
+    const compose = body.querySelector(".tkt-compose");
+    if (compose) compose.scrollIntoView({ behavior: "smooth", block: "center" });
+    const box = body.querySelector("#tdNewComment");
+    if (box) setTimeout(() => box.focus(), 250);
+  });
+
+  const delBtn = body.querySelector("#tdDelete");
+  if (delBtn) delBtn.addEventListener("click", () => deleteTicket(t.TicketID));
 
   // Comment vs question changes what's on screen and what the button says.
   const qFields = body.querySelector("#tdQuestionFields");
@@ -7562,6 +7748,38 @@ async function setStepState(commentId, state) {
   }
 }
 
+// Only offered while a ticket has no steps — once someone has built out the
+// work, deleting it would throw away more than a mistaken entry.
+async function deleteTicket(ticketId) {
+  const t = tickets.find(x => x.TicketID === ticketId);
+  if (!t) return;
+  if (stepsFor(ticketId).length) {
+    alert("This ticket has steps on it now, so it can't be deleted. Close it instead if it's not needed.");
+    return;
+  }
+  const notes = commentsFor(ticketId).length;
+  const warning =
+    `Delete ${ticketKeyOf(t)} "${t.Title}"?` +
+    (notes ? ` Its ${notes} comment${notes === 1 ? "" : "s"} go with it.` : "") +
+    ` This can't be undone. If real work happened here, close it instead.`;
+  if (!confirm(warning)) return;
+
+  tickets = tickets.filter(x => x.TicketID !== ticketId);
+  comments = comments.filter(c => String(c.TicketID) !== String(ticketId));
+  closeTicketDetail();
+  renderTickets();
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "deleteTicket", ticketId }),
+      });
+    } catch (err) {}
+  }
+}
+
 async function deleteTicketComment(commentId) {
   if (!confirm("Delete this comment?")) return;
   comments = comments.filter(c => c.CommentID !== commentId);
@@ -7579,12 +7797,88 @@ async function deleteTicketComment(commentId) {
 }
 
 
+/* ---------- STEP ROW EDITOR ----------
+   One shared component for everywhere steps get written: the new-ticket form,
+   the recurring form and the template editor. Each row is a text box plus a
+   row of initial circles — click one to make that step theirs, click again to
+   unassign. The @Name text syntax still parses on the way in, so anything
+   already stored that way keeps working, but nobody has to type it. */
+function stepAvatarsHtml(selected) {
+  return EMPLOYEES.map(e => `
+    <button type="button" class="step-avatar" data-name="${e.name}" data-on="${e.name === selected}"
+      style="--who:${e.hex}" title="${e.name}">${initials(e.name)}</button>
+  `).join("");
+}
+
+function stepRowsHtml(rows) {
+  const list = rows && rows.length ? rows : [{ body: "", assignee: "" }];
+  return list.map((r, i) => `
+    <div class="step-edit-row" data-assignee="${(r.assignee || "").replace(/"/g, "&quot;")}">
+      <span class="step-edit-num">${i + 1}</span>
+      <input type="text" class="step-edit-input" value="${String(r.body || "").replace(/"/g, "&quot;")}" placeholder="What needs doing?" />
+      <span class="step-edit-who">${stepAvatarsHtml(r.assignee || "")}</span>
+      <button type="button" class="step-edit-del" title="Remove">&times;</button>
+    </div>
+  `).join("");
+}
+
+function getStepRows(host, includeBlank) {
+  const rows = [...host.querySelectorAll(".step-edit-row")].map(row => ({
+    body: row.querySelector(".step-edit-input").value.trim(),
+    assignee: row.dataset.assignee || "",
+  }));
+  return includeBlank ? rows : rows.filter(r => r.body);
+}
+
+function setStepRows(host, rows) {
+  host.innerHTML = stepRowsHtml(rows);
+  wireStepRows(host);
+}
+
+function wireStepRows(host) {
+  host.querySelectorAll(".step-edit-row").forEach((row, i) => {
+    row.querySelectorAll(".step-avatar").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const already = row.dataset.assignee === btn.dataset.name;
+        row.dataset.assignee = already ? "" : btn.dataset.name;
+        row.querySelectorAll(".step-avatar").forEach(b => {
+          b.dataset.on = !already && b.dataset.name === btn.dataset.name;
+        });
+      });
+    });
+    row.querySelector(".step-edit-del").addEventListener("click", () => {
+      const current = getStepRows(host, true);
+      current.splice(i, 1);
+      setStepRows(host, current.length ? current : [{ body: "", assignee: "" }]);
+    });
+    row.querySelector(".step-edit-input").addEventListener("keydown", e => {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      const current = getStepRows(host, true);
+      current.splice(i + 1, 0, { body: "", assignee: "" });
+      setStepRows(host, current);
+      const inputs = host.querySelectorAll(".step-edit-input");
+      if (inputs[i + 1]) inputs[i + 1].focus();
+    });
+  });
+}
+
+function addStepRow(host) {
+  setStepRows(host, [...getStepRows(host, true), { body: "", assignee: "" }]);
+  const inputs = host.querySelectorAll(".step-edit-input");
+  if (inputs.length) inputs[inputs.length - 1].focus();
+}
+
+// Steps on the new-ticket form are their own little list: one row each, a +
+// to add another, and an × to drop one. Rows are renumbered on every change so
+// the order you see is the order they'll appear on the ticket.
 function openNewTicketModal() {
   document.getElementById("ntkTitle").value = "";
   document.getElementById("ntkNotes").value = "";
   document.getElementById("ntkPriority").value = "";
   document.getElementById("ntkExternalName").value = "";
   document.getElementById("ntkExternalEmail").value = "";
+  setStepRows(document.getElementById("ntkStepList"), [{ body: "", assignee: "" }]);
   document.getElementById("ntkExternalFields").style.display = "none";
   document.getElementById("ntkExternalCaret").textContent = "▸";
   document.getElementById("ntkAssigneeChecklist").innerHTML = buildAssigneeChecklistHtml([]);
@@ -7656,6 +7950,7 @@ async function createTicket(title, category, priority, assignee, notes, external
     } catch (err) {}
   }
   renderTickets();
+  return ticketId;
 }
 
 async function claimTicket(ticketId) {
