@@ -160,12 +160,39 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 16px 20px;
-  font-size: 16px;
+  font-size: 15px;
   color: var(--muted);
   line-height: 1.6;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 .instructions-card strong { color: var(--text); }
+
+/* Collapsed by default. The reference is worth having, but it doesn't need to
+   sit open above the board forever once everyone knows how the thing works. */
+details.instructions-card { padding: 0; }
+details.instructions-card > summary {
+  padding: 11px 18px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--dim);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+details.instructions-card > summary::-webkit-details-marker { display: none; }
+details.instructions-card > summary::before {
+  content: "▸";
+  font-size: 10px;
+  transition: transform 0.15s ease;
+}
+details.instructions-card[open] > summary { color: var(--text); border-bottom: 1px solid var(--border); }
+details.instructions-card[open] > summary::before { content: "▾"; }
+details.instructions-card > summary:hover { color: var(--text); }
+.instructions-body { padding: 14px 18px 16px; }
+.instructions-body .how-list:last-child { margin-bottom: 0; }
 
 /* ---------- Top tiles (employees + categories, now stacked full-width) ---------- */
 .tile-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05); margin-bottom: 20px; }
@@ -709,6 +736,17 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
 .todoist-breadcrumb span { cursor: pointer; }
 .todoist-breadcrumb span:hover { color: var(--text); text-decoration: underline; }
 .todo-card-preview { font-size: 12px; color: var(--dim); margin-top: 4px; font-style: italic; }
+.build-stamp {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 10px;
+  color: var(--dim);
+  opacity: 0.5;
+  letter-spacing: 0.3px;
+  pointer-events: auto;
+}
+.build-stamp:hover { opacity: 1; }
 .sheet-warning {
   margin: 14px 0 0;
   padding: 12px 16px;
@@ -719,6 +757,26 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
   font-size: 13px;
   line-height: 1.5;
 }
+.how-list {
+  list-style: none;
+  margin: 12px 0;
+  padding: 0;
+}
+.how-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 5px 0;
+  line-height: 1.5;
+}
+.how-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  transform: translateY(-1px);
+}
+.how-icon { width: 9px; flex-shrink: 0; font-size: 12px; }
 .rollup-note { font-size: 13px; color: var(--dim); margin-bottom: 14px; }
 
 /* ---------- PROJECT BULLETIN BOARD ----------
@@ -1171,7 +1229,7 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
   margin-bottom: 6px;
   flex-wrap: wrap;
 }
-.ftree-head-icon { font-size: 22px; }
+.ftree-head-icon { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
 .ftree-head-title { font-size: 24px; font-weight: 700; }
 .ftree-status-select {
   background: rgba(255,255,255,0.06);
@@ -1211,7 +1269,9 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
 .ftree-row.drag-over { background-color: rgba(99,188,188,0.25); }
 .ftree-row[data-done="true"] .ftree-name { text-decoration: line-through; opacity: 0.6; }
 .ftree-twisty { width: 12px; flex-shrink: 0; color: var(--dim); font-size: 10px; text-align: center; }
-.ftree-icon { flex-shrink: 0; font-size: 14px; }
+.ftree-icon { flex-shrink: 0; }
+.ftree-icon-folder { width: 9px; height: 9px; border-radius: 2px; }
+.ftree-icon-file { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--dim); box-sizing: border-box; }
 .ftree-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ftree-folder .ftree-name { font-weight: 700; color: var(--text); }
 .ftree-task .ftree-name { font-weight: 500; color: var(--muted); }
@@ -1861,6 +1921,14 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
   margin-top: 12px;
 }
 .submit-btn:hover { filter: brightness(1.1); }
+
+/* "+ New" buttons get their own colour so starting something is visually
+   distinct from saving something — teal stays the generic submit action. */
+.create-btn {
+  background: #8B5CF6;
+  color: #FFFFFF;
+}
+.create-btn:hover { background: #7C4DF4; filter: none; }
 .submit-btn:disabled { opacity: 0.5; cursor: default; }
 .cancel-btn {
   width: 100%;
@@ -2149,6 +2217,7 @@ td.muted { color: var(--muted); }
     </div>
   </div>
 
+  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 23, 2026 · 18:42</div>
   <div id="sheetWarning" class="sheet-warning" style="display:none;"></div>
 
   <div class="top-tabs">
@@ -2193,9 +2262,10 @@ td.muted { color: var(--muted); }
       <div class="page-eyebrow">Log Time · See Your Week</div>
     </header>
 
-    <div class="instructions-card">
-      <strong>How this works:</strong> Type a task name — if it matches one of your open tasks, this just adds a new entry to it. If it's new, it starts a fresh task. Every task keeps its own running list, notes, and status.
-    </div>
+    <details class="instructions-card">
+      <summary>How this works</summary>
+      <div class="instructions-body"> Type a task name — if it matches one of your open tasks, this just adds a new entry to it. If it's new, it starts a fresh task. Every task keeps its own running list, notes, and status.</div>
+    </details>
 
     <div class="log-task-frame" id="logTaskFrame">
     <div class="tile-card emp-tile-wide">
@@ -2434,11 +2504,12 @@ td.muted { color: var(--muted); }
       <div class="page-eyebrow">Set It Once, It Shows Up On Schedule</div>
     </header>
 
-    <div class="instructions-card">
-      <strong>How this works:</strong> Set something up once with a name, a category, and a day of the month. On its day — a day of the month, or a day of the week — it drops into the ticket queue automatically. You can file it inside a project or sub-project. When someone completes that ticket, it turns into a task with the time logged against it.
-    </div>
+    <details class="instructions-card">
+      <summary>How this works</summary>
+      <div class="instructions-body"> Set something up once with a name, a category, and a day of the month. On its day — a day of the month, or a day of the week — it drops into the ticket queue automatically. You can file it inside a project or sub-project. When someone completes that ticket, it turns into a task with the time logged against it.</div>
+    </details>
 
-    <button class="submit-btn" id="newToDoBtn" style="max-width:340px;">+ Schedule a Recurring Ticket</button>
+    <button class="submit-btn create-btn" id="newToDoBtn" style="max-width:340px;">+ Schedule a Recurring Ticket</button>
 
     <div class="modal-overlay" id="newToDoOverlay" style="display:none;">
       <div class="modal-box tkt-create-box">
@@ -2505,18 +2576,30 @@ td.muted { color: var(--muted); }
   <!-- TICKETS VIEW -->
   <div class="view active" id="view-tickets">
     <div class="ticket-title-row">
-      <button class="ticket-new-btn" id="newTicketBtn">+ New Ticket</button>
+      <button class="ticket-new-btn create-btn" id="newTicketBtn">+ New Ticket</button>
       <header style="margin-bottom:0; flex:1;">
         <h1>Tickets</h1>
         <div class="page-eyebrow">The Queue</div>
       </header>
-      <button class="ticket-invite-btn" id="templatesBtn">⚙ Templates</button>
-      <button class="ticket-invite-btn" id="newInviteBtn">✉ Invite External Person</button>
+      <button class="ticket-invite-btn" id="templatesBtn">Templates</button>
+      <button class="ticket-invite-btn" id="newInviteBtn">Invite External Person</button>
     </div>
 
-    <div class="instructions-card" style="margin-top:24px;">
-      <strong>How this works:</strong> Drag a ticket across the board as the work moves. <strong>To Do</strong> — nobody's started it. <strong>In Progress</strong> — someone's actively on it. <strong>Waiting</strong> — started, but it can't move until someone or something else comes back. <strong>Done</strong> — finished. Click any ticket to open it: fields, files, and a conversation. Multi-step work gets a <strong>checklist</strong> — add steps as you go, or start from a template, and skip the branches you don't take. Need something from someone? Use <strong>Ask a Question</strong> — give them one-click choices like "Paycom / External", and it parks the ticket in Waiting, emails them, and pops back to In Progress the moment they answer. Dragging to Done asks for time and a project, then files it as completed work.
-    </div>
+    <details class="instructions-card" style="margin-top:24px;">
+      <summary>How this works</summary>
+      <div class="instructions-body"> Drag tickets across the board as work moves.
+      <ul class="how-list">
+        <li><span class="how-dot" style="background:#5A6A8F"></span><strong>To Do</strong> — not started.</li>
+        <li><span class="how-dot" style="background:#63bcbc"></span><strong>In Progress</strong> — someone's on it.</li>
+        <li><span class="how-dot" style="background:#C9A24D"></span><strong>Waiting</strong> — stuck until someone else comes back.</li>
+        <li><span class="how-dot" style="background:#1D9E75"></span><strong>Done</strong> — finished. Asks for time and a project, then files it as real work.</li>
+      </ul>
+      Click a ticket for its fields, files, steps and conversation.
+      <ul class="how-list">
+        <li><span class="how-dot" style="background:#C9A24D"></span><strong>Ask a Question</strong> — offer one-click choices, and it parks the ticket in Waiting and emails them. Their answer sends it back to In Progress.</li>
+        <li><span class="how-dot" style="background:#8FA0C4"></span><strong>Templates</strong> — saved ticket recipes the whole team shares. Pick one and it builds the ticket for you, steps and all.</li>
+      </ul></div>
+    </details>
 
     <div class="modal-overlay" id="newTicketOverlay" style="display:none;">
       <div class="modal-box tkt-create-box">
@@ -2695,7 +2778,7 @@ td.muted { color: var(--muted); }
           <div class="tkt-create-eyebrow">Shared Library</div>
           <div class="tpl-head-row">
             <div class="ftree-head-title">Ticket Templates</div>
-            <button type="button" class="submit-btn" id="tplNewBtn" style="max-width:180px; margin:0;">+ New Template</button>
+            <button type="button" class="submit-btn create-btn" id="tplNewBtn" style="max-width:180px; margin:0;">+ New Template</button>
           </div>
           <div class="tpl-head-note">Anyone on the team can build and edit these. Everyone sees the same list.</div>
         </div>
@@ -2772,7 +2855,7 @@ td.muted { color: var(--muted); }
       <div class="page-eyebrow">Every Category, Every Project, One Wall</div>
     </header>
 
-    <button class="submit-btn" id="newBoardProjectBtn" style="max-width:220px;">+ New Project</button>
+    <button class="submit-btn create-btn" id="newBoardProjectBtn" style="max-width:220px;">+ New Project</button>
 
     <div class="entry-card" id="newBoardProjectForm" style="display:none; max-width:560px; margin-top:16px;">
       <div class="field">
@@ -4896,7 +4979,7 @@ function buildCategoryCard(cat, catProjects, slot) {
     const ticketLink = document.createElement("button");
     ticketLink.type = "button";
     ticketLink.className = "pin-card-tickets";
-    ticketLink.innerHTML = `🎫 ${openTickets} open ticket${openTickets === 1 ? "" : "s"}`;
+    ticketLink.innerHTML = `${openTickets} open ticket${openTickets === 1 ? "" : "s"}`;
     ticketLink.addEventListener("click", e => {
       e.stopPropagation();
       jumpToTicketsForCategory(cat.key);
@@ -5090,7 +5173,7 @@ function buildTreeProjectRow(p, depth) {
 
   row.innerHTML = `
     <span class="ftree-twisty">${hasChildren ? (open ? "▾" : "▸") : ""}</span>
-    <span class="ftree-icon" style="color:${catColor(p.Category)}">${open && hasChildren ? "📂" : "📁"}</span>
+    <span class="ftree-icon ftree-icon-folder" style="background:${catColor(p.Category)}"></span>
     <span class="ftree-name">${p.ProjectName || ""}</span>
     <span class="ftree-badge" style="color:${projectStatusColor(p.Status)}">${p.Status || ""}</span>
     <span class="ftree-count">${total}</span>
@@ -5136,7 +5219,7 @@ function buildTreeTaskRow(t, depth) {
   const hours = taskHours(t.TaskID);
   row.innerHTML = `
     <span class="ftree-twisty">${expandedTreeTaskId === t.TaskID ? "▾" : "▸"}</span>
-    <span class="ftree-icon">📄</span>
+    <span class="ftree-icon ftree-icon-file"></span>
     <span class="ftree-name">${t.TaskName || ""}</span>
     <span class="ftree-badge" style="color:${taskStatusColor(t.Status)}">${t.Status || ""}</span>
     <span class="ftree-count">${hours ? hours.toFixed(1) + "h" : ""}</span>
@@ -5207,7 +5290,7 @@ function renderProjectDetailPanel(detail) {
   detail.innerHTML = `
     ${breadcrumbHtml}
     <div class="ftree-head">
-      <span class="ftree-head-icon" style="color:${color}">📂</span>
+      <span class="ftree-head-icon" style="background:${color}"></span>
       <div class="ftree-head-title" style="color:${color}">${p.ProjectName || ""}</div>
       <select class="ftree-status-select" id="boardDetailStatusSelect" style="color:${projectStatusColor(p.Status)}">
         ${PROJECT_STATUSES.map(st => `<option value="${st}" ${st === p.Status ? "selected" : ""}>${st}</option>`).join("")}
@@ -5699,7 +5782,7 @@ function buildToDoCard(t) {
     <div class="todo-card" style="border-left:3px solid ${color}">
       <div>
         <div class="todo-card-name" style="color:${color}">${t.ToDoName}</div>
-        <div class="todo-card-meta">🎫 ${t.Category} · ${recurrenceLabel(t)}${projectLabel}${t.Assignee ? ` · Assigned to ${t.Assignee}` : ""}</div>
+        <div class="todo-card-meta">${t.Category} · ${recurrenceLabel(t)}${projectLabel}${t.Assignee ? ` · Assigned to ${t.Assignee}` : ""}</div>
         <div class="todo-card-preview">Lands as: “${preview}”</div>
       </div>
       <div class="todo-card-actions">
@@ -6524,9 +6607,9 @@ function buildTicketTile(t) {
   if (openQs.length) {
     const who = openQs[0].AskedOf || "someone";
     const age = agoLabel(openQs[0].CreatedAt);
-    qBanner = `<div class="tkt-q tkt-q-open">❓ Asked ${who}${age ? ` · ${age}` : ""}</div>`;
+    qBanner = `<div class="tkt-q tkt-q-open">Waiting on ${who}${age ? ` · ${age}` : ""}</div>`;
   } else if (ticketStatus(t) === "Waiting" && freshAnswers.length) {
-    qBanner = `<div class="tkt-q tkt-q-done">✅ Answered — ready to move</div>`;
+    qBanner = `<div class="tkt-q tkt-q-done">Answered — ready to move</div>`;
   }
 
   tile.innerHTML = `
@@ -6536,7 +6619,7 @@ function buildTicketTile(t) {
     </div>
     <div class="tkt-title">${t.Title || ""}</div>
     ${qBanner}
-    ${t.WaitingOn && !openQs.length ? `<div class="tkt-q tkt-q-open">⏳ ${t.WaitingOn}</div>` : ""}
+    ${t.WaitingOn && !openQs.length ? `<div class="tkt-q tkt-q-open">${t.WaitingOn}</div>` : ""}
     ${prog.total ? `<div class="tkt-steps">
       <div class="tkt-steps-bar"><div class="tkt-steps-fill" style="width:${Math.round((prog.settled / prog.total) * 100)}%"></div></div>
       <span class="tkt-steps-text">${prog.settled}/${prog.total}</span>
@@ -6544,8 +6627,8 @@ function buildTicketTile(t) {
     ${nextStep ? `<div class="tkt-next">Next: ${nextStep.Body}</div>` : ""}` : ""}
     <div class="tkt-foot">
       ${t.Category ? `<span class="tkt-chip" style="color:${catColor(t.Category)}">${t.Category}</span>` : ""}
-      ${project ? `<span class="tkt-chip">📌 ${project.ProjectName}</span>` : ""}
-      ${commentCount ? `<span class="tkt-comment-count">💬 ${commentCount}</span>` : ""}
+      ${project ? `<span class="tkt-chip">${project.ProjectName}</span>` : ""}
+      ${commentCount ? `<span class="tkt-comment-count">${commentCount} note${commentCount === 1 ? "" : "s"}</span>` : ""}
       ${sitting ? `<span class="tkt-age">${sitting}</span>` : ""}
       <span class="tkt-who">
         ${people.map(n => `<span class="tkt-avatar" style="background:${empColor(n)}" title="${n}">${initials(n)}</span>`).join("")}
@@ -8036,7 +8119,7 @@ function buildAttachmentsSection(parentType, parentId) {
       const row = document.createElement("div");
       row.className = "attach-row";
       row.innerHTML = `
-        <a class="attach-name" href="${a.FileURL}" target="_blank" rel="noopener">📎 ${a.FileName}</a>
+        <a class="attach-name" href="${a.FileURL}" target="_blank" rel="noopener">${a.FileName}</a>
         <span class="attach-meta">${a.UploadedBy || ""}${a.UploadedDate ? " · " + cleanDate(a.UploadedDate) : ""}</span>
         <button type="button" class="attach-remove" title="Remove this file">×</button>
       `;
@@ -8358,7 +8441,7 @@ function buildTaskCard(t) {
               <input type="date" class="pe-date-input" value="${e.Date || ""}" />
               <input type="number" step="0.25" min="0" class="pe-hours-input" value="${hrs}" />
               <span>hrs</span>
-              <button type="button" class="delete-entry-btn pe-delete-btn" title="Delete this entry">🗑</button>
+              <button type="button" class="delete-entry-btn pe-delete-btn" title="Delete this entry">&times;</button>
             </div>
           </div>
         </div>
@@ -8705,7 +8788,7 @@ function renderBossView() {
                     </select>
                   </td>
                   <td>
-                    <button type="button" class="delete-entry-btn" data-id="${e.ID || ""}" title="Delete this entry">🗑</button>
+                    <button type="button" class="delete-entry-btn" data-id="${e.ID || ""}" title="Delete this entry">&times;</button>
                   </td>
                 </tr>
               `;
