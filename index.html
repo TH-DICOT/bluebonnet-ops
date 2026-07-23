@@ -2335,7 +2335,7 @@ td.muted { color: var(--muted); }
     </div>
   </div>
 
-  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 23, 2026 · 19:45</div>
+  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 23, 2026 · 19:49</div>
   <div id="sheetWarning" class="sheet-warning" style="display:none;"></div>
   <div id="renderWarning" class="sheet-warning" style="display:none;"></div>
 
@@ -7606,6 +7606,7 @@ async function askTicketQuestion(ticketId, body, askedOf, options) {
           action: "askTicketQuestion", commentId, ticketId, author: selectedEmployee,
           body, askedOf, options: options || "",
           ticketKey: t.TicketKey || "", ticketTitle: t.Title || "",
+          siteUrl: getSiteBasePath(),
         }),
       });
       await fetch(APPS_SCRIPT_URL, {
@@ -7652,6 +7653,7 @@ async function answerTicketQuestion(question, ticket, answerBody) {
           answerBody, answeredBy: selectedEmployee,
           askedBy: c.Author, questionBody: c.Body,
           ticketKey: (t && t.TicketKey) || "", ticketTitle: (t && t.Title) || "",
+          siteUrl: getSiteBasePath(),
         }),
       });
       if (t && !stillWaiting) {
@@ -7776,6 +7778,7 @@ async function setStepState(commentId, state) {
             action: "notifyStepHandoff", to: handoff.to, from: selectedEmployee,
             stepBody: handoff.stepBody,
             ticketKey: (t && t.TicketKey) || "", ticketTitle: (t && t.Title) || "",
+            siteUrl: getSiteBasePath(),
           }),
         });
       }
