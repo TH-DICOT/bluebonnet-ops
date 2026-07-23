@@ -2335,7 +2335,7 @@ td.muted { color: var(--muted); }
     </div>
   </div>
 
-  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 23, 2026 · 19:33</div>
+  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 23, 2026 · 19:45</div>
   <div id="sheetWarning" class="sheet-warning" style="display:none;"></div>
   <div id="renderWarning" class="sheet-warning" style="display:none;"></div>
 
@@ -4496,12 +4496,44 @@ function cleanDate(d) {
   return String(d).split("T")[0];
 }
 
+// Times come back from Sheets in whatever shape the cell happened to be in:
+// a clean "09:00", a full datetime like "1899-12-30T15:00:00.000Z" because
+// Sheets stores times as dates, or "3:00 PM" if someone typed it that way.
+// Everything downstream assumes "HH:MM", so normalise once, here.
+function normalizeTime(value) {
+  if (!value) return "";
+  if (value instanceof Date) {
+    return String(value.getHours()).padStart(2, "0") + ":" + String(value.getMinutes()).padStart(2, "0");
+  }
+  const raw = String(value).trim();
+  if (!raw) return "";
+
+  // Full datetime — the time we want is the literal clock part after the T.
+  const iso = raw.match(/T(\d{2}):(\d{2})/);
+  if (iso) return `${iso[1]}:${iso[2]}`;
+
+  const clock = raw.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+  if (clock) {
+    let hh = Number(clock[1]);
+    const mm = clock[2];
+    const suffix = (clock[3] || "").toUpperCase();
+    if (suffix === "PM" && hh < 12) hh += 12;
+    if (suffix === "AM" && hh === 12) hh = 0;
+    if (hh > 23 || Number(mm) > 59) return "";
+    return String(hh).padStart(2, "0") + ":" + mm;
+  }
+  // Unrecognisable — treat as no time rather than poisoning the calendar.
+  return "";
+}
+
 function rebuildDerivedEntries() {
   entries = taskEvents.map(ev => {
     const task = tasks.find(t => t.TaskID === ev.TaskID) || {};
+    const startTime = normalizeTime(ev.StartTime);
+    const endTime = normalizeTime(ev.EndTime);
     let durationMinutes;
-    if (ev.StartTime && ev.EndTime) {
-      durationMinutes = calcDurationMinutes(ev.StartTime, ev.EndTime);
+    if (startTime && endTime) {
+      durationMinutes = calcDurationMinutes(startTime, endTime);
     } else {
       durationMinutes = Math.round(Number(ev.Hours || 0) * 60);
     }
@@ -4512,8 +4544,8 @@ function rebuildDerivedEntries() {
       Employee: ev.Employee,
       Category: task.Category || "",
       Task: task.TaskName || "",
-      StartTime: ev.StartTime || "",
-      EndTime: ev.EndTime || "",
+      StartTime: startTime,
+      EndTime: endTime,
       DurationMinutes: durationMinutes,
     };
   });
@@ -4874,9 +4906,12 @@ function renderCalendar() {
       const startSlot = Math.round(((sh * 60 + sm) - CAL_START_HOUR * 60) / CAL_SLOT_MINUTES);
       const endSlot = Math.round(((eh * 60 + em) - CAL_START_HOUR * 60) / CAL_SLOT_MINUTES);
       const span = Math.max(1, endSlot - startSlot);
-      if (startSlot < 0 || startSlot >= bodies.length) return;
+      // NaN passes both comparisons below, so test for it explicitly — that's
+      // how an unparseable time used to end up indexing past the array.
+      if (!Number.isFinite(startSlot) || startSlot < 0 || startSlot >= bodies.length) return;
 
       const anchor = bodies[startSlot];
+      if (!anchor) return;
       const color = catColor(e.Category);
       const block = document.createElement("div");
       block.className = "cal-entry-block";
