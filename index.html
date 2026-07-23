@@ -709,6 +709,16 @@ h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; 
 .todoist-breadcrumb span { cursor: pointer; }
 .todoist-breadcrumb span:hover { color: var(--text); text-decoration: underline; }
 .todo-card-preview { font-size: 12px; color: var(--dim); margin-top: 4px; font-style: italic; }
+.sheet-warning {
+  margin: 14px 0 0;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(232,131,58,0.5);
+  background: rgba(232,131,58,0.12);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+}
 .rollup-note { font-size: 13px; color: var(--dim); margin-bottom: 14px; }
 
 /* ---------- PROJECT BULLETIN BOARD ----------
@@ -2138,6 +2148,8 @@ td.muted { color: var(--muted); }
       <button type="button" class="quick-log-btn" id="quickLogTicketBtn">+ Log a Ticket</button>
     </div>
   </div>
+
+  <div id="sheetWarning" class="sheet-warning" style="display:none;"></div>
 
   <div class="top-tabs">
     <button type="button" class="top-tab-item active" data-view="tickets">🎫 Tickets</button>
@@ -3930,6 +3942,36 @@ function updateDurationPreview() {
   el.innerHTML = mins != null ? `Duration: <strong>${formatMinutes(mins)}</strong>` : "";
 }
 
+// Fetches one sheet. Returns an array on success, or null if that tab is
+// missing / the request failed — never throws, so one bad sheet can't stop
+// the others from loading.
+async function fetchSheet(name) {
+  try {
+    const res = await fetch(APPS_SCRIPT_URL + "?sheet=" + name);
+    const data = await res.json();
+    return Array.isArray(data) ? data : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+// If a tab is missing, say so plainly instead of leaving the screen blank and
+// letting someone guess. Shown once, at the top of the page.
+function reportMissingSheets(results) {
+  const missing = Object.keys(results).filter(k => results[k] === null);
+  const bar = document.getElementById("sheetWarning");
+  if (!bar) return;
+  if (!missing.length) {
+    bar.style.display = "none";
+    return;
+  }
+  bar.style.display = "block";
+  bar.innerHTML =
+    `<strong>Couldn't load ${missing.length === 1 ? "a tab" : "some tabs"}:</strong> ${missing.join(", ")}. ` +
+    `Everything else is working. If you just added a feature, check that tab exists in the Google Sheet ` +
+    `and that the Apps Script has been redeployed as a new version.`;
+}
+
 async function loadTasksAndEvents() {
   if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
     projects = [];
@@ -3944,35 +3986,41 @@ async function loadTasksAndEvents() {
     renderAll();
     return;
   }
-  try {
-    const [projectsRes, tasksRes, eventsRes, todosRes, ticketsRes, attachmentsRes, commentsRes, templatesRes] = await Promise.all([
-      fetch(APPS_SCRIPT_URL + "?sheet=projects"),
-      fetch(APPS_SCRIPT_URL + "?sheet=tasks"),
-      fetch(APPS_SCRIPT_URL + "?sheet=events"),
-      fetch(APPS_SCRIPT_URL + "?sheet=todos"),
-      fetch(APPS_SCRIPT_URL + "?sheet=tickets"),
-      fetch(APPS_SCRIPT_URL + "?sheet=attachments"),
-      fetch(APPS_SCRIPT_URL + "?sheet=comments"),
-      fetch(APPS_SCRIPT_URL + "?sheet=templates"),
-    ]);
-    projects = await projectsRes.json();
-    tasks = await tasksRes.json();
-    taskEvents = await eventsRes.json();
-    todos = await todosRes.json();
-    tickets = await ticketsRes.json();
-    // An older deployment without the Attachments tab returns an error object
-    // rather than a list — treat that as "no files yet" instead of breaking.
-    const loadedAttachments = await attachmentsRes.json();
-    attachments = Array.isArray(loadedAttachments) ? loadedAttachments : [];
-    const loadedComments = await commentsRes.json();
-    comments = Array.isArray(loadedComments) ? loadedComments : [];
-    const loadedTemplates = await templatesRes.json();
-    ticketTemplates = Array.isArray(loadedTemplates) ? loadedTemplates : [];
-  } catch (err) {
-    // keep whatever was already loaded
-  }
-  // Runs before anything renders, so renamed categories are already correct
-  // by the time the board, filters and colours are built.
+  // Each sheet loads on its own. This used to be one Promise.all, which meant
+  // a single missing tab took the whole app's data down with it — no projects,
+  // no tasks, nothing. Now a tab that doesn't exist yet just comes back empty
+  // and everything else still loads.
+  const [
+    loadedProjects, loadedTasks, loadedEvents, loadedTodos,
+    loadedTickets, loadedAttachments, loadedComments, loadedTemplates,
+  ] = await Promise.all([
+    fetchSheet("projects"),
+    fetchSheet("tasks"),
+    fetchSheet("events"),
+    fetchSheet("todos"),
+    fetchSheet("tickets"),
+    fetchSheet("attachments"),
+    fetchSheet("comments"),
+    fetchSheet("templates"),
+  ]);
+
+  // Only overwrite what actually came back, so a hiccup on one sheet doesn't
+  // blank out data that's already on screen.
+  if (loadedProjects) projects = loadedProjects;
+  if (loadedTasks) tasks = loadedTasks;
+  if (loadedEvents) taskEvents = loadedEvents;
+  if (loadedTodos) todos = loadedTodos;
+  if (loadedTickets) tickets = loadedTickets;
+  if (loadedAttachments) attachments = loadedAttachments;
+  if (loadedComments) comments = loadedComments;
+  if (loadedTemplates) ticketTemplates = loadedTemplates;
+
+  reportMissingSheets({
+    Projects: loadedProjects, Tasks: loadedTasks, TaskEvents: loadedEvents,
+    ToDos: loadedTodos, Tickets: loadedTickets, Attachments: loadedAttachments,
+    TicketComments: loadedComments, TicketTemplates: loadedTemplates,
+  });
+
   normalizeLoadedCategories();
   await checkAndGenerateToDos();
   rebuildDerivedEntries();
