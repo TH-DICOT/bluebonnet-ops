@@ -2335,7 +2335,7 @@ td.muted { color: var(--muted); }
     </div>
   </div>
 
-  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 23, 2026 · 19:49</div>
+  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 23, 2026 · 20:47</div>
   <div id="sheetWarning" class="sheet-warning" style="display:none;"></div>
   <div id="renderWarning" class="sheet-warning" style="display:none;"></div>
 
@@ -2750,6 +2750,25 @@ td.muted { color: var(--muted); }
               <label>Steps <span class="field-hint">(optional — tap a circle to give a step to someone)</span></label>
               <div id="ntkStepList"></div>
               <button type="button" class="step-add-more" id="ntkAddStep">+ Add another step</button>
+            </div>
+
+            <button type="button" class="tkt-create-disclosure" id="ntkQuestionToggle">
+              <span id="ntkQuestionCaret">▸</span> I need to ask someone something before this can start
+            </button>
+            <div id="ntkQuestionFields" style="display:none;">
+              <div class="field">
+                <label>Question</label>
+                <input type="text" id="ntkQuestion" placeholder="e.g. Paycom or external?" />
+              </div>
+              <div class="field">
+                <label>Ask</label>
+                <div class="assignee-checklist" id="ntkAskWho"></div>
+              </div>
+              <div class="field">
+                <label>Answer Choices <span class="field-hint">(optional — comma separated, so they answer in one click)</span></label>
+                <input type="text" id="ntkAskOptions" placeholder="e.g. Paycom, External, Not sure yet" />
+              </div>
+              <div class="rollup-note">The ticket starts in Waiting and they get emailed. Their answer moves it to In Progress.</div>
             </div>
 
             <button type="button" class="tkt-create-disclosure" id="ntkExternalToggle">
@@ -3659,6 +3678,13 @@ function init() {
     useTemplate(id);
   });
   document.getElementById("ntkAddStep").addEventListener("click", () => addStepRow(document.getElementById("ntkStepList")));
+  document.getElementById("ntkQuestionToggle").addEventListener("click", () => {
+    const fields = document.getElementById("ntkQuestionFields");
+    const open = fields.style.display === "none";
+    fields.style.display = open ? "block" : "none";
+    document.getElementById("ntkQuestionCaret").textContent = open ? "▾" : "▸";
+    if (open) document.getElementById("ntkQuestion").focus();
+  });
   document.getElementById("ntkExternalToggle").addEventListener("click", () => {
     const fields = document.getElementById("ntkExternalFields");
     const open = fields.style.display === "none";
@@ -3680,6 +3706,21 @@ function init() {
       return;
     }
     const steps = getStepRows(document.getElementById("ntkStepList"), false);
+    const question = document.getElementById("ntkQuestion").value.trim();
+    const askWho = getCheckedAssignees(document.getElementById("ntkAskWho"));
+    const askOptions = document.getElementById("ntkAskOptions").value.trim();
+
+    // Catch a half-filled question before the ticket exists, so nothing is
+    // created in a state the person didn't intend.
+    if (question && !askWho.length) {
+      alert("Pick who you're asking, or clear the question.");
+      return;
+    }
+    if (!question && askWho.length) {
+      alert("Type the question you want to ask, or unpick the person.");
+      return;
+    }
+
     closeNewTicketModal();
     createTicket(title, category, priority, assignee, notes, externalName, externalEmail, projectId)
       .then(async ticketId => {
@@ -3687,6 +3728,10 @@ function init() {
         for (const step of steps) {
           await addTicketStep(ticketId, step.body, step.assignee);
           await new Promise(r => setTimeout(r, 12));
+        }
+        // Asking last, since it's what parks the ticket in Waiting.
+        if (question && askWho.length) {
+          await askTicketQuestion(ticketId, question, askWho[0], askOptions);
         }
       });
   });
@@ -7917,6 +7962,11 @@ function openNewTicketModal() {
   document.getElementById("ntkExternalName").value = "";
   document.getElementById("ntkExternalEmail").value = "";
   setStepRows(document.getElementById("ntkStepList"), [{ body: "", assignee: "" }]);
+  document.getElementById("ntkQuestion").value = "";
+  document.getElementById("ntkAskOptions").value = "";
+  document.getElementById("ntkAskWho").innerHTML = buildAssigneeChecklistHtml([]);
+  document.getElementById("ntkQuestionFields").style.display = "none";
+  document.getElementById("ntkQuestionCaret").textContent = "▸";
   document.getElementById("ntkExternalFields").style.display = "none";
   document.getElementById("ntkExternalCaret").textContent = "▸";
   document.getElementById("ntkAssigneeChecklist").innerHTML = buildAssigneeChecklistHtml([]);
