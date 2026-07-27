@@ -1446,6 +1446,16 @@ details.instructions-card > summary:hover { color: var(--text); }
   color: #C9A24D;
 }
 .ticket-action-btn.ask:hover { background: #C9A24D; color: #050F23; }
+.tkt-savebar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+.tkt-saved-note { font-size: 13px; font-weight: 700; color: #1D9E75; }
 .tkt-danger {
   display: flex;
   align-items: center;
@@ -2335,9 +2345,10 @@ td.muted { color: var(--muted); }
     </div>
   </div>
 
-  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 23, 2026 · 20:47</div>
+  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 23, 2026 · 21:11</div>
   <div id="sheetWarning" class="sheet-warning" style="display:none;"></div>
   <div id="renderWarning" class="sheet-warning" style="display:none;"></div>
+  <div id="columnWarning" class="sheet-warning" style="display:none;"></div>
 
   <div class="top-tabs">
     <button type="button" class="top-tab-item active" data-view="tickets">🎫 Tickets</button>
@@ -4234,6 +4245,35 @@ async function fetchSheet(name) {
   }
 }
 
+// The columns each tab must have, in the order the backend writes them.
+// A missing column is worse than a missing tab: the sheet keeps working but
+// every value after it lands one place to the left, silently.
+const EXPECTED_COLUMNS = {
+  projects: ["ProjectID", "ProjectName", "Category", "Status", "Notes", "CreatedBy", "CreatedDate", "ParentProjectID"],
+  tasks: ["TaskID", "TaskName", "ProjectID", "Category", "Status", "Notes", "Assignee", "DueDate", "AttachmentLink", "CreatedBy", "CreatedDate"],
+  events: ["EventID", "TaskID", "Date", "StartTime", "EndTime", "Hours", "Employee"],
+  todos: ["ToDoID", "ToDoName", "Category", "ProjectID", "DayOfMonth", "Assignee", "Status", "LastGeneratedMonth", "CreatedBy", "CreatedDate", "ItemType", "Frequency", "DayOfWeek", "Steps"],
+  tickets: ["TicketID", "Title", "Category", "Priority", "Assignee", "Status", "Notes", "LastUpdated", "ConvertedType", "ConvertedID", "CreatedBy", "CreatedDate", "ExternalName", "ExternalEmail", "ProjectID", "TicketKey", "WaitingOn", "StatusChangedAt", "CreatedAt"],
+  attachments: ["AttachmentID", "ParentType", "ParentID", "FileName", "FileURL", "FileID", "UploadedBy", "UploadedDate"],
+  comments: ["CommentID", "TicketID", "Author", "Body", "CreatedAt", "Kind", "AskedOf", "Options", "AnswerBody", "AnsweredBy", "AnsweredAt"],
+  templates: ["TemplateID", "Name", "Description", "TitlePattern", "Category", "Priority", "Assignee", "ProjectID", "Steps", "CreatedBy", "CreatedAt", "UpdatedBy", "UpdatedAt", "UseCount"],
+};
+
+const TAB_LABELS = {
+  projects: "Projects", tasks: "Tasks", events: "TaskEvents", todos: "ToDos",
+  tickets: "Tickets", attachments: "Attachments", comments: "TicketComments",
+  templates: "TicketTemplates",
+};
+
+// Compares the first row that came back against what's expected. Only useful
+// when there's at least one row, since headers arrive as object keys.
+function findMissingColumns(which, rows) {
+  const expected = EXPECTED_COLUMNS[which];
+  if (!expected || !Array.isArray(rows) || !rows.length) return [];
+  const present = new Set(Object.keys(rows[0]));
+  return expected.filter(c => !present.has(c));
+}
+
 // If a tab is missing, say so plainly instead of leaving the screen blank and
 // letting someone guess. Shown once, at the top of the page.
 function reportMissingSheets(results) {
@@ -4249,6 +4289,26 @@ function reportMissingSheets(results) {
     `<strong>Couldn't load ${missing.length === 1 ? "a tab" : "some tabs"}:</strong> ${missing.join(", ")}. ` +
     `Everything else is working. If you just added a feature, check that tab exists in the Google Sheet ` +
     `and that the Apps Script has been redeployed as a new version.`;
+}
+
+function reportMissingColumns(results) {
+  const problems = [];
+  Object.keys(results).forEach(which => {
+    const missing = findMissingColumns(which, results[which]);
+    if (missing.length) problems.push(`<strong>${TAB_LABELS[which]}</strong>: ${missing.join(", ")}`);
+  });
+
+  const bar = document.getElementById("columnWarning");
+  if (!bar) return;
+  if (!problems.length) {
+    bar.style.display = "none";
+    return;
+  }
+  bar.style.display = "block";
+  bar.innerHTML =
+    `<strong>Missing columns in the Google Sheet.</strong> Add these to the end of each tab, ` +
+    `spelled exactly as shown — anything written while they're absent lands in the wrong column.<br>` +
+    problems.join("<br>");
 }
 
 async function loadTasksAndEvents() {
@@ -4298,6 +4358,12 @@ async function loadTasksAndEvents() {
     Projects: loadedProjects, Tasks: loadedTasks, TaskEvents: loadedEvents,
     ToDos: loadedTodos, Tickets: loadedTickets, Attachments: loadedAttachments,
     TicketComments: loadedComments, TicketTemplates: loadedTemplates,
+  });
+
+  reportMissingColumns({
+    projects: loadedProjects, tasks: loadedTasks, events: loadedEvents,
+    todos: loadedTodos, tickets: loadedTickets, attachments: loadedAttachments,
+    comments: loadedComments, templates: loadedTemplates,
   });
 
   normalizeLoadedCategories();
@@ -6842,10 +6908,25 @@ function answersForMe() {
 
 // How long a ticket has sat where it is. Vague on purpose — "9 days" is the
 // useful part, not the hour.
+// Nothing in this app predates 2020, so anything parsing older than that is
+// junk, not history. Bare numbers are the usual culprit: JavaScript reads
+// new Date("7") as July 2001, which is how a stray value once showed up on
+// screen as "9131 days".
+const EARLIEST_SANE_YEAR = 2020;
+
 function daysSince(stamp) {
   if (!stamp) return null;
-  const then = new Date(String(stamp).replace(" ", "T"));
+  const raw = String(stamp).trim();
+  if (!raw) return null;
+  // A real timestamp always carries a date separator. A bare number never is.
+  if (!/[-/]/.test(raw)) return null;
+
+  const then = new Date(raw.replace(" ", "T"));
   if (isNaN(then.getTime())) return null;
+  if (then.getFullYear() < EARLIEST_SANE_YEAR) return null;
+  // Slightly ahead of now is just clock skew between machines; way ahead is junk.
+  if (then.getTime() > Date.now() + 86400000) return null;
+
   const days = Math.floor((Date.now() - then.getTime()) / 86400000);
   return days < 0 ? 0 : days;
 }
@@ -7225,12 +7306,11 @@ function renderTicketDetail() {
     <div class="ticket-actions" style="margin-bottom:18px;">
       ${!people.length ? `<button type="button" class="ticket-action-btn claim" id="tdClaim">Claim</button>` : ""}
       <button type="button" class="ticket-action-btn ask" id="tdAskBtn">Ask a Question</button>
-      <button type="button" class="ticket-action-btn convert" id="tdEdit">Edit Fields</button>
       <button type="button" class="ticket-action-btn convert" id="tdProject">→ Project</button>
       <button type="button" class="ticket-action-btn claim" id="tdComplete">Complete</button>
     </div>
 
-    <div class="todo-edit-panel" id="tdEditPanel" style="display:none;">
+    <div class="todo-edit-panel" id="tdEditPanel">
       <div class="field">
         <label>Description / Notes</label>
         <textarea class="notes-textarea" id="tdNotes">${(t.Notes || "").replace(/</g, "&lt;")}</textarea>
@@ -7250,7 +7330,6 @@ function renderTicketDetail() {
         <label>Project</label>
         <select id="tdProjectSelect"></select>
       </div>
-      <button type="button" class="submit-btn" id="tdSave" style="margin-top:8px;">Save Changes</button>
     </div>
 
     <div class="section-label" style="margin-top:22px;">Steps</div>
@@ -7295,6 +7374,11 @@ function renderTicketDetail() {
 
     <div class="ticket-attachments" data-ticket-id="${t.TicketID}"></div>
 
+    <div class="tkt-savebar">
+      <span class="tkt-saved-note" id="tdSavedNote"></span>
+      <button type="button" class="submit-btn" id="tdSave" style="max-width:200px; margin:0;">Save Changes</button>
+    </div>
+
     ${stepsFor(t.TicketID).length ? "" : `
     <div class="tkt-danger">
       <div class="tkt-danger-text">Raised this by mistake? Nothing's been worked on it yet, so it can be removed cleanly.</div>
@@ -7327,21 +7411,29 @@ function renderTicketDetail() {
     completeTicket(t.TicketID);
   });
 
-  const editPanel = body.querySelector("#tdEditPanel");
-  body.querySelector("#tdEdit").addEventListener("click", () => {
-    editPanel.style.display = editPanel.style.display === "none" ? "block" : "none";
-  });
   body.querySelector("#tdAssignees").innerHTML = buildAssigneeChecklistHtml(people);
   body.querySelector("#tdProjectSelect").innerHTML =
     `<option value="">— none —</option>` + projectOptionsHtml(t.ProjectID || "");
-  body.querySelector("#tdSave").addEventListener("click", () => {
-    updateTicketFields(t.TicketID, {
+  // One save for the whole card, so there's no guessing about what stuck.
+  const saveBtn = body.querySelector("#tdSave");
+  const savedNote = body.querySelector("#tdSavedNote");
+  saveBtn.addEventListener("click", async () => {
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Saving...";
+    await updateTicketFields(t.TicketID, {
       notes: body.querySelector("#tdNotes").value,
       priority: body.querySelector("#tdPriority").value,
       assignee: getCheckedAssignees(body.querySelector("#tdAssignees")).join(", "),
       projectId: body.querySelector("#tdProjectSelect").value,
+      waitingOn: body.querySelector("#tdWaitingOn").value.trim(),
     });
-    editPanel.style.display = "none";
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Save Changes";
+    const note = document.getElementById("tdSavedNote");
+    if (note) {
+      note.textContent = "Saved.";
+      setTimeout(() => { if (note) note.textContent = ""; }, 2500);
+    }
   });
 
   const attachMount = body.querySelector(".ticket-attachments");
@@ -7410,10 +7502,6 @@ function renderTicketDetail() {
       noteBox.placeholder = asking ? "What do you need to know?" : "Add a comment...";
       postBtn.textContent = asking ? "Ask & Move to Waiting" : "Post Comment";
     });
-  });
-
-  body.querySelector("#tdWaitingOn").addEventListener("change", e => {
-    setTicketWaitingOn(t.TicketID, e.target.value.trim());
   });
 
   postBtn.addEventListener("click", () => {
@@ -7568,6 +7656,7 @@ async function updateTicketFields(ticketId, changes) {
     if (changes.priority !== undefined) t.Priority = changes.priority;
     if (changes.assignee !== undefined) t.Assignee = changes.assignee;
     if (changes.projectId !== undefined) t.ProjectID = changes.projectId;
+    if (changes.waitingOn !== undefined) t.WaitingOn = changes.waitingOn;
     t.LastUpdated = nowTimestampLocal();
   }
 
@@ -7586,6 +7675,13 @@ async function updateTicketFields(ticketId, changes) {
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({ action: "updateTicketProject", ticketId, projectId: changes.projectId || "" }),
       });
+      if (changes.waitingOn !== undefined) {
+        await fetch(APPS_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "updateTicketWaitingOn", ticketId, waitingOn: changes.waitingOn }),
+        });
+      }
     } catch (err) {}
   }
   renderTickets();
