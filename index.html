@@ -1522,19 +1522,26 @@ details.instructions-card > summary:hover { color: var(--text); }
 .step-row:hover { background: rgba(255,255,255,0.04); }
 .step-row[data-next="true"] { border-color: rgba(99,188,188,0.5); background: rgba(99,188,188,0.07); }
 .step-check {
-  width: 20px; height: 20px;
-  border-radius: 5px;
-  border: 1.5px solid var(--border);
-  background: transparent;
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  /* A clearly-lighter outline, so an empty (pending) checkbox actually reads
+     as an empty checkbox rather than blending into the card behind it. */
+  border: 2px solid #5A6A8F;
+  background: rgba(255,255,255,0.04);
   color: #050F23;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
+  line-height: 1;
   cursor: pointer;
   flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.12s ease, background 0.12s ease;
 }
-.step-row[data-state="Done"] .step-check { background: #1D9E75; border-color: transparent; }
-.step-row[data-state="Skipped"] .step-check { background: var(--dim); border-color: transparent; }
+.step-check:hover { border-color: #1D9E75; background: rgba(29,158,117,0.15); }
+/* The one you should do next gets a stronger cue. */
+.step-row[data-next="true"] .step-check { border-color: #63bcbc; }
+.step-row[data-state="Done"] .step-check { background: #1D9E75; border-color: #1D9E75; }
+.step-row[data-state="Skipped"] .step-check { background: var(--dim); border-color: var(--dim); }
 .step-num { font-size: 11px; font-weight: 800; color: var(--dim); min-width: 14px; flex-shrink: 0; }
 .step-label { flex: 1; color: var(--text); }
 .step-row[data-state="Done"] .step-label { color: var(--muted); text-decoration: line-through; }
@@ -1694,6 +1701,59 @@ details.instructions-card > summary:hover { color: var(--text); }
   color: var(--dim);
   font-weight: 600;
 }
+
+/* ---------- TICKET DETAIL LAYOUT ---------- */
+.tkt-detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.tkt-detail-panel {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+.tkt-detail-strip {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  padding: 8px 0;
+}
+.tkt-detail-strip + .tkt-detail-strip { border-top: 1px solid var(--border); }
+.tkt-strip-cell { display: flex; flex-direction: column; gap: 5px; min-width: 90px; }
+.tkt-strip-grow { flex: 1; min-width: 160px; }
+.tkt-strip-who { display: flex; gap: 5px; flex-wrap: wrap; }
+.tkt-who-pick {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--dim);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0;
+}
+.tkt-who-pick:hover { border-color: var(--who); color: var(--who); }
+.tkt-who-pick[data-on="true"] { background: var(--who); border-color: transparent; color: #050F23; }
+.tkt-inline-select, .tkt-inline-input {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 10px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+}
+.tkt-inline-input { width: 100%; box-sizing: border-box; }
 
 .todoist-detail {
   flex: 1;
@@ -2345,7 +2405,7 @@ td.muted { color: var(--muted); }
     </div>
   </div>
 
-  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 23, 2026 · 21:11</div>
+  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 27, 2026 · 15:31</div>
   <div id="sheetWarning" class="sheet-warning" style="display:none;"></div>
   <div id="renderWarning" class="sheet-warning" style="display:none;"></div>
   <div id="columnWarning" class="sheet-warning" style="display:none;"></div>
@@ -7251,87 +7311,35 @@ function renderTicketDetail() {
   const project = projects.find(p => p.ProjectID === t.ProjectID);
   const thread = commentsFor(t.TicketID);
 
+  const hasSteps = stepsFor(t.TicketID).length > 0;
+
   body.innerHTML = `
-    <div class="tkt-detail-key">${ticketKeyOf(t)}</div>
-    <div class="tkt-detail-title">${t.Title || ""}</div>
-
-    <div class="tkt-status-row">
-      ${TICKET_STATUSES.map(c => `
-        <button type="button" class="tkt-status-btn" data-set-status="${c.key}"
-          data-active="${c.key === status}"
-          style="${c.key === status ? `background:${c.hex}` : ""}">${c.key}</button>
-      `).join("")}
-      <button type="button" class="tkt-status-btn" data-set-status="Closed" data-active="${status === "Closed"}"
-        style="${status === "Closed" ? "background:#5A6A8F" : ""}">Closed</button>
-    </div>
-
-    <div class="tkt-detail-fields">
+    <div class="tkt-detail-head">
       <div>
-        <div class="tkt-field-label">Assignee</div>
-        <div class="tkt-field-value">${people.length ? people.join(", ") : "Unassigned"}</div>
+        <div class="tkt-detail-key">${ticketKeyOf(t)}</div>
+        <div class="tkt-detail-title">${t.Title || ""}</div>
       </div>
-      <div>
-        <div class="tkt-field-label">Priority</div>
-        <div class="tkt-field-value" style="color:${priorityColor(t.Priority)}">${t.Priority || "None"}</div>
+      <div class="tkt-status-row">
+        ${TICKET_STATUSES.map(c => `
+          <button type="button" class="tkt-status-btn" data-set-status="${c.key}"
+            data-active="${c.key === status}"
+            style="${c.key === status ? `background:${c.hex}` : ""}">${c.key}</button>
+        `).join("")}
+        <button type="button" class="tkt-status-btn" data-set-status="Closed" data-active="${status === "Closed"}"
+          style="${status === "Closed" ? "background:#5A6A8F" : ""}">Closed</button>
       </div>
-      <div>
-        <div class="tkt-field-label">Category</div>
-        <div class="tkt-field-value" style="color:${t.Category ? catColor(t.Category) : "var(--dim)"}">${t.Category || "None"}</div>
-      </div>
-      <div>
-        <div class="tkt-field-label">Project</div>
-        <div class="tkt-field-value">${project ? projectPath(project.ProjectID) : "None"}</div>
-      </div>
-      <div>
-        <div class="tkt-field-label">Reported By</div>
-        <div class="tkt-field-value">${t.CreatedBy || "—"}</div>
-      </div>
-      <div>
-        <div class="tkt-field-label">Created</div>
-        <div class="tkt-field-value">${cleanDate(t.CreatedDate) || "—"}${t.CreatedAt ? ` <span class="tkt-field-sub">(${agoLabel(t.CreatedAt)} ago)</span>` : ""}</div>
-      </div>
-      <div>
-        <div class="tkt-field-label">In ${status} Since</div>
-        <div class="tkt-field-value">${t.StatusChangedAt ? agoLabel(t.StatusChangedAt) : "—"}</div>
-      </div>
-    </div>
-
-    <div class="field" style="max-width:420px;">
-      <label>Waiting On <span class="field-hint">(what's holding it up)</span></label>
-      <input type="text" id="tdWaitingOn" value="${(t.WaitingOn || "").replace(/"/g, "&quot;")}" placeholder="e.g. offer approval" />
     </div>
 
     ${t.ExternalName ? `<div class="rollup-note">Regarding <strong>${t.ExternalName}</strong>${t.ExternalEmail ? ` (${t.ExternalEmail})` : ""}</div>` : ""}
 
-    <div class="ticket-actions" style="margin-bottom:18px;">
+    <div class="ticket-actions">
       ${!people.length ? `<button type="button" class="ticket-action-btn claim" id="tdClaim">Claim</button>` : ""}
       <button type="button" class="ticket-action-btn ask" id="tdAskBtn">Ask a Question</button>
       <button type="button" class="ticket-action-btn convert" id="tdProject">→ Project</button>
       <button type="button" class="ticket-action-btn claim" id="tdComplete">Complete</button>
     </div>
 
-    <div class="todo-edit-panel" id="tdEditPanel">
-      <div class="field">
-        <label>Description / Notes</label>
-        <textarea class="notes-textarea" id="tdNotes">${(t.Notes || "").replace(/</g, "&lt;")}</textarea>
-      </div>
-      <div class="field">
-        <label>Priority</label>
-        <select id="tdPriority">
-          ${["", "Low", "Normal", "High", "Urgent"].map(p =>
-            `<option value="${p}" ${p === (t.Priority || "") ? "selected" : ""}>${p || "— none —"}</option>`).join("")}
-        </select>
-      </div>
-      <div class="field">
-        <label>Assignees</label>
-        <div class="assignee-checklist" id="tdAssignees"></div>
-      </div>
-      <div class="field">
-        <label>Project</label>
-        <select id="tdProjectSelect"></select>
-      </div>
-    </div>
-
+    <!-- Steps ride at the top: they're the live work, everything else is reference. -->
     <div class="section-label" style="margin-top:22px;">Steps</div>
     <div id="tdSteps"></div>
     <div class="step-add-row">
@@ -7374,6 +7382,56 @@ function renderTicketDetail() {
 
     <div class="ticket-attachments" data-ticket-id="${t.TicketID}"></div>
 
+    <!-- Details live at the bottom: they set context but rarely change once set. -->
+    <div class="section-label" style="margin-top:26px;">Details</div>
+    <div class="tkt-detail-panel">
+      <div class="tkt-detail-strip">
+        <div class="tkt-strip-cell">
+          <div class="tkt-field-label">Assignees</div>
+          <div class="tkt-strip-who" id="tdAssignees"></div>
+        </div>
+        <div class="tkt-strip-cell">
+          <div class="tkt-field-label">Priority</div>
+          <select id="tdPriority" class="tkt-inline-select">
+            ${["", "Low", "Normal", "High", "Urgent"].map(p =>
+              `<option value="${p}" ${p === (t.Priority || "") ? "selected" : ""}>${p || "— none —"}</option>`).join("")}
+          </select>
+        </div>
+        <div class="tkt-strip-cell">
+          <div class="tkt-field-label">Category</div>
+          <div class="tkt-field-value" style="color:${t.Category ? catColor(t.Category) : "var(--dim)"}">${t.Category || "None"}</div>
+        </div>
+        <div class="tkt-strip-cell tkt-strip-grow">
+          <div class="tkt-field-label">Project</div>
+          <select id="tdProjectSelect" class="tkt-inline-select"></select>
+        </div>
+      </div>
+
+      <div class="tkt-detail-strip">
+        <div class="tkt-strip-cell tkt-strip-grow">
+          <div class="tkt-field-label">Waiting On</div>
+          <input type="text" id="tdWaitingOn" class="tkt-inline-input" value="${(t.WaitingOn || "").replace(/"/g, "&quot;")}" placeholder="what's holding it up" />
+        </div>
+        <div class="tkt-strip-cell">
+          <div class="tkt-field-label">Reported By</div>
+          <div class="tkt-field-value">${t.CreatedBy || "—"}</div>
+        </div>
+        <div class="tkt-strip-cell">
+          <div class="tkt-field-label">Created</div>
+          <div class="tkt-field-value">${cleanDate(t.CreatedDate) || "—"}</div>
+        </div>
+        <div class="tkt-strip-cell">
+          <div class="tkt-field-label">In ${status} Since</div>
+          <div class="tkt-field-value">${t.StatusChangedAt && agoLabel(t.StatusChangedAt) ? agoLabel(t.StatusChangedAt) : "—"}</div>
+        </div>
+      </div>
+
+      <div class="field" style="margin:14px 0 0;">
+        <label>Description / Notes</label>
+        <textarea class="notes-textarea" id="tdNotes">${(t.Notes || "").replace(/</g, "&lt;")}</textarea>
+      </div>
+    </div>
+
     <div class="tkt-savebar">
       <span class="tkt-saved-note" id="tdSavedNote"></span>
       <button type="button" class="submit-btn" id="tdSave" style="max-width:200px; margin:0;">Save Changes</button>
@@ -7411,7 +7469,18 @@ function renderTicketDetail() {
     completeTicket(t.TicketID);
   });
 
-  body.querySelector("#tdAssignees").innerHTML = buildAssigneeChecklistHtml(people);
+  const assigneeHost = body.querySelector("#tdAssignees");
+  assigneeHost.dataset.selected = people.join(",");
+  assigneeHost.innerHTML = EMPLOYEES.map(e => `
+    <button type="button" class="tkt-who-pick" data-name="${e.name}" data-on="${people.includes(e.name)}"
+      style="--who:${e.hex}" title="${e.name}">${initials(e.name)}</button>
+  `).join("");
+  assigneeHost.querySelectorAll(".tkt-who-pick").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const on = btn.dataset.on !== "true";
+      btn.dataset.on = on;
+    });
+  });
   body.querySelector("#tdProjectSelect").innerHTML =
     `<option value="">— none —</option>` + projectOptionsHtml(t.ProjectID || "");
   // One save for the whole card, so there's no guessing about what stuck.
@@ -7423,7 +7492,7 @@ function renderTicketDetail() {
     await updateTicketFields(t.TicketID, {
       notes: body.querySelector("#tdNotes").value,
       priority: body.querySelector("#tdPriority").value,
-      assignee: getCheckedAssignees(body.querySelector("#tdAssignees")).join(", "),
+      assignee: [...body.querySelectorAll("#tdAssignees .tkt-who-pick[data-on=\"true\"]")].map(b => b.dataset.name).join(", "),
       projectId: body.querySelector("#tdProjectSelect").value,
       waitingOn: body.querySelector("#tdWaitingOn").value.trim(),
     });
