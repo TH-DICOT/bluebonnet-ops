@@ -2417,7 +2417,7 @@ td.muted { color: var(--muted); }
     </div>
   </div>
 
-  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 27, 2026 · 18:16</div>
+  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 27, 2026 · 21:19</div>
   <div id="sheetWarning" class="sheet-warning" style="display:none;"></div>
   <div id="renderWarning" class="sheet-warning" style="display:none;"></div>
   <div id="columnWarning" class="sheet-warning" style="display:none;"></div>
@@ -2735,6 +2735,16 @@ td.muted { color: var(--muted); }
             <div class="field" id="ntdDayOfMonthField">
               <label>Day of the Month</label>
               <select id="ntdDayOfMonth"></select>
+            </div>
+
+            <div class="field" id="ntdLeadField">
+              <label>This work is for <span class="field-hint">(e.g. July cards for August birthdays)</span></label>
+              <select id="ntdLead">
+                <option value="0">The current month</option>
+                <option value="1">1 month ahead</option>
+                <option value="2">2 months ahead</option>
+                <option value="3">3 months ahead</option>
+              </select>
             </div>
 
             <div class="field" id="ntdDayOfWeekField" style="display:none;">
@@ -3682,6 +3692,7 @@ function init() {
       btn.dataset.active = "true";
       const weekly = btn.dataset.freq === "Weekly";
       document.getElementById("ntdDayOfMonthField").style.display = weekly ? "none" : "";
+      document.getElementById("ntdLeadField").style.display = weekly ? "none" : "";
       document.getElementById("ntdDayOfWeekField").style.display = weekly ? "" : "none";
       updateNtdPreview();
     });
@@ -3713,6 +3724,7 @@ function init() {
     const frequency = activeFreq ? activeFreq.dataset.freq : "Monthly";
     const dayOfWeek = getSelectedDayPills(document.getElementById("ntdDayPills")).join(", ");
     const steps = stepListToText(getStepRows(document.getElementById("ntdStepList"), false));
+    const lead = document.getElementById("ntdLead").value;
     const projectId = document.getElementById("ntdProject").value;
     const checkedAssignees = getCheckedAssignees(document.getElementById("ntdAssigneeChecklist"));
     const assignee = checkedAssignees.length ? checkedAssignees.join(", ") : selectedEmployee;
@@ -3725,7 +3737,7 @@ function init() {
       alert("Pick at least one day of the week.");
       return;
     }
-    createToDo(name, category, dayOfMonth, projectId, assignee, frequency, dayOfWeek, steps);
+    createToDo(name, category, dayOfMonth, projectId, assignee, frequency, dayOfWeek, steps, lead);
     closeNewToDoModal();
   });
 
@@ -4315,7 +4327,7 @@ const EXPECTED_COLUMNS = {
   projects: ["ProjectID", "ProjectName", "Category", "Status", "Notes", "CreatedBy", "CreatedDate", "ParentProjectID"],
   tasks: ["TaskID", "TaskName", "ProjectID", "Category", "Status", "Notes", "Assignee", "DueDate", "AttachmentLink", "CreatedBy", "CreatedDate"],
   events: ["EventID", "TaskID", "Date", "StartTime", "EndTime", "Hours", "Employee"],
-  todos: ["ToDoID", "ToDoName", "Category", "ProjectID", "DayOfMonth", "Assignee", "Status", "LastGeneratedMonth", "CreatedBy", "CreatedDate", "ItemType", "Frequency", "DayOfWeek", "Steps"],
+  todos: ["ToDoID", "ToDoName", "Category", "ProjectID", "DayOfMonth", "Assignee", "Status", "LastGeneratedMonth", "CreatedBy", "CreatedDate", "ItemType", "Frequency", "DayOfWeek", "Steps", "LeadMonths"],
   tickets: ["TicketID", "Title", "Category", "Priority", "Assignee", "Status", "Notes", "LastUpdated", "ConvertedType", "ConvertedID", "CreatedBy", "CreatedDate", "ExternalName", "ExternalEmail", "ProjectID", "TicketKey", "WaitingOn", "StatusChangedAt", "CreatedAt"],
   attachments: ["AttachmentID", "ParentType", "ParentID", "FileName", "FileURL", "FileID", "UploadedBy", "UploadedDate"],
   comments: ["CommentID", "TicketID", "Author", "Body", "CreatedAt", "Kind", "AskedOf", "Options", "AnswerBody", "AnsweredBy", "AnsweredAt"],
@@ -4466,6 +4478,13 @@ const MONTH_NAMES = ["January", "February", "March", "April", "May", "June",
 // The title a recurring item gets when it fires. Monthly items carry the
 // month, weekly ones carry the week they belong to — so a queue holding three
 // months of "Birthday cards" tells you which is which at a glance.
+// How many months ahead a monthly item is "for". 0 = this month (default).
+// Work done in July for August birthdays sets this to 1.
+function leadMonths(t) {
+  const n = Number(t.LeadMonths || 0);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+}
+
 function stampedTitle(t, when) {
   const base = t.ToDoName || "";
   if (isWeekly(t)) {
@@ -4473,7 +4492,10 @@ function stampedTitle(t, when) {
     const label = `${MONTH_NAMES[monday.getMonth()].slice(0, 3)} ${monday.getDate()}`;
     return `${base} — Week of ${label}`;
   }
-  return `${base} — ${MONTH_NAMES[when.getMonth()]} ${when.getFullYear()}`;
+  // Stamp the month the work is FOR, which may be a month or two ahead of when
+  // it's actually generated.
+  const forMonth = new Date(when.getFullYear(), when.getMonth() + leadMonths(t), 1);
+  return `${base} — ${MONTH_NAMES[forMonth.getMonth()]} ${forMonth.getFullYear()}`;
 }
 
 // DayOfWeek holds one day ("Monday") or several ("Monday, Friday"). Reading
@@ -4504,7 +4526,9 @@ function recurrenceLabel(t) {
     if (days.length === 1) return `Every ${days[0]}`;
     return `Every ${days.map(d => d.slice(0, 3)).join(", ")}`;
   }
-  return `Day ${t.DayOfMonth} of each month`;
+  const lead = leadMonths(t);
+  const base = `Day ${t.DayOfMonth} of each month`;
+  return lead ? `${base}, for ${lead} month${lead === 1 ? "" : "s"} ahead` : base;
 }
 
 function monthKey(value) {
@@ -6271,6 +6295,15 @@ function buildToDoCard(t) {
           <label>Day of Month</label>
           <select class="todo-edit-day"></select>
         </div>
+        <div class="field todo-edit-lead-field" style="display:${weekly ? "none" : "block"};">
+          <label>For</label>
+          <select class="todo-edit-lead">
+            <option value="0">This month</option>
+            <option value="1">1 month ahead</option>
+            <option value="2">2 months ahead</option>
+            <option value="3">3 months ahead</option>
+          </select>
+        </div>
         <div class="field todo-edit-day-week-field" style="display:${weekly ? "block" : "none"};">
           <label>Which Days</label>
           <div class="day-pills todo-edit-dow"></div>
@@ -6324,15 +6357,20 @@ function buildToDoCard(t) {
     pill.dataset.on = pill.dataset.on !== "true";
   });
 
+  const leadSel = wrap.querySelector(".todo-edit-lead");
+  leadSel.value = String(leadMonths(t));
+
   const freqBtns = wrap.querySelectorAll(".todo-edit-freq-btn");
   const monthField = wrap.querySelector(".todo-edit-day-month-field");
   const weekField = wrap.querySelector(".todo-edit-day-week-field");
+  const leadField = wrap.querySelector(".todo-edit-lead-field");
   freqBtns.forEach(btn => {
     btn.addEventListener("click", () => {
       freqBtns.forEach(b => (b.dataset.active = "false"));
       btn.dataset.active = "true";
       const nowWeekly = btn.dataset.freq === "Weekly";
       monthField.style.display = nowWeekly ? "none" : "block";
+      leadField.style.display = nowWeekly ? "none" : "block";
       weekField.style.display = nowWeekly ? "block" : "none";
     });
   });
@@ -6382,6 +6420,7 @@ function buildToDoCard(t) {
       projectId: projSel.value,
       assignee: checked.join(", "),
       steps: stepListToText(getStepRows(stepsBox, false)),
+      leadMonths: leadSel.value,
       ...(cadenceChanged ? { lastGeneratedMonth: "" } : {}),
     });
     editPanel.style.display = "none";
@@ -6417,6 +6456,7 @@ async function duplicateToDo(toDoId) {
     Frequency: src.Frequency || "Monthly",
     DayOfWeek: src.DayOfWeek || "",
     Steps: src.Steps || "",
+    LeadMonths: src.LeadMonths || "0",
   };
   todos.push(copy);
   renderToDos();
@@ -6431,6 +6471,7 @@ async function duplicateToDo(toDoId) {
           category: copy.Category, projectId: copy.ProjectID, dayOfMonth: copy.DayOfMonth,
           assignee: copy.Assignee, createdBy: selectedEmployee, createdDate,
           frequency: copy.Frequency, dayOfWeek: copy.DayOfWeek, steps: copy.Steps,
+          leadMonths: copy.LeadMonths,
         }),
       });
     } catch (err) {}
@@ -6452,6 +6493,8 @@ function openNewToDoModal() {
   setStepRows(document.getElementById("ntdStepList"), [{ body: "", assignee: "" }]);
   document.querySelectorAll(".ntd-freq-btn").forEach(b => (b.dataset.active = b.dataset.freq === "Monthly"));
   document.getElementById("ntdDayOfMonthField").style.display = "";
+  document.getElementById("ntdLeadField").style.display = "";
+  document.getElementById("ntdLead").value = "0";
   document.getElementById("ntdDayOfWeekField").style.display = "none";
   document.getElementById("ntdDayPills").innerHTML = buildDayPillsHtml(["Monday"]);
   document.getElementById("ntdAssigneeChecklist").innerHTML = buildAssigneeChecklistHtml([selectedEmployee]);
@@ -6478,6 +6521,7 @@ function updateNtdPreview() {
     Frequency: frequency,
     DayOfMonth: document.getElementById("ntdDayOfMonth").value,
     DayOfWeek: getSelectedDayPills(document.getElementById("ntdDayPills")).join(", "),
+    LeadMonths: document.getElementById("ntdLead").value,
   };
   if (frequency === "Weekly" && !fake.DayOfWeek) {
     box.innerHTML = `<span class="ntd-preview-warn">Pick at least one day.</span>`;
@@ -6502,7 +6546,7 @@ function refreshNtdProjectOptions() {
     projectOptionsHtml(stillValid ? keep : "", { category: catSel.value });
 }
 
-async function createToDo(name, category, dayOfMonth, projectId, assignee, frequency, dayOfWeek, steps) {
+async function createToDo(name, category, dayOfMonth, projectId, assignee, frequency, dayOfWeek, steps, lead) {
   const toDoId = "td" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   const createdDate = dateToStr(new Date());
   // Recurring items always come back as tickets — they land in the queue and
@@ -6523,6 +6567,7 @@ async function createToDo(name, category, dayOfMonth, projectId, assignee, frequ
     Frequency: frequency === "Weekly" ? "Weekly" : "Monthly",
     DayOfWeek: dayOfWeek || "Monday",
     Steps: steps || "",
+    LeadMonths: lead || "0",
   };
   todos.push(newToDo);
 
@@ -6538,6 +6583,7 @@ async function createToDo(name, category, dayOfMonth, projectId, assignee, frequ
           frequency: frequency === "Weekly" ? "Weekly" : "Monthly",
           dayOfWeek: dayOfWeek || "Monday",
           steps: steps || "",
+          leadMonths: lead || "0",
         }),
       });
     } catch (err) {}
@@ -6557,6 +6603,7 @@ async function updateToDoDetails(toDoId, changes) {
     if (changes.frequency !== undefined) t.Frequency = changes.frequency;
     if (changes.dayOfWeek !== undefined) t.DayOfWeek = changes.dayOfWeek;
     if (changes.steps !== undefined) t.Steps = changes.steps;
+    if (changes.leadMonths !== undefined) t.LeadMonths = changes.leadMonths;
     if (changes.lastGeneratedMonth !== undefined) t.LastGeneratedMonth = changes.lastGeneratedMonth;
   }
 
