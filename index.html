@@ -2417,7 +2417,7 @@ td.muted { color: var(--muted); }
     </div>
   </div>
 
-  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 27, 2026 · 18:05</div>
+  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 27, 2026 · 18:16</div>
   <div id="sheetWarning" class="sheet-warning" style="display:none;"></div>
   <div id="renderWarning" class="sheet-warning" style="display:none;"></div>
   <div id="columnWarning" class="sheet-warning" style="display:none;"></div>
@@ -6245,11 +6245,16 @@ function buildToDoCard(t) {
       </div>
       <div class="todo-card-actions">
         <button type="button" class="todo-pause-btn todo-edit-btn" id="toDoEditBtn-${t.ToDoID}">Edit</button>
+        <button type="button" class="todo-pause-btn todo-dupe-btn">Duplicate</button>
         <button type="button" class="todo-pause-btn todo-resume-btn">${pauseLabel}</button>
         <button type="button" class="todo-delete-btn">Delete</button>
       </div>
     </div>
     <div class="todo-edit-panel" id="toDoEditPanel-${t.ToDoID}" style="display:none;">
+      <div class="field">
+        <label>Name</label>
+        <input type="text" class="todo-edit-name" value="${(t.ToDoName || "").replace(/"/g, "&quot;")}" />
+      </div>
       <div class="field">
         <label>Repeats</label>
         <div class="status-picker">
@@ -6346,7 +6351,14 @@ function buildToDoCard(t) {
   const assigneeChecklist = wrap.querySelector(".todo-edit-assignee");
   assigneeChecklist.innerHTML = buildAssigneeChecklistHtml(parseAssignees(t.Assignee));
 
+  wrap.querySelector(".todo-dupe-btn").addEventListener("click", () => duplicateToDo(t.ToDoID));
+
   wrap.querySelector(".todo-edit-save-btn").addEventListener("click", () => {
+    const newName = wrap.querySelector(".todo-edit-name").value.trim();
+    if (!newName) {
+      alert("Give it a name.");
+      return;
+    }
     const checked = getCheckedAssignees(assigneeChecklist);
     if (!checked.length) {
       alert("Pick at least one person.");
@@ -6362,6 +6374,7 @@ function buildToDoCard(t) {
     // means nothing to a weekly schedule, and vice versa.
     const cadenceChanged = newFreq !== (t.Frequency || "Monthly");
     updateToDoDetails(t.ToDoID, {
+      name: newName,
       category: catSel.value,
       dayOfMonth: daySel.value,
       dayOfWeek: getSelectedDayPills(dowSel).join(", "),
@@ -6375,6 +6388,53 @@ function buildToDoCard(t) {
   });
 
   return wrap;
+}
+
+// Copies a recurring item so it can be reused for a different market with one
+// word changed. The copy starts with a fresh "never generated" stamp, so it
+// fires on its own schedule rather than inheriting the original's history.
+async function duplicateToDo(toDoId) {
+  const src = todos.find(t => t.ToDoID === toDoId);
+  if (!src) return;
+  const suggested = prompt("Name for the copy:", src.ToDoName + " (copy)");
+  if (suggested === null) return;
+  const name = suggested.trim() || src.ToDoName + " (copy)";
+
+  const newId = "td" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const createdDate = dateToStr(new Date());
+  const copy = {
+    ToDoID: newId,
+    ToDoName: name,
+    Category: src.Category || "",
+    ProjectID: src.ProjectID || "",
+    DayOfMonth: src.DayOfMonth || "",
+    Assignee: src.Assignee || "",
+    Status: "Active",
+    LastGeneratedMonth: "",
+    CreatedBy: selectedEmployee,
+    CreatedDate: createdDate,
+    ItemType: src.ItemType || "Ticket",
+    Frequency: src.Frequency || "Monthly",
+    DayOfWeek: src.DayOfWeek || "",
+    Steps: src.Steps || "",
+  };
+  todos.push(copy);
+  renderToDos();
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "createToDo", toDoId: newId, toDoName: name,
+          category: copy.Category, projectId: copy.ProjectID, dayOfMonth: copy.DayOfMonth,
+          assignee: copy.Assignee, createdBy: selectedEmployee, createdDate,
+          frequency: copy.Frequency, dayOfWeek: copy.DayOfWeek, steps: copy.Steps,
+        }),
+      });
+    } catch (err) {}
+  }
 }
 
 function buildDayPillsHtml(selectedDays) {
@@ -6488,6 +6548,7 @@ async function createToDo(name, category, dayOfMonth, projectId, assignee, frequ
 async function updateToDoDetails(toDoId, changes) {
   const t = todos.find(x => x.ToDoID === toDoId);
   if (t) {
+    if (changes.name !== undefined) t.ToDoName = changes.name;
     if (changes.category !== undefined) t.Category = changes.category;
     if (changes.dayOfMonth !== undefined) t.DayOfMonth = changes.dayOfMonth;
     if (changes.projectId !== undefined) t.ProjectID = changes.projectId;
@@ -6504,7 +6565,12 @@ async function updateToDoDetails(toDoId, changes) {
       await fetch(APPS_SCRIPT_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(Object.assign({ action: "updateToDo", toDoId }, changes)),
+        body: JSON.stringify(Object.assign(
+          { action: "updateToDo", toDoId },
+          changes,
+          // Backend expects toDoName, but the form speaks "name".
+          changes.name !== undefined ? { toDoName: changes.name } : {}
+        )),
       });
     } catch (err) {}
   }
