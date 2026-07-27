@@ -2417,7 +2417,7 @@ td.muted { color: var(--muted); }
     </div>
   </div>
 
-  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 27, 2026 · 17:30</div>
+  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 27, 2026 · 18:05</div>
   <div id="sheetWarning" class="sheet-warning" style="display:none;"></div>
   <div id="renderWarning" class="sheet-warning" style="display:none;"></div>
   <div id="columnWarning" class="sheet-warning" style="display:none;"></div>
@@ -2957,6 +2957,8 @@ td.muted { color: var(--muted); }
       <button type="button" class="filter-pill" id="ticketsClearFiltersPill">Clear</button>
     </div>
 
+    <div id="ticketEmptyState" class="sheet-warning" style="display:none;"></div>
+    <div id="ticketFilterNotice" class="sheet-warning" style="display:none;"></div>
     <div id="ticketCategoryFix" class="sheet-warning" style="display:none;"></div>
     <div id="ticketAlerts"></div>
     <div class="ticket-board" id="ticketBoard"></div>
@@ -3630,19 +3632,7 @@ function init() {
     ticketSortMode = e.target.value;
     renderTickets();
   });
-  document.getElementById("ticketsClearFiltersPill").addEventListener("click", () => {
-    ticketSearchText = "";
-    ticketFilterAssignee = "";
-    ticketFilterPriority = "";
-    ticketFilterCategory = "";
-    ticketsShowMineOnly = false;
-    document.getElementById("ticketSearch").value = "";
-    document.getElementById("ticketFilterAssignee").value = "";
-    document.getElementById("ticketFilterPriority").value = "";
-    document.getElementById("ticketFilterCategory").value = "";
-    document.getElementById("ticketsMineOnlyPill").dataset.active = "false";
-    renderTickets();
-  });
+  document.getElementById("ticketsClearFiltersPill").addEventListener("click", clearAllTicketFilters);
 
   document.getElementById("templatesBtn").addEventListener("click", openTemplatesModal);
   document.getElementById("templatesClose").addEventListener("click", closeTemplatesModal);
@@ -7208,6 +7198,45 @@ function renderTickets() {
   const live = tickets.filter(t => ticketStatus(t) !== "Closed" && ticketMatchesFilters(t));
 
   board.innerHTML = "";
+
+  // Zero tickets loaded at all is different from filters hiding them, and the
+  // fix is different too — so distinguish the two right on the board.
+  const emptyState = document.getElementById("ticketEmptyState");
+  if (emptyState) {
+    if (tickets.length === 0) {
+      emptyState.style.display = "block";
+      emptyState.innerHTML =
+        `<strong>No tickets are loading from the Google Sheet.</strong><br>` +
+        `The app is connected, but the Tickets tab came back with zero rows. That usually means one of:<br>` +
+        `&nbsp;&nbsp;• the Apps Script hasn't been redeployed as a <em>new version</em> since the last change<br>` +
+        `&nbsp;&nbsp;• the tab isn't named exactly <code>Tickets</code><br>` +
+        `&nbsp;&nbsp;• the header row was edited so the rows can't be read<br>` +
+        `Check the amber bar at the very top of the page — it names anything it couldn't load.`;
+    } else {
+      emptyState.style.display = "none";
+    }
+  }
+
+  // If filters are hiding everything, say so — an empty board with an active
+  // filter and no explanation is how a ticket "disappears".
+  const anyFilterOn = ticketsShowMineOnly || ticketFilterCategory || ticketFilterPriority ||
+    ticketFilterAssignee || ticketSearchText;
+  const totalLive = tickets.filter(t => ticketStatus(t) !== "Closed").length;
+  const notice = document.getElementById("ticketFilterNotice");
+  if (notice) {
+    if (anyFilterOn && !live.length && totalLive > 0) {
+      notice.style.display = "block";
+      notice.innerHTML =
+        `<strong>${totalLive} ticket${totalLive === 1 ? "" : "s"} hidden by a filter.</strong> ` +
+        `Nothing matches what's set right now. ` +
+        `<button type="button" id="clearTicketFiltersInline" class="inline-fix-btn">Show all tickets</button>`;
+      const btn = notice.querySelector("#clearTicketFiltersInline");
+      if (btn) btn.addEventListener("click", clearAllTicketFilters);
+    } else {
+      notice.style.display = "none";
+    }
+  }
+
   TICKET_STATUSES.forEach(col => {
     const inCol = sortTickets(live.filter(t => ticketStatus(t) === col.key));
 
@@ -7265,6 +7294,25 @@ function renderTickets() {
 
 // Offers a one-click fix when tickets are tagged with a project name instead
 // of a category.
+function clearAllTicketFilters() {
+  ticketSearchText = "";
+  ticketFilterAssignee = "";
+  ticketFilterPriority = "";
+  ticketFilterCategory = "";
+  ticketsShowMineOnly = false;
+  const search = document.getElementById("ticketSearch");
+  if (search) search.value = "";
+  const aSel = document.getElementById("ticketFilterAssignee");
+  if (aSel) aSel.value = "";
+  const pSel = document.getElementById("ticketFilterPriority");
+  if (pSel) pSel.value = "";
+  const cSel = document.getElementById("ticketFilterCategory");
+  if (cSel) cSel.value = "";
+  const mine = document.getElementById("ticketsMineOnlyPill");
+  if (mine) mine.dataset.active = "false";
+  renderTickets();
+}
+
 function renderCategoryFixBanner() {
   const bar = document.getElementById("ticketCategoryFix");
   if (!bar) return;
@@ -7434,7 +7482,6 @@ function renderTicketDetail() {
     <div class="ticket-actions">
       ${!people.length ? `<button type="button" class="ticket-action-btn claim" id="tdClaim">Claim</button>` : ""}
       <button type="button" class="ticket-action-btn ask" id="tdAskBtn">Ask a Question</button>
-      <button type="button" class="ticket-action-btn convert" id="tdProject">→ Project</button>
       <button type="button" class="ticket-action-btn claim" id="tdComplete">Complete</button>
     </div>
 
@@ -7501,7 +7548,7 @@ function renderTicketDetail() {
           <div class="tkt-field-value" style="color:${t.Category ? catColor(t.Category) : "var(--dim)"}">${t.Category || "None"}</div>
         </div>
         <div class="tkt-strip-cell tkt-strip-grow">
-          <div class="tkt-field-label">Project</div>
+          <div class="tkt-field-label">Housed In</div>
           <select id="tdProjectSelect" class="tkt-inline-select"></select>
         </div>
       </div>
@@ -7559,10 +7606,6 @@ function renderTicketDetail() {
   const claimBtn = body.querySelector("#tdClaim");
   if (claimBtn) claimBtn.addEventListener("click", () => claimTicket(t.TicketID));
 
-  body.querySelector("#tdProject").addEventListener("click", () => {
-    closeTicketDetail();
-    convertTicketToProject(t.TicketID);
-  });
   body.querySelector("#tdComplete").addEventListener("click", () => {
     closeTicketDetail();
     completeTicket(t.TicketID);
@@ -8670,37 +8713,6 @@ function convertTicketToTask(ticketId) {
   updateNewTaskFieldsVisibility();
   convertingTicketId = ticketId;
   openEntryModal();
-}
-
-async function convertTicketToProject(ticketId) {
-  const t = tickets.find(x => x.TicketID === ticketId);
-  if (!t) return;
-  const category = t.Category || selectedCategory;
-  const projectId = "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  const createdDate = dateToStr(new Date());
-  const newProject = {
-    ProjectID: projectId,
-    ProjectName: t.Title,
-    Category: category,
-    Status: "Active",
-    Notes: "",
-    CreatedBy: selectedEmployee,
-    CreatedDate: createdDate,
-  };
-  projects.push(newProject);
-
-  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
-    try {
-      await fetch(APPS_SCRIPT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "createProject", projectId, projectName: t.Title, category, status: "Active", notes: "", createdBy: selectedEmployee, createdDate }),
-      });
-    } catch (err) {}
-  }
-
-  await markTicketConverted(ticketId, "Project", projectId);
-  renderAll();
 }
 
 function renderOverview() {
