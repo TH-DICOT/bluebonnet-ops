@@ -747,6 +747,18 @@ details.instructions-card > summary:hover { color: var(--text); }
   pointer-events: auto;
 }
 .build-stamp:hover { opacity: 1; }
+.inline-fix-btn {
+  margin-left: 10px;
+  background: #63bcbc;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  color: #050F23;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
 .sheet-warning {
   margin: 14px 0 0;
   padding: 12px 16px;
@@ -2405,7 +2417,7 @@ td.muted { color: var(--muted); }
     </div>
   </div>
 
-  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 27, 2026 · 15:31</div>
+  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 27, 2026 · 17:30</div>
   <div id="sheetWarning" class="sheet-warning" style="display:none;"></div>
   <div id="renderWarning" class="sheet-warning" style="display:none;"></div>
   <div id="columnWarning" class="sheet-warning" style="display:none;"></div>
@@ -2945,6 +2957,7 @@ td.muted { color: var(--muted); }
       <button type="button" class="filter-pill" id="ticketsClearFiltersPill">Clear</button>
     </div>
 
+    <div id="ticketCategoryFix" class="sheet-warning" style="display:none;"></div>
     <div id="ticketAlerts"></div>
     <div class="ticket-board" id="ticketBoard"></div>
 
@@ -5391,15 +5404,74 @@ function buildCategoryCard(cat, catProjects, slot) {
   return card;
 }
 
+// Some tickets ended up with a project name in the Category field (e.g. a
+// ticket tagged "WorkProud", which is a project, not a category). This finds
+// them, moves the project name into the Project field, and gives the ticket
+// the project's real category — so it groups where it belongs. Runs on demand
+// from the amber banner, not automatically.
+function findMiscategorizedTickets() {
+  const categoryKeys = new Set(CATEGORIES.map(c => c.key));
+  return tickets.filter(t => {
+    const cat = String(t.Category || "").trim();
+    if (!cat || categoryKeys.has(cat)) return false;
+    // Only offer to fix it if that category name matches a real project.
+    return projects.some(p => p.ProjectName.toLowerCase() === cat.toLowerCase());
+  });
+}
+
+async function cleanUpMiscategorizedTickets() {
+  const stray = findMiscategorizedTickets();
+  if (!stray.length) return;
+
+  const summary = stray
+    .map(t => {
+      const proj = projects.find(p => p.ProjectName.toLowerCase() === String(t.Category).toLowerCase());
+      return `• ${ticketKeyOf(t)} "${t.Title}" → project ${proj.ProjectName}, category ${proj.Category || "none"}`;
+    })
+    .join("\n");
+
+  if (!confirm(`Fix ${stray.length} ticket${stray.length === 1 ? "" : "s"} that use a project name as their category?\n\n${summary}\n\nThis moves the project into the Project field and sets the real category.`)) return;
+
+  for (const t of stray) {
+    const proj = projects.find(p => p.ProjectName.toLowerCase() === String(t.Category).toLowerCase());
+    if (!proj) continue;
+    t.ProjectID = proj.ProjectID;
+    t.Category = proj.Category || "";
+    t.LastUpdated = nowTimestampLocal();
+
+    if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+      try {
+        await fetch(APPS_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "updateTicket", ticketId: t.TicketID, category: t.Category }),
+        });
+        await fetch(APPS_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "updateTicketProject", ticketId: t.TicketID, projectId: t.ProjectID }),
+        });
+      } catch (err) {}
+    }
+    await new Promise(r => setTimeout(r, 12));
+  }
+  renderAll();
+}
+
 // Sends you to the ticket queue already filtered to one category.
 function jumpToTicketsForCategory(category) {
   ticketFilterCategory = category;
   const sel = document.getElementById("ticketFilterCategory");
   if (sel) {
     sel.dataset.built = "1";
+    // Include the jumped-to category even if it's an orphan not in the master
+    // list — otherwise the dropdown can't represent the filter we just set and
+    // the board looks empty despite the counter promising tickets.
+    const keys = CATEGORIES.map(c => c.key);
+    if (category && !keys.includes(category)) keys.push(category);
     sel.innerHTML =
       `<option value="">Any category</option>` +
-      CATEGORIES.map(c => `<option value="${c.key}" ${c.key === category ? "selected" : ""}>${c.key}</option>`).join("");
+      keys.map(c => `<option value="${c}" ${c === category ? "selected" : ""}>${c}</option>`).join("");
   }
   const tab = document.querySelector('.top-tab-item[data-view="tickets"]');
   switchView("view-tickets", tab);
@@ -7129,6 +7201,7 @@ function renderTickets() {
 
   refreshTicketFilterOptions();
   renderTicketAlerts();
+  renderCategoryFixBanner();
 
   // Closed tickets are done with — they live in the history list, not on the
   // board taking up a column.
@@ -7190,6 +7263,25 @@ function renderTickets() {
   if (openTicketDetailId) renderTicketDetail();
 }
 
+// Offers a one-click fix when tickets are tagged with a project name instead
+// of a category.
+function renderCategoryFixBanner() {
+  const bar = document.getElementById("ticketCategoryFix");
+  if (!bar) return;
+  const stray = findMiscategorizedTickets();
+  if (!stray.length) {
+    bar.style.display = "none";
+    return;
+  }
+  bar.style.display = "block";
+  bar.innerHTML =
+    `<strong>${stray.length} ticket${stray.length === 1 ? "" : "s"} use a project name as the category.</strong> ` +
+    `They'd group better with the project moved into the Project field. ` +
+    `<button type="button" id="fixCategoriesBtn" class="inline-fix-btn">Fix them</button>`;
+  const btn = document.getElementById("fixCategoriesBtn");
+  if (btn) btn.addEventListener("click", cleanUpMiscategorizedTickets);
+}
+
 // Two things you'd otherwise have to go hunting for: questions sitting on
 // you, and answers that came back to you while you were elsewhere.
 function renderTicketAlerts() {
@@ -7243,11 +7335,18 @@ function refreshTicketFilterOptions() {
       EMPLOYEES.map(e => `<option value="${e.name}">${e.name}</option>`).join("");
   }
   const cSel = document.getElementById("ticketFilterCategory");
-  if (cSel && cSel.dataset.built !== "1") {
-    cSel.dataset.built = "1";
+  if (cSel) {
+    // Build from the categories that actually appear on tickets, plus the
+    // master list — so an orphan category like an old project name still
+    // filters, and the dropdown can never disagree with the counter.
+    const keys = CATEGORIES.map(c => c.key);
+    tickets.forEach(t => {
+      if (t.Category && !keys.includes(t.Category)) keys.push(t.Category);
+    });
+    const current = cSel.value || ticketFilterCategory || "";
     cSel.innerHTML =
       `<option value="">Any category</option>` +
-      CATEGORIES.map(c => `<option value="${c.key}">${c.key}</option>`).join("");
+      keys.map(c => `<option value="${c}" ${c === current ? "selected" : ""}>${c}</option>`).join("");
   }
 }
 
