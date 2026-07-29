@@ -2417,7 +2417,7 @@ td.muted { color: var(--muted); }
     </div>
   </div>
 
-  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 27, 2026 · 21:19</div>
+  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 29, 2026 · 18:36</div>
   <div id="sheetWarning" class="sheet-warning" style="display:none;"></div>
   <div id="renderWarning" class="sheet-warning" style="display:none;"></div>
   <div id="columnWarning" class="sheet-warning" style="display:none;"></div>
@@ -7696,11 +7696,12 @@ function renderTicketDetail() {
       <button type="button" class="submit-btn" id="tdSave" style="max-width:200px; margin:0;">Save Changes</button>
     </div>
 
-    ${stepsFor(t.TicketID).length ? "" : `
     <div class="tkt-danger">
-      <div class="tkt-danger-text">Raised this by mistake? Nothing's been worked on it yet, so it can be removed cleanly.</div>
+      <div class="tkt-danger-text">${stepsFor(t.TicketID).length
+        ? "Deleting removes this ticket and its steps, comments and history for everyone. This can't be undone."
+        : "Raised this by mistake? Nothing's been worked on it yet, so it can be removed cleanly."}</div>
       <button type="button" class="todo-delete-btn" id="tdDelete">Delete Ticket</button>
-    </div>`}
+    </div>
   `;
 
   // Status buttons, including Closed which takes it off the board entirely
@@ -8256,16 +8257,22 @@ async function setStepState(commentId, state) {
 async function deleteTicket(ticketId) {
   const t = tickets.find(x => x.TicketID === ticketId);
   if (!t) return;
-  if (stepsFor(ticketId).length) {
-    alert("This ticket has steps on it now, so it can't be deleted. Close it instead if it's not needed.");
-    return;
-  }
-  const notes = commentsFor(ticketId).length;
-  const warning =
-    `Delete ${ticketKeyOf(t)} "${t.Title}"?` +
-    (notes ? ` Its ${notes} comment${notes === 1 ? "" : "s"} go with it.` : "") +
-    ` This can't be undone. If real work happened here, close it instead.`;
-  if (!confirm(warning)) return;
+
+  const stepCount = stepsFor(ticketId).length;
+  const noteCount = commentsFor(ticketId).length;
+
+  // Any ticket can be deleted, but the more that's on it, the more the prompt
+  // spells out what's about to vanish — and a ticket with real work asks twice.
+  const bits = [];
+  if (stepCount) bits.push(`${stepCount} step${stepCount === 1 ? "" : "s"}`);
+  if (noteCount) bits.push(`${noteCount} comment${noteCount === 1 ? "" : "s"}`);
+  const tail = bits.length ? ` Its ${bits.join(" and ")} go with it.` : "";
+
+  if (!confirm(`Delete ${ticketKeyOf(t)} "${t.Title}"?${tail} This can't be undone.`)) return;
+
+  // A ticket with steps has had real work on it — confirm once more so it's
+  // never a single stray click.
+  if (stepCount && !confirm(`Really delete ${ticketKeyOf(t)}? Everything on it is removed for the whole team.`)) return;
 
   tickets = tickets.filter(x => x.TicketID !== ticketId);
   comments = comments.filter(c => String(c.TicketID) !== String(ticketId));
