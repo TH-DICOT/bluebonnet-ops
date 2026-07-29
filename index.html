@@ -2417,7 +2417,7 @@ td.muted { color: var(--muted); }
     </div>
   </div>
 
-  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 29, 2026 · 18:36</div>
+  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 29, 2026 · 18:52</div>
   <div id="sheetWarning" class="sheet-warning" style="display:none;"></div>
   <div id="renderWarning" class="sheet-warning" style="display:none;"></div>
   <div id="columnWarning" class="sheet-warning" style="display:none;"></div>
@@ -6268,6 +6268,7 @@ function buildToDoCard(t) {
         <div class="todo-card-preview">Lands as: “${preview}”${stepCount ? ` · ${stepCount} step${stepCount === 1 ? "" : "s"}` : ""}</div>
       </div>
       <div class="todo-card-actions">
+        <button type="button" class="todo-pause-btn todo-generate-btn">Generate now</button>
         <button type="button" class="todo-pause-btn todo-edit-btn" id="toDoEditBtn-${t.ToDoID}">Edit</button>
         <button type="button" class="todo-pause-btn todo-dupe-btn">Duplicate</button>
         <button type="button" class="todo-pause-btn todo-resume-btn">${pauseLabel}</button>
@@ -6390,6 +6391,7 @@ function buildToDoCard(t) {
   assigneeChecklist.innerHTML = buildAssigneeChecklistHtml(parseAssignees(t.Assignee));
 
   wrap.querySelector(".todo-dupe-btn").addEventListener("click", () => duplicateToDo(t.ToDoID));
+  wrap.querySelector(".todo-generate-btn").addEventListener("click", () => generateToDoNow(t.ToDoID));
 
   wrap.querySelector(".todo-edit-save-btn").addEventListener("click", () => {
     const newName = wrap.querySelector(".todo-edit-name").value.trim();
@@ -6427,6 +6429,70 @@ function buildToDoCard(t) {
   });
 
   return wrap;
+}
+
+// Force a recurring item to drop its ticket for the current period right now,
+// regardless of whether its scheduled day has arrived. For the "it's the 29th
+// but the item fires on the 25th and I want August's tickets showing today"
+// case — after this, normal scheduling carries on untouched.
+async function generateToDoNow(toDoId) {
+  const t = todos.find(x => x.ToDoID === toDoId);
+  if (!t) return;
+
+  const now = new Date();
+  const weekly = isWeekly(t);
+  const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const currentPeriod = weekly ? isoWeekKey(now) : currentMonthStr;
+  const title = stampedTitle(t, now);
+
+  // Don't create a second copy if this period's ticket is already out there.
+  const already = tickets.some(existing =>
+    existing.Title === title && String(existing.ProjectID || "") === String(t.ProjectID || "")
+  ) || monthKey(t.LastGeneratedMonth) === currentPeriod;
+  if (already) {
+    alert(`"${title}" is already in the ticket queue for this period.`);
+    return;
+  }
+
+  if (!confirm(`Create "${title}" now?\n\nIts normal schedule (${recurrenceLabel(t)}) keeps running after this.`)) return;
+
+  const assignee = t.Assignee || t.CreatedBy;
+  const todayStr = dateToStr(now);
+  const ticketId = "tk" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  tickets.push({
+    TicketID: ticketId, Title: title, Category: t.Category, Priority: "",
+    Assignee: assignee, Status: "Open", Notes: "", LastUpdated: "",
+    ConvertedType: "", ConvertedID: "", CreatedBy: t.CreatedBy, CreatedDate: todayStr,
+    ExternalName: "", ExternalEmail: "", ProjectID: t.ProjectID || "",
+  });
+  t.LastGeneratedMonth = currentPeriod;
+  renderAll();
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "createTicket", ticketId, title, category: t.Category,
+          priority: "", assignee, notes: "", createdBy: t.CreatedBy, createdDate: todayStr,
+          externalName: "", externalEmail: "", projectId: t.ProjectID || "",
+        }),
+      });
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "markToDoGenerated", toDoId: t.ToDoID, lastGeneratedMonth: currentPeriod }),
+      });
+    } catch (err) {}
+  }
+
+  // Its checklist, owners and all.
+  for (const step of parseStepList(t.Steps)) {
+    await addTicketStep(ticketId, step.body, step.assignee);
+    await new Promise(r => setTimeout(r, 12));
+  }
+  renderAll();
 }
 
 // Copies a recurring item so it can be reused for a different market with one
