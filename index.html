@@ -2417,7 +2417,7 @@ td.muted { color: var(--muted); }
     </div>
   </div>
 
-  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 29, 2026 · 18:52</div>
+  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 29, 2026 · 19:29</div>
   <div id="sheetWarning" class="sheet-warning" style="display:none;"></div>
   <div id="renderWarning" class="sheet-warning" style="display:none;"></div>
   <div id="columnWarning" class="sheet-warning" style="display:none;"></div>
@@ -7078,6 +7078,11 @@ function ticketStatus(t) {
   const raw = String(t.Status || "").trim();
   if (raw === "Open" || raw === "") return "To Do";
   if (raw === "Completed") return "Done";
+  // "Converted" is a leftover from the old convert-to-task/project feature —
+  // it meant the ticket had been finished off into something else. Treat it as
+  // Done so those tickets show as complete instead of vanishing off a board
+  // that has no Converted band.
+  if (raw === "Converted") return "Done";
   // Anything already parked in the old "Blocked" column reads as Waiting, so
   // nothing in the Sheet needs editing by hand.
   if (raw === "Blocked") return "Waiting";
