@@ -1069,6 +1069,9 @@ details.instructions-card > summary:hover { color: var(--text); }
   color: var(--muted);
 }
 .ticket-col-dot { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+.ticket-col-toggle { cursor: pointer; user-select: none; }
+.ticket-col-toggle:hover { color: var(--text); }
+.ticket-col-caret { margin-left: 8px; font-size: 11px; color: var(--dim); }
 .ticket-col-count {
   margin-left: auto;
   color: var(--dim);
@@ -2417,7 +2420,7 @@ td.muted { color: var(--muted); }
     </div>
   </div>
 
-  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 29, 2026 · 19:29</div>
+  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 29, 2026 · 19:42</div>
   <div id="sheetWarning" class="sheet-warning" style="display:none;"></div>
   <div id="renderWarning" class="sheet-warning" style="display:none;"></div>
   <div id="columnWarning" class="sheet-warning" style="display:none;"></div>
@@ -6748,6 +6751,7 @@ function getMyTickets() {
 }
 
 let ticketsShowMineOnly = false;
+let ticketDoneCollapsed = true; // Done starts folded so live work sits up top
 let boardShowMineOnly = false;
 
 /* =========================================================
@@ -7424,25 +7428,40 @@ function renderTickets() {
   TICKET_STATUSES.forEach(col => {
     const inCol = sortTickets(live.filter(t => ticketStatus(t) === col.key));
 
+    // Done accumulates finished work and pushes the live bands down, so it's
+    // collapsible — and starts collapsed. The others always show.
+    const collapsible = col.key === "Done";
+    const collapsed = collapsible && ticketDoneCollapsed;
+
     const el = document.createElement("div");
     el.className = "ticket-col";
     el.dataset.status = col.key;
     el.style.setProperty("--col", col.hex);
     el.innerHTML = `
-      <div class="ticket-col-head">
+      <div class="ticket-col-head${collapsible ? " ticket-col-toggle" : ""}">
         <span class="ticket-col-dot" style="background:${col.hex}"></span>
         ${col.key}
         <span class="ticket-col-count">${inCol.length}</span>
+        ${collapsible ? `<span class="ticket-col-caret">${collapsed ? "▸" : "▾"}</span>` : ""}
       </div>
     `;
 
-    if (!inCol.length) {
-      const empty = document.createElement("div");
-      empty.className = "ticket-col-empty";
-      empty.textContent = "Nothing here.";
-      el.appendChild(empty);
-    } else {
-      inCol.forEach(t => el.appendChild(buildTicketTile(t)));
+    if (collapsible) {
+      el.querySelector(".ticket-col-head").addEventListener("click", () => {
+        ticketDoneCollapsed = !ticketDoneCollapsed;
+        renderTickets();
+      });
+    }
+
+    if (!collapsed) {
+      if (!inCol.length) {
+        const empty = document.createElement("div");
+        empty.className = "ticket-col-empty";
+        empty.textContent = "Nothing here.";
+        el.appendChild(empty);
+      } else {
+        inCol.forEach(t => el.appendChild(buildTicketTile(t)));
+      }
     }
 
     el.addEventListener("dragover", e => {
@@ -7455,6 +7474,9 @@ function renderTickets() {
       el.classList.remove("drag-over");
       const payload = e.dataTransfer.getData("text/plain");
       if (!payload.startsWith("tkt:")) return;
+      // Dropping onto a collapsed Done band still marks it done, and opens it
+      // so you see where the ticket landed.
+      if (col.key === "Done" && ticketDoneCollapsed) ticketDoneCollapsed = false;
       moveTicketToStatus(payload.slice(4), col.key);
     });
 
