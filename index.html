@@ -386,6 +386,20 @@ details.instructions-card > summary:hover { color: var(--text); }
 .form-section:last-child { margin-bottom: 0; }
 
 
+.cat-readout-select {
+  border: none;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  font-family: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+  text-align: center;
+}
+.cat-readout-select:hover { filter: brightness(1.08); }
 .cat-readout {
   display: flex;
   align-items: center;
@@ -1461,6 +1475,78 @@ details.instructions-card > summary:hover { color: var(--text); }
   color: #C9A24D;
 }
 .ticket-action-btn.ask:hover { background: #C9A24D; color: #050F23; }
+
+.big-proj-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+}
+.big-proj-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.big-proj-titlewrap { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; min-width: 0; flex: 1; }
+.big-proj-caret { font-size: 13px; color: var(--dim); margin-top: 2px; flex-shrink: 0; user-select: none; }
+.big-proj-titlewrap:hover .big-proj-caret { color: var(--text); }
+.big-proj-folder { font-size: 12px; color: var(--dim); margin-bottom: 3px; }
+.big-proj-title { font-size: 18px; font-weight: 700; color: var(--text); }
+.big-proj-head-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.big-proj-status {
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+  border-radius: 6px; padding: 6px 10px; color: var(--text);
+  font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.big-proj-progress { display: flex; align-items: center; gap: 12px; margin: 16px 0 18px; }
+.big-proj-bar { flex: 1; height: 6px; background: rgba(255,255,255,0.08); border-radius: 20px; overflow: hidden; }
+.big-proj-fill { height: 100%; border-radius: 20px; }
+.big-proj-count { font-size: 13px; color: var(--dim); white-space: nowrap; }
+
+.big-proj-phases { display: flex; flex-direction: column; gap: 8px; }
+.phase-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: 8px;
+}
+.phase-row.phase-next { border-color: #378ADD; background: rgba(55,138,221,0.10); }
+.phase-check {
+  width: 22px; height: 22px; flex-shrink: 0;
+  border-radius: 6px; border: 2px solid #5A6A8F;
+  background: rgba(255,255,255,0.04);
+  color: #050F23; font-size: 13px; font-weight: 800; line-height: 1;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.phase-check:hover { border-color: #1D9E75; }
+.phase-row.phase-done .phase-check { background: #1D9E75; border-color: #1D9E75; }
+.phase-row.phase-done .phase-name { text-decoration: line-through; color: var(--dim); }
+.phase-body { flex: 1; min-width: 0; }
+.phase-name { font-size: 14px; color: var(--text); }
+.phase-meta { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.phase-owner {
+  width: 18px; height: 18px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 8px; font-weight: 800; color: #050F23;
+}
+.phase-state { font-size: 11px; color: var(--dim); }
+.phase-due { font-size: 12px; color: var(--dim); white-space: nowrap; flex-shrink: 0; }
+.phase-due.phase-soon { color: #C9A24D; font-weight: 700; }
+.phase-due.phase-overdue { color: #D95C84; font-weight: 700; }
+.phase-edit {
+  background: none; border: none; color: var(--dim);
+  font-size: 14px; cursor: pointer; padding: 0 4px; flex-shrink: 0;
+}
+.phase-edit:hover { color: #63bcbc; }
+.big-proj-actions { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+.phase-add-btn {
+  background: transparent; border: 1px dashed var(--border); color: var(--dim);
+  border-radius: 6px; padding: 8px 14px; font-family: inherit; font-size: 12px;
+  font-weight: 700; cursor: pointer;
+}
+.phase-add-btn:hover { border-color: #63bcbc; color: #63bcbc; }
+.big-proj-del {
+  margin-left: auto; background: none; border: none; color: var(--dim);
+  font-size: 12px; cursor: pointer;
+}
+.big-proj-del:hover { color: #D95C84; }
+
 .tkt-savebar {
   display: flex;
   align-items: center;
@@ -2420,14 +2506,15 @@ td.muted { color: var(--muted); }
     </div>
   </div>
 
-  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 29, 2026 · 19:42</div>
+  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 30, 2026 · 21:07</div>
   <div id="sheetWarning" class="sheet-warning" style="display:none;"></div>
   <div id="renderWarning" class="sheet-warning" style="display:none;"></div>
   <div id="columnWarning" class="sheet-warning" style="display:none;"></div>
 
   <div class="top-tabs">
     <button type="button" class="top-tab-item active" data-view="tickets">🎫 Tickets</button>
-    <button type="button" class="top-tab-item" data-view="board">📌 Project Bulletin Board</button>
+    <button type="button" class="top-tab-item" data-view="board">📁 Folders</button>
+    <button type="button" class="top-tab-item" data-view="projects">📋 Projects</button>
     <button type="button" class="top-tab-item" data-view="log">📅 My Calendar</button>
     <button type="button" class="top-tab-item" data-view="todos">🔁 Recurring Items</button>
     <button type="button" class="top-tab-item" id="dataTabBtn" data-view="overview" style="display:none;">📊 Data</button>
@@ -2450,12 +2537,12 @@ td.muted { color: var(--muted); }
 
     <div class="section-label" style="margin-top:28px;">Your Views (tabs, above)</div>
     <div class="todo-card"><div><div class="todo-card-name">My Calendar</div><div class="todo-card-meta">Log time, see your day on the calendar, and view every task assigned to you or anyone else on the team.</div></div></div>
-    <div class="todo-card"><div><div class="todo-card-name">My Project Board</div><div class="todo-card-meta">Only the projects you're actually involved in — created by you, or with a task assigned to you.</div></div></div>
+    <div class="todo-card"><div><div class="todo-card-name">My Folder Board</div><div class="todo-card-meta">Only the folders you're actually involved in — created by you, or with a task assigned to you.</div></div></div>
     <div class="todo-card"><div><div class="todo-card-name">My Tickets</div><div class="todo-card-meta">Tickets assigned to you or that you created. You can add a new one right from here.</div></div></div>
 
     <div class="section-label" style="margin-top:28px;">Team Views (top row)</div>
-    <div class="todo-card"><div><div class="todo-card-name">Team Project Board</div><div class="todo-card-meta">Every project on the team, filterable by status. Open one to see and edit its tasks.</div></div></div>
-    <div class="todo-card"><div><div class="todo-card-name">Tickets</div><div class="todo-card-meta">The full open-ticket queue — claim one, or convert it into a real Task or Project.</div></div></div>
+    <div class="todo-card"><div><div class="todo-card-name">Team Folder Board</div><div class="todo-card-meta">Every folder on the team, filterable by status. Open one to see and edit its tasks.</div></div></div>
+    <div class="todo-card"><div><div class="todo-card-name">Tickets</div><div class="todo-card-meta">The full open-ticket queue — claim one to work it.</div></div></div>
     <div class="todo-card"><div><div class="todo-card-name">Recurring Items</div><div class="todo-card-meta">Set up something once (like "Birthday cards — El Paso"), and it spawns a real task automatically each month.</div></div></div>
     <div class="todo-card"><div><div class="todo-card-name">Data</div><div class="todo-card-meta">Team-wide stats, plus a breakdown by employee and by category. Only visible after entering Maintenance Access.</div></div></div>
   </div>
@@ -2514,28 +2601,28 @@ td.muted { color: var(--muted); }
 
         <div class="task-col">
           <div class="form-section form-section-project">
-            <div class="section-label" style="margin-top:0;">Project</div>
+            <div class="section-label" style="margin-top:0;">Folder</div>
             <div class="yesno-picker">
               <button type="button" class="yesno-btn" id="projYesBtn">Yes</button>
               <button type="button" class="yesno-btn" id="projNoBtn" data-active="true">No</button>
             </div>
             <div id="projectFields" style="display:none; margin-top:14px;">
               <div class="field">
-                <label>Existing Project</label>
+                <label>Existing Folder</label>
                 <div class="project-tile-grid" id="fProjectTiles"></div>
               </div>
-              <button type="button" class="new-project-toggle-btn" id="newProjectToggleBtn">+ Create New Project</button>
+              <button type="button" class="new-project-toggle-btn" id="newProjectToggleBtn">+ Create New Folder</button>
               <div id="newProjectInlineFields" style="display:none; margin-top:14px;">
                 <div class="field">
-                  <label>New Project Name</label>
-                  <input type="text" id="fProjectName" placeholder="e.g. Radiologist Requisition" />
+                  <label>New Folder Name</label>
+                  <input type="text" id="fProjectName" placeholder="e.g. Recruiting" />
                 </div>
                 <div class="field">
                   <label>Sits Inside <span class="field-hint">(optional — nest it in a bigger bucket)</span></label>
                   <select id="fProjectParent"></select>
                 </div>
                 <div class="field">
-                  <label>Project Notes <span class="field-hint">(for a new project)</span></label>
+                  <label>Folder Notes <span class="field-hint">(for a new folder)</span></label>
                   <textarea id="fProjectNotes" class="notes-textarea" placeholder="Any context worth saving..."></textarea>
                 </div>
               </div>
@@ -2695,7 +2782,7 @@ td.muted { color: var(--muted); }
       </div>
     </div>
 
-    <div class="section-label" style="margin-top:32px;">My Tasks <span style="text-transform:none; letter-spacing:0; color:var(--dim); font-weight:500;">(grouped by project — drag a task into one to reassign it)</span></div>
+    <div class="section-label" style="margin-top:32px;">My Tasks <span style="text-transform:none; letter-spacing:0; color:var(--dim); font-weight:500;">(grouped by folder — drag a task into one to reassign it)</span></div>
     <div id="myTasksList"></div>
 
     <div class="section-label" style="margin-top:28px;">Active Tasks · Everyone Else</div>
@@ -2711,7 +2798,7 @@ td.muted { color: var(--muted); }
 
     <details class="instructions-card">
       <summary>How this works</summary>
-      <div class="instructions-body"> Set something up once with a name, a category, and a day of the month. On its day — a day of the month, or a day of the week — it drops into the ticket queue automatically. You can file it inside a project or sub-project. When someone completes that ticket, it turns into a task with the time logged against it.</div>
+      <div class="instructions-body"> Set something up once with a name, a category, and a day of the month. On its day — a day of the month, or a day of the week — it drops into the ticket queue automatically. You can file it inside a folder or sub-folder. When someone completes that ticket, it turns into a task with the time logged against it.</div>
     </details>
 
     <button class="submit-btn create-btn" id="newToDoBtn" style="max-width:340px;">+ Schedule a Recurring Ticket</button>
@@ -2770,7 +2857,7 @@ td.muted { color: var(--muted); }
               <select id="ntdCategory"></select>
             </div>
             <div class="field">
-              <label>Project <span class="field-hint">(optional)</span></label>
+              <label>Folder <span class="field-hint">(optional)</span></label>
               <select id="ntdProject"></select>
             </div>
             <div class="field" style="margin-bottom:0;">
@@ -2813,7 +2900,7 @@ td.muted { color: var(--muted); }
         <li><span class="how-dot" style="background:#5A6A8F"></span><strong>To Do</strong> — not started.</li>
         <li><span class="how-dot" style="background:#63bcbc"></span><strong>In Progress</strong> — someone's on it.</li>
         <li><span class="how-dot" style="background:#C9A24D"></span><strong>Waiting</strong> — stuck until someone else comes back.</li>
-        <li><span class="how-dot" style="background:#1D9E75"></span><strong>Done</strong> — finished. Asks for time and a project, then files it as real work.</li>
+        <li><span class="how-dot" style="background:#1D9E75"></span><strong>Done</strong> — finished. Asks for time and a folder, then files it as real work.</li>
       </ul>
       Click a ticket for its fields, files, steps and conversation.
       <ul class="how-list">
@@ -2900,7 +2987,7 @@ td.muted { color: var(--muted); }
               </select>
             </div>
             <div class="field">
-              <label>Project <span class="field-hint">(optional)</span></label>
+              <label>Folder <span class="field-hint">(optional)</span></label>
               <select id="ntkProject"></select>
             </div>
             <div class="field" style="margin-bottom:0;">
@@ -2984,12 +3071,12 @@ td.muted { color: var(--muted); }
           <div class="todo-card-name" id="completeTicketTitle" style="margin-bottom:4px;"></div>
           <div class="rollup-note">This becomes a completed task, and the time below gets logged against it.</div>
           <div class="field">
-            <label>Goes Into <span class="field-hint">(every completed ticket lands in a project)</span></label>
+            <label>Goes Into <span class="field-hint">(every completed ticket lands in a folder)</span></label>
             <select id="completeTicketProject"></select>
           </div>
           <div id="completeTicketNewProjectFields" style="display:none;">
             <div class="field">
-              <label>New Project Name</label>
+              <label>New Folder Name</label>
               <input type="text" id="completeTicketNewProjectName" placeholder="e.g. Radiologist Requisition" />
             </div>
             <div class="field">
@@ -3072,7 +3159,7 @@ td.muted { color: var(--muted); }
                 </select>
               </div>
               <div class="field">
-                <label>Project <span class="field-hint">(optional)</span></label>
+                <label>Folder <span class="field-hint">(optional)</span></label>
                 <select id="tplProject"></select>
               </div>
               <div class="field" style="margin-bottom:0;">
@@ -3101,15 +3188,15 @@ td.muted { color: var(--muted); }
   <!-- KANBAN BOARD VIEW -->
   <div class="view" id="view-board">
     <header>
-      <h1>Project Bulletin Board</h1>
-      <div class="page-eyebrow">Every Category, Every Project, One Wall</div>
+      <h1>Folders</h1>
+      <div class="page-eyebrow">Every Category, Every Folder, One Wall</div>
     </header>
 
-    <button class="submit-btn create-btn" id="newBoardProjectBtn" style="max-width:220px;">+ New Project</button>
+    <button class="submit-btn create-btn" id="newBoardProjectBtn" style="max-width:220px;">+ New Folder</button>
 
     <div class="entry-card" id="newBoardProjectForm" style="display:none; max-width:560px; margin-top:16px;">
       <div class="field">
-        <label>Project Name</label>
+        <label>Folder Name</label>
         <input type="text" id="bpName" placeholder="e.g. Radiologist Requisition" />
       </div>
       <div class="field">
@@ -3120,7 +3207,7 @@ td.muted { color: var(--muted); }
         <label>Notes <span class="field-hint">(optional)</span></label>
         <textarea id="bpNotes" class="notes-textarea" placeholder="Any context worth saving..."></textarea>
       </div>
-      <button class="submit-btn" id="bpCreateBtn">Create Project</button>
+      <button class="submit-btn" id="bpCreateBtn">Create Folder</button>
     </div>
 
     <div class="board-filter-row" id="boardFilterRow" style="margin-top:20px;">
@@ -3142,6 +3229,22 @@ td.muted { color: var(--muted); }
         <div class="todoist-detail" id="projectDetailPanel"></div>
       </div>
     </div>
+  </div>
+
+
+  <!-- PROJECTS (milestone-driven) VIEW -->
+  <div class="view" id="view-projects">
+    <header>
+      <h1>Projects</h1>
+      <div class="page-eyebrow">Longer-term efforts, phase by phase</div>
+    </header>
+    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+      <button type="button" class="submit-btn create-btn" id="newBigProjectBtn" style="max-width:220px; margin:0;">+ New Project</button>
+      <button type="button" class="filter-pill" id="collapseAllProjects">Collapse all</button>
+      <button type="button" class="filter-pill" id="expandAllProjects">Expand all</button>
+    </div>
+    <div id="bigProjectBlankBar" class="sheet-warning" style="display:none; margin-top:14px;"></div>
+    <div id="bigProjectList" style="margin-top:20px;"></div>
   </div>
 
 
@@ -3390,6 +3493,9 @@ const BOSS_SESSION_MINUTES = 120; // how long access stays unlocked before it as
 
 let projects = [];       // one row per project: ProjectID, ProjectName, Category, Status, CreatedBy, CreatedDate
 let ticketTemplates = []; // shared library: TemplateID, Name, Description, TitlePattern, Category, Priority, Assignee, ProjectID, Steps, ...
+let bigProjects = [];   // real Projects: ProjectID, Title, FolderID, Status, Owner, Notes, CreatedBy, CreatedDate
+let projectPhases = []; // milestones: PhaseID, ProjectID, Name, Status, Owner, DueDate, SortOrder
+let collapsedProjects = new Set(); // ProjectIDs whose phase list is folded away
 let comments = [];      // ticket comment thread: CommentID, TicketID, Author, Body, CreatedAt
 let attachments = [];   // uploaded files: AttachmentID, ParentType, ParentID, FileName, FileURL, FileID, UploadedBy, UploadedDate
 let todos = [];          // recurring templates: ToDoID, ToDoName, Category, ProjectID, DayOfMonth, Status, LastGeneratedMonth, CreatedBy, CreatedDate
@@ -3570,6 +3676,15 @@ function init() {
   updateStarState();
 
   document.getElementById("bpCategory").innerHTML = CATEGORIES.map(c => `<option value="${c.key}">${c.key}</option>`).join("");
+  document.getElementById("newBigProjectBtn").addEventListener("click", createBigProject);
+  document.getElementById("collapseAllProjects").addEventListener("click", () => {
+    bigProjects.forEach(p => collapsedProjects.add(p.ProjectID));
+    renderBigProjects();
+  });
+  document.getElementById("expandAllProjects").addEventListener("click", () => {
+    collapsedProjects.clear();
+    renderBigProjects();
+  });
   document.getElementById("newBoardProjectBtn").addEventListener("click", () => {
     const form = document.getElementById("newBoardProjectForm");
     form.style.display = form.style.display === "none" ? "block" : "none";
@@ -3678,7 +3793,7 @@ function init() {
     const nowOpen = fields.style.display === "none";
     fields.style.display = nowOpen ? "block" : "none";
     btn.dataset.active = nowOpen;
-    btn.textContent = nowOpen ? "− Hide New Project Fields" : "+ Create New Project";
+    btn.textContent = nowOpen ? "− Hide New Folder Fields" : "+ Create New Folder";
   });
 
   document.getElementById("ntdCategory").innerHTML = CATEGORIES.map(c => `<option value="${c.key}">${c.key}</option>`).join("");
@@ -4078,7 +4193,7 @@ function updateProjectSelect() {
   }
 
   if (!openProjects.length) {
-    wrap.innerHTML = `<div class="empty-state" style="padding:6px 0;">No open projects in this category yet.</div>`;
+    wrap.innerHTML = `<div class="empty-state" style="padding:6px 0;">No open folders in this category yet.</div>`;
     return;
   }
 
@@ -4104,8 +4219,20 @@ function updateProjectSelect() {
 function updateCatReadout() {
   const hex = catColor(selectedCategory);
   const textColor = contrastText(hex);
+  // The category is a live dropdown, not a fixed label — so you can switch it
+  // right here instead of backing out to the category screen every time.
   document.getElementById("catReadout").innerHTML =
-    `<span class="dot" style="background:${hex}"></span><span class="cat-badge" style="background:${hex};color:${textColor}">${selectedCategory}</span>`;
+    `<span class="dot" style="background:${hex}"></span>` +
+    `<select id="catReadoutSelect" class="cat-readout-select" style="background:${hex};color:${textColor};">` +
+    CATEGORIES.map(c => `<option value="${c.key}" ${c.key === selectedCategory ? "selected" : ""}>${c.key}</option>`).join("") +
+    `</select>`;
+  const sel = document.getElementById("catReadoutSelect");
+  sel.addEventListener("change", e => {
+    selectedCategory = e.target.value;
+    // Refreshes tasks, favorites, projects and the tint for the new category —
+    // everything on the card that depends on which category you're in.
+    renderCatPicker();
+  });
   updateCategorySectionTint(hex);
 }
 
@@ -4410,6 +4537,7 @@ async function loadTasksAndEvents() {
   const [
     loadedProjects, loadedTasks, loadedEvents, loadedTodos,
     loadedTickets, loadedAttachments, loadedComments, loadedTemplates,
+    loadedBigProjects, loadedPhases,
   ] = await Promise.all([
     fetchSheet("projects"),
     fetchSheet("tasks"),
@@ -4419,6 +4547,8 @@ async function loadTasksAndEvents() {
     fetchSheet("attachments"),
     fetchSheet("comments"),
     fetchSheet("templates"),
+    fetchSheet("bigprojects"),
+    fetchSheet("phases"),
   ]);
 
   // Only overwrite what actually came back, so a hiccup on one sheet doesn't
@@ -4431,6 +4561,8 @@ async function loadTasksAndEvents() {
   if (loadedAttachments) attachments = loadedAttachments;
   if (loadedComments) comments = loadedComments;
   if (loadedTemplates) ticketTemplates = loadedTemplates;
+  if (loadedBigProjects) bigProjects = loadedBigProjects;
+  if (loadedPhases) projectPhases = loadedPhases;
 
   reportMissingSheets({
     Projects: loadedProjects, Tasks: loadedTasks, TaskEvents: loadedEvents,
@@ -4921,7 +5053,7 @@ async function submitEntry() {
     document.getElementById("projectFields").style.display = "none";
     document.getElementById("newProjectInlineFields").style.display = "none";
     document.getElementById("newProjectToggleBtn").dataset.active = "false";
-    document.getElementById("newProjectToggleBtn").textContent = "+ Create New Project";
+    document.getElementById("newProjectToggleBtn").textContent = "+ Create New Folder";
     clearFieldTime("fStart");
     clearFieldTime("fEnd");
     updateDurationPreview();
@@ -4995,6 +5127,7 @@ function renderAll() {
   safeRender("Calendar", renderCalendar);
   safeRender("Recurring Items", renderToDos);
   safeRender("Tickets", renderTickets);
+  safeRender("Projects", renderBigProjects);
   if (typeof renderBossView === "function" && isBossAuthed()) safeRender("Maintenance", renderBossView);
   reportRenderFailures();
 }
@@ -5371,7 +5504,7 @@ function buildCategoryCard(cat, catProjects, slot) {
   card.dataset.empty = catProjects.length === 0;
 
   const taskTotal = catProjects.reduce((n, p) => n + tasksInProject(p.ProjectID, false).length, 0);
-  const projWord = catProjects.length === 1 ? "project" : "projects";
+  const projWord = catProjects.length === 1 ? "folder" : "folders";
   const taskWord = taskTotal === 1 ? "task" : "tasks";
 
   const head = document.createElement("div");
@@ -5500,7 +5633,7 @@ function renderLooseEnds(container) {
   container.className = "loose-note";
   container.innerHTML = `
     <div class="loose-note-title">Unfiled · ${loose.length}</div>
-    <div class="loose-note-hint">Tasks that don't belong to a project yet. Click one to open it, or drag it onto a card to file it.</div>
+    <div class="loose-note-hint">Tasks that don't belong to a folder yet. Click one to open it, or drag it onto a card to file it.</div>
     <div class="loose-chips" id="looseChips"></div>
     <div id="looseDetail"></div>
   `;
@@ -5784,11 +5917,11 @@ function renderProjectDetailPanel(detail) {
       </div>
     </div>
 
-    <div class="ftree-sub">${subProjects.length} sub-project${subProjects.length === 1 ? "" : "s"} · ${ownTasks.length} task${ownTasks.length === 1 ? "" : "s"} here · ${nestedTaskCount} total inside</div>
+    <div class="ftree-sub">${subProjects.length} sub-folder${subProjects.length === 1 ? "" : "s"} · ${ownTasks.length} task${ownTasks.length === 1 ? "" : "s"} here · ${nestedTaskCount} total inside</div>
 
     <div class="todo-edit-panel" id="boardDetailEditPanel" style="display:none;">
       <div class="field">
-        <label>Project Name</label>
+        <label>Folder Name</label>
         <input type="text" id="boardEditName" value="${(p.ProjectName || "").replace(/"/g, "&quot;")}" />
       </div>
       <div class="field">
@@ -5805,7 +5938,7 @@ function renderProjectDetailPanel(detail) {
     <div class="ftree" id="boardTreeWrap"></div>
 
     <div class="ftree-actions">
-      <button type="button" class="new-project-toggle-btn" id="boardDetailAddSubBtn">+ New Sub-Project</button>
+      <button type="button" class="new-project-toggle-btn" id="boardDetailAddSubBtn">+ New Sub-Folder</button>
       <button type="button" class="new-project-toggle-btn" id="boardDetailAddTaskBtn">+ New Task Here</button>
       ${ownTasks.length === 1 && !subProjects.length ? `<button type="button" class="new-project-toggle-btn" id="boardDetailConvertBtn">Convert to a Single Task</button>` : ""}
     </div>
@@ -5817,7 +5950,7 @@ function renderProjectDetailPanel(detail) {
 
   const tree = detail.querySelector("#boardTreeWrap");
   if (!subProjects.length && !ownTasks.length) {
-    tree.innerHTML = `<div class="empty-state" style="padding:14px 0;">This folder is empty. Add a sub-project or a task below.</div>`;
+    tree.innerHTML = `<div class="empty-state" style="padding:14px 0;">This folder is empty. Add a sub-folder or a task below.</div>`;
   } else {
     appendTreeChildren(tree, p.ProjectID, 0);
   }
@@ -6124,7 +6257,7 @@ function buildProjectGroup(project, groupTasks) {
   wrap.innerHTML = `
     <div class="project-group-head" style="color:${color}">
       <span>${isUnassigned ? "Unassigned" : project.ProjectName}</span>
-      ${!isUnassigned ? `<button type="button" class="todo-delete-btn project-delete-btn-inline" style="margin-left:auto;">Delete Project</button>` : ""}
+      ${!isUnassigned ? `<button type="button" class="todo-delete-btn project-delete-btn-inline" style="margin-left:auto;">Delete Folder</button>` : ""}
     </div>
     <div class="project-group-body"></div>
   `;
@@ -6314,7 +6447,7 @@ function buildToDoCard(t) {
         </div>
       </div>
       <div class="field">
-        <label>Project <span class="field-hint">(a project or a sub-project)</span></label>
+        <label>Folder <span class="field-hint">(a folder or a sub-folder)</span></label>
         <select class="todo-edit-project"></select>
       </div>
       <div class="field">
@@ -7373,6 +7506,282 @@ function buildTicketTile(t) {
   return tile;
 }
 
+/* ============================================================
+   PROJECTS — the milestone-driven layer. A Project has phases,
+   each with a due date, an owner and a status. Progress is the
+   share of phases that are Done. Distinct from Folders (the
+   filing buckets) and from Tickets (single requests).
+   ============================================================ */
+const PHASE_STATUSES = ["Not started", "In progress", "Done"];
+
+function phasesFor(projectId) {
+  return projectPhases
+    .filter(p => String(p.ProjectID) === String(projectId))
+    .sort((a, b) => (Number(a.SortOrder) || 0) - (Number(b.SortOrder) || 0));
+}
+
+function projectProgress(projectId) {
+  const ph = phasesFor(projectId);
+  const done = ph.filter(p => p.Status === "Done").length;
+  return { done, total: ph.length, pct: ph.length ? Math.round((done / ph.length) * 100) : 0 };
+}
+
+// The next phase that still needs work — what the project is "on" right now.
+function currentPhase(projectId) {
+  return phasesFor(projectId).find(p => p.Status !== "Done") || null;
+}
+
+function dueClass(dateStr) {
+  const days = daysUntil(dateStr);
+  if (days === null) return "";
+  if (days < 0) return "phase-overdue";
+  if (days <= 3) return "phase-soon";
+  return "";
+}
+
+// Days from today to a date, or null if unparseable. Positive = future.
+function daysUntil(dateStr) {
+  const raw = String(dateStr || "").trim();
+  if (!raw || !/[-/]/.test(raw)) return null;
+  const then = new Date(raw.replace(" ", "T"));
+  if (isNaN(then.getTime())) return null;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  then.setHours(0, 0, 0, 0);
+  return Math.round((then.getTime() - today.getTime()) / 86400000);
+}
+
+function dueLabel(dateStr) {
+  const days = daysUntil(dateStr);
+  if (days === null) return "";
+  if (days < 0) return `${Math.abs(days)}d overdue`;
+  if (days === 0) return "Due today";
+  if (days === 1) return "Due tomorrow";
+  return `Due in ${days}d`;
+}
+
+function folderName(folderId) {
+  const f = projects.find(p => p.ProjectID === folderId);
+  return f ? f.ProjectName : "";
+}
+
+function renderBigProjects() {
+  const host = document.getElementById("bigProjectList");
+  if (!host) return;
+
+  // A row with no title is almost always a stray/half-written entry — don't
+  // paint an empty card for it. Offer a one-click cleanup instead.
+  const blanks = bigProjects.filter(p => !String(p.Title || "").trim());
+  const active = bigProjects.filter(p => p.Status !== "Archived" && String(p.Title || "").trim());
+
+  const blankBar = document.getElementById("bigProjectBlankBar");
+  if (blankBar) {
+    if (blanks.length) {
+      blankBar.style.display = "block";
+      blankBar.innerHTML =
+        `<strong>${blanks.length} blank project row${blanks.length === 1 ? "" : "s"}</strong> with no title — probably stray entries. ` +
+        `<button type="button" id="clearBlankProjects" class="inline-fix-btn">Remove them</button>`;
+      const btn = document.getElementById("clearBlankProjects");
+      if (btn) btn.addEventListener("click", removeBlankProjects);
+    } else {
+      blankBar.style.display = "none";
+    }
+  }
+
+  if (!active.length) {
+    host.innerHTML = `<div class="ticket-col-empty" style="padding:24px 4px;">No projects yet. Start one for a longer-term effort like Position Seat Management or a Job Description overhaul.</div>`;
+    return;
+  }
+
+  host.innerHTML = active.map(proj => {
+    const prog = projectProgress(proj.ProjectID);
+    const ph = phasesFor(proj.ProjectID);
+    const statusColor = proj.Status === "Done" ? "#1D9E75" : "#378ADD";
+    const folder = folderName(proj.FolderID);
+
+    const collapsed = collapsedProjects.has(proj.ProjectID);
+
+    return `
+      <div class="big-proj-card" data-project-id="${proj.ProjectID}">
+        <div class="big-proj-head">
+          <div class="big-proj-titlewrap" data-toggle-project="${proj.ProjectID}">
+            <span class="big-proj-caret">${collapsed ? "▸" : "▾"}</span>
+            <div style="min-width:0;">
+              ${folder ? `<div class="big-proj-folder">${folder}</div>` : ""}
+              <div class="big-proj-title">${proj.Title || ""}</div>
+            </div>
+          </div>
+          <div class="big-proj-head-right">
+            ${proj.Owner ? `<span class="tkt-avatar" style="background:${empColor(proj.Owner)}" title="${proj.Owner}">${initials(proj.Owner)}</span>` : ""}
+            <select class="big-proj-status" data-project-id="${proj.ProjectID}">
+              ${["Active", "On hold", "Done", "Archived"].map(st => `<option value="${st}" ${st === (proj.Status || "Active") ? "selected" : ""}>${st}</option>`).join("")}
+            </select>
+          </div>
+        </div>
+
+        <div class="big-proj-progress">
+          <div class="big-proj-bar"><div class="big-proj-fill" style="width:${prog.pct}%;background:${statusColor}"></div></div>
+          <span class="big-proj-count">${prog.done} of ${prog.total} phase${prog.total === 1 ? "" : "s"}</span>
+        </div>
+
+        <div class="big-proj-collapsible" style="${collapsed ? "display:none;" : ""}">
+        <div class="big-proj-phases">
+          ${ph.map(p => {
+            const state = p.Status || "Not started";
+            const isNext = currentPhase(proj.ProjectID) && currentPhase(proj.ProjectID).PhaseID === p.PhaseID;
+            return `
+              <div class="phase-row ${state === "Done" ? "phase-done" : ""} ${isNext ? "phase-next" : ""}" data-phase-id="${p.PhaseID}">
+                <button type="button" class="phase-check" data-phase-id="${p.PhaseID}" title="Cycle status">${state === "Done" ? "✓" : state === "In progress" ? "•" : ""}</button>
+                <div class="phase-body">
+                  <div class="phase-name">${p.Name || ""}</div>
+                  <div class="phase-meta">
+                    ${p.Owner ? `<span class="phase-owner" style="background:${empColor(p.Owner)}" title="${p.Owner}">${initials(p.Owner)}</span>` : ""}
+                    <span class="phase-state">${state}</span>
+                  </div>
+                </div>
+                ${p.DueDate ? `<span class="phase-due ${dueClass(p.DueDate)}">${dueLabel(p.DueDate)}</span>` : ""}
+                <button type="button" class="phase-edit" data-phase-id="${p.PhaseID}" title="Edit phase">✎</button>
+              </div>`;
+          }).join("")}
+        </div>
+
+        <div class="big-proj-actions">
+          <button type="button" class="phase-add-btn" data-project-id="${proj.ProjectID}">+ Add phase</button>
+          <button type="button" class="big-proj-del" data-project-id="${proj.ProjectID}" title="Delete project">Delete</button>
+        </div>
+        </div>
+      </div>`;
+  }).join("");
+
+  // wire everything
+  host.querySelectorAll("[data-toggle-project]").forEach(el => {
+    el.addEventListener("click", () => {
+      const id = el.dataset.toggleProject;
+      if (collapsedProjects.has(id)) collapsedProjects.delete(id);
+      else collapsedProjects.add(id);
+      renderBigProjects();
+    });
+  });
+  host.querySelectorAll(".big-proj-status").forEach(sel => {
+    sel.addEventListener("change", () => updateBigProject(sel.dataset.projectId, { status: sel.value }));
+  });
+  host.querySelectorAll(".phase-check").forEach(btn => {
+    btn.addEventListener("click", () => cyclePhaseStatus(btn.dataset.phaseId));
+  });
+  host.querySelectorAll(".phase-edit").forEach(btn => {
+    btn.addEventListener("click", () => openPhaseEditor(btn.dataset.phaseId));
+  });
+  host.querySelectorAll(".phase-add-btn").forEach(btn => {
+    btn.addEventListener("click", () => addPhase(btn.dataset.projectId));
+  });
+  host.querySelectorAll(".big-proj-del").forEach(btn => {
+    btn.addEventListener("click", () => deleteBigProject(btn.dataset.projectId));
+  });
+}
+
+// Clicking a phase's box cycles Not started -> In progress -> Done -> back.
+async function cyclePhaseStatus(phaseId) {
+  const ph = projectPhases.find(p => p.PhaseID === phaseId);
+  if (!ph) return;
+  const idx = PHASE_STATUSES.indexOf(ph.Status || "Not started");
+  ph.Status = PHASE_STATUSES[(idx + 1) % PHASE_STATUSES.length];
+  renderBigProjects();
+  await postAction({ action: "updatePhase", phaseId, status: ph.Status });
+}
+
+async function addPhase(projectId) {
+  const name = prompt("Phase name:", "");
+  if (name === null || !name.trim()) return;
+  const phaseId = "ph" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const sortOrder = String(phasesFor(projectId).length);
+  const phase = { PhaseID: phaseId, ProjectID: projectId, Name: name.trim(), Status: "Not started", Owner: "", DueDate: "", SortOrder: sortOrder };
+  projectPhases.push(phase);
+  renderBigProjects();
+  await postAction({ action: "createPhase", phaseId, projectId, name: name.trim(), status: "Not started", owner: "", dueDate: "", sortOrder });
+}
+
+// A tiny inline editor via prompts keeps this pass simple; owner + due date.
+async function openPhaseEditor(phaseId) {
+  const ph = projectPhases.find(p => p.PhaseID === phaseId);
+  if (!ph) return;
+  const name = prompt("Phase name:", ph.Name || "");
+  if (name === null) return;
+  const owner = prompt(`Owner (one of: ${EMPLOYEES.map(e => e.name.split(" ")[0]).join(", ")}), or blank:`, ph.Owner || "");
+  if (owner === null) return;
+  const matched = EMPLOYEES.find(e => e.name.toLowerCase().startsWith(String(owner).trim().toLowerCase()) && owner.trim());
+  const due = prompt("Due date (YYYY-MM-DD), or blank:", ph.DueDate || "");
+  if (due === null) return;
+
+  ph.Name = name.trim() || ph.Name;
+  ph.Owner = matched ? matched.name : "";
+  ph.DueDate = String(due).trim();
+  renderBigProjects();
+  await postAction({ action: "updatePhase", phaseId, name: ph.Name, owner: ph.Owner, dueDate: ph.DueDate });
+}
+
+async function deletePhase(phaseId) {
+  projectPhases = projectPhases.filter(p => p.PhaseID !== phaseId);
+  renderBigProjects();
+  await postAction({ action: "deletePhase", phaseId });
+}
+
+async function updateBigProject(projectId, changes) {
+  const proj = bigProjects.find(p => p.ProjectID === projectId);
+  if (proj) {
+    if (changes.status !== undefined) proj.Status = changes.status;
+    if (changes.title !== undefined) proj.Title = changes.title;
+    if (changes.owner !== undefined) proj.Owner = changes.owner;
+    if (changes.folderId !== undefined) proj.FolderID = changes.folderId;
+  }
+  renderBigProjects();
+  await postAction(Object.assign({ action: "updateBigProject", projectId }, changes));
+}
+
+async function deleteBigProject(projectId) {
+  const proj = bigProjects.find(p => p.ProjectID === projectId);
+  if (!proj) return;
+  const n = phasesFor(projectId).length;
+  if (!confirm(`Delete project "${proj.Title}"?${n ? ` Its ${n} phase${n === 1 ? "" : "s"} go with it.` : ""} This can't be undone.`)) return;
+  bigProjects = bigProjects.filter(p => p.ProjectID !== projectId);
+  projectPhases = projectPhases.filter(p => String(p.ProjectID) !== String(projectId));
+  renderBigProjects();
+  await postAction({ action: "deleteBigProject", projectId });
+}
+
+async function removeBlankProjects() {
+  const blanks = bigProjects.filter(p => !String(p.Title || "").trim());
+  if (!blanks.length) return;
+  if (!confirm(`Remove ${blanks.length} blank project row${blanks.length === 1 ? "" : "s"}? They have no title.`)) return;
+  for (const b of blanks) {
+    await postAction({ action: "deleteBigProject", projectId: b.ProjectID });
+    await new Promise(r => setTimeout(r, 12));
+  }
+  bigProjects = bigProjects.filter(p => String(p.Title || "").trim());
+  renderBigProjects();
+}
+
+async function createBigProject() {
+  const title = prompt("Project name (e.g. Position Seat Management):", "");
+  if (title === null || !title.trim()) return;
+  const projectId = "bp" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const createdDate = dateToStr(new Date());
+  const proj = { ProjectID: projectId, Title: title.trim(), FolderID: "", Status: "Active", Owner: selectedEmployee, Notes: "", CreatedBy: selectedEmployee, CreatedDate: createdDate };
+  bigProjects.push(proj);
+  renderBigProjects();
+  await postAction({ action: "createBigProject", projectId, title: title.trim(), folderId: "", status: "Active", owner: selectedEmployee, notes: "", createdBy: selectedEmployee, createdDate });
+}
+
+// Small helper so the CRUD above isn't 8 copies of the same fetch boilerplate.
+async function postAction(payload) {
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("PASTE_YOUR")) return;
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload),
+    });
+  } catch (err) {}
+}
+
 function renderTickets() {
   const board = document.getElementById("ticketBoard");
   if (!board) return;
@@ -7688,6 +8097,7 @@ function renderTicketDetail() {
     <div class="ticket-actions">
       ${!people.length ? `<button type="button" class="ticket-action-btn claim" id="tdClaim">Claim</button>` : ""}
       <button type="button" class="ticket-action-btn ask" id="tdAskBtn">Ask a Question</button>
+      <button type="button" class="ticket-action-btn convert" id="tdDuplicate">Duplicate</button>
       <button type="button" class="ticket-action-btn claim" id="tdComplete">Complete</button>
     </div>
 
@@ -7902,6 +8312,8 @@ function renderTicketDetail() {
     const box = body.querySelector("#tdNewComment");
     if (box) setTimeout(() => box.focus(), 250);
   });
+
+  body.querySelector("#tdDuplicate").addEventListener("click", () => duplicateTicket(t.TicketID));
 
   const delBtn = body.querySelector("#tdDelete");
   if (delBtn) delBtn.addEventListener("click", () => deleteTicket(t.TicketID));
@@ -8347,6 +8759,57 @@ async function setStepState(commentId, state) {
 
 // Only offered while a ticket has no steps — once someone has built out the
 // work, deleting it would throw away more than a mistaken entry.
+// Clones a ticket — same category, priority, project, assignees and steps —
+// with a fresh key and a blank status, so a repeatable request (a new hire, a
+// weekly report) takes one click instead of retyping. Comments and answered
+// questions are NOT copied; they belonged to the original instance.
+async function duplicateTicket(ticketId) {
+  const src = tickets.find(x => x.TicketID === ticketId);
+  if (!src) return;
+
+  const suggested = prompt("Title for the copy:", src.Title);
+  if (suggested === null) return;
+  const title = suggested.trim() || src.Title;
+
+  const newId = "tk" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const createdDate = dateToStr(new Date());
+  const copy = {
+    TicketID: newId, Title: title, Category: src.Category || "", Priority: src.Priority || "",
+    Assignee: src.Assignee || "", Status: "Open", Notes: src.Notes || "", LastUpdated: "",
+    ConvertedType: "", ConvertedID: "", CreatedBy: selectedEmployee, CreatedDate: createdDate,
+    ExternalName: "", ExternalEmail: "", ProjectID: src.ProjectID || "",
+  };
+  tickets.push(copy);
+  closeTicketDetail();
+  renderTickets();
+
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("PASTE_YOUR")) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "createTicket", ticketId: newId, title, category: copy.Category,
+          priority: copy.Priority, assignee: copy.Assignee, notes: copy.Notes,
+          createdBy: selectedEmployee, createdDate,
+          externalName: "", externalEmail: "", projectId: copy.ProjectID,
+        }),
+      });
+    } catch (err) {}
+  }
+
+  // Copy the checklist (bodies + owners), not the completion state — the copy
+  // starts fresh with everything to do.
+  for (const step of stepsFor(ticketId)) {
+    await addTicketStep(newId, step.Body, stepOwner(step));
+    await new Promise(r => setTimeout(r, 12));
+  }
+  renderTickets();
+
+  // Jump straight into the copy so you can tweak it.
+  openTicketDetail(newId);
+}
+
 async function deleteTicket(ticketId) {
   const t = tickets.find(x => x.TicketID === ticketId);
   if (!t) return;
@@ -9321,7 +9784,7 @@ function buildTaskCard(t) {
           <select class="card-edit-category-select"></select>
         </div>
         <div class="field">
-          <label>Project <span class="field-hint">(optional)</span></label>
+          <label>Folder <span class="field-hint">(optional)</span></label>
           <select class="card-edit-project-select"></select>
         </div>
         <button type="button" class="submit-btn card-details-save-btn" style="margin-top:8px;">Save Changes</button>
@@ -9346,7 +9809,7 @@ function buildTaskCard(t) {
         <label>Notes</label>
         <textarea class="notes-textarea card-notes">${(t.Notes || "").replace(/</g, "&lt;")}</textarea>
       </div>
-      ${!t.ProjectID ? `<button type="button" class="new-project-toggle-btn card-convert-project-btn" style="margin-top:16px;">Convert to a Project</button>` : ""}
+      ${!t.ProjectID ? `<button type="button" class="new-project-toggle-btn card-convert-project-btn" style="margin-top:16px;">Convert to a Folder</button>` : ""}
       <button type="button" class="new-project-toggle-btn card-delete-task-btn" style="margin-top:10px; border-color:#D95C84; color:#D95C84;">Delete This Task</button>
     </div>
   `;
