@@ -419,6 +419,19 @@ details.instructions-card > summary:hover { color: var(--text); }
 .task-col label { display: block; font-size: 15px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
 .task-or { font-size: 14px; color: var(--dim); text-align: center; margin: 10px 0; }
 
+.folder-count { font-size: 11px; color: var(--dim); font-weight: 700; }
+.project-tile-wrap { position: relative; display: flex; }
+.project-tile-wrap .project-tile { flex: 1; }
+.folder-pick-self {
+  width: 26px; flex-shrink: 0; margin-left: 4px;
+  border: 1px solid var(--border); border-radius: 6px;
+  background: rgba(255,255,255,0.04); color: var(--dim);
+  cursor: pointer; font-weight: 800;
+}
+.folder-pick-self[data-active="true"] { background: #63bcbc; color: #050F23; border-color: transparent; }
+.folder-pick-self:hover { border-color: #63bcbc; color: #63bcbc; }
+.project-tile.folder-back { color: var(--dim); font-style: italic; }
+.project-tile[data-has-kids="true"] { border-style: dashed; }
 .project-tile-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
 .project-tile {
   padding: 10px 8px;
@@ -607,6 +620,14 @@ details.instructions-card > summary:hover { color: var(--text); }
 .task-card-name { font-size: 15px; font-weight: 700; }
 .task-card-title { font-size: 15px; font-weight: 700; }
 .task-card-sep { color: var(--dim); margin: 0 6px; }
+.task-card-folder {
+  font-size: 11px;
+  color: var(--dim);
+  background: rgba(255,255,255,0.06);
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-left: 8px;
+}
 .task-card-cat-name { color: var(--muted); font-weight: 500; }
 .task-card-cat { font-size: 14px; color: var(--muted); }
 .task-card-hrs { margin-left: auto; font-size: 15px; font-weight: 700; }
@@ -1475,6 +1496,46 @@ details.instructions-card > summary:hover { color: var(--text); }
   color: #C9A24D;
 }
 .ticket-action-btn.ask:hover { background: #C9A24D; color: #050F23; }
+
+
+.hire-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 18px 20px; margin-bottom: 16px;
+}
+.hire-card-waiting { border-left: 3px solid #C9A24D; }
+.hire-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.hire-name { font-size: 18px; font-weight: 700; color: var(--text); }
+.hire-sub { font-size: 13px; color: var(--dim); margin-top: 3px; }
+.hire-head-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.hire-flag { background: rgba(201,162,77,0.18); color: #C9A24D; font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 12px; white-space: nowrap; }
+.hire-status {
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+  border-radius: 6px; padding: 6px 10px; color: var(--text);
+  font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.hire-approvals { display: flex; flex-direction: column; gap: 8px; margin: 16px 0 0; }
+.approval-row {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: 8px;
+}
+.approval-row.approval-waiting { border-color: #C9A24D; background: rgba(201,162,77,0.08); }
+.approval-check {
+  width: 22px; height: 22px; flex-shrink: 0;
+  border-radius: 6px; border: 2px solid #5A6A8F; background: rgba(255,255,255,0.04);
+  color: #050F23; font-size: 13px; font-weight: 800; line-height: 1;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.approval-row.approval-done .approval-check { background: #1D9E75; border-color: #1D9E75; }
+.approval-row.approval-waiting .approval-check { background: #C9A24D; border-color: #C9A24D; }
+.approval-row.approval-done .approval-name { text-decoration: line-through; color: var(--dim); }
+.approval-body { flex: 1; min-width: 0; }
+.approval-name { font-size: 14px; color: var(--text); }
+.approval-approver { font-size: 12px; color: var(--dim); margin-top: 2px; }
+.approval-state { font-size: 11px; color: var(--dim); flex-shrink: 0; }
+.approval-state-waiting { color: #C9A24D; font-weight: 700; }
+.approval-edit { background: none; border: none; color: var(--dim); font-size: 14px; cursor: pointer; padding: 0 4px; flex-shrink: 0; }
+.approval-edit:hover { color: #63bcbc; }
+.hire-actions { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
 
 .big-proj-card {
   background: var(--card);
@@ -2506,7 +2567,7 @@ td.muted { color: var(--muted); }
     </div>
   </div>
 
-  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Jul 30, 2026 · 21:07</div>
+  <div class="build-stamp" title="If this doesn't match the newest file you pushed, you're on a cached copy — hard-refresh.">build Aug 04, 2026 · 18:12</div>
   <div id="sheetWarning" class="sheet-warning" style="display:none;"></div>
   <div id="renderWarning" class="sheet-warning" style="display:none;"></div>
   <div id="columnWarning" class="sheet-warning" style="display:none;"></div>
@@ -2515,6 +2576,7 @@ td.muted { color: var(--muted); }
     <button type="button" class="top-tab-item active" data-view="tickets">🎫 Tickets</button>
     <button type="button" class="top-tab-item" data-view="board">📁 Folders</button>
     <button type="button" class="top-tab-item" data-view="projects">📋 Projects</button>
+    <button type="button" class="top-tab-item" data-view="hiring">🧑‍💼 Hiring</button>
     <button type="button" class="top-tab-item" data-view="log">📅 My Calendar</button>
     <button type="button" class="top-tab-item" data-view="todos">🔁 Recurring Items</button>
     <button type="button" class="top-tab-item" id="dataTabBtn" data-view="overview" style="display:none;">📊 Data</button>
@@ -2782,7 +2844,7 @@ td.muted { color: var(--muted); }
       </div>
     </div>
 
-    <div class="section-label" style="margin-top:32px;">My Tasks <span style="text-transform:none; letter-spacing:0; color:var(--dim); font-weight:500;">(grouped by folder — drag a task into one to reassign it)</span></div>
+    <div class="section-label" style="margin-top:32px;">My Tasks</div>
     <div id="myTasksList"></div>
 
     <div class="section-label" style="margin-top:28px;">Active Tasks · Everyone Else</div>
@@ -3248,6 +3310,17 @@ td.muted { color: var(--muted); }
   </div>
 
 
+  <!-- HIRING BOARD VIEW -->
+  <div class="view" id="view-hiring">
+    <header>
+      <h1>Hiring</h1>
+      <div class="page-eyebrow">Reqs &amp; new hires — what's waiting on approval</div>
+    </header>
+    <button type="button" class="submit-btn create-btn" id="newHireBtn" style="max-width:220px;">+ New Hire / Req</button>
+    <div id="hireList" style="margin-top:20px;"></div>
+  </div>
+
+
   <!-- OVERVIEW VIEW -->
   <div class="view" id="view-overview">
     <header>
@@ -3435,12 +3508,16 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyUZJY5ZCPF82fa
 const SITE_BASE_URL = "https://th-dicot.github.io/bluebonnet-ops/";
 
 const EMPLOYEES = [
-  { name: "Carol Fountain",     hex: "#7B68EE" }, // purple
-  { name: "Giselle Cartagena",  hex: "#E8833A" }, // orange
-  { name: "Irene Sanchez",      hex: "#C9A24D" }, // desert yellow
-  { name: "Larry Thomas",       hex: "#63bcbc" }, // DICOT teal
-  { name: "Tyler Hare",         hex: "#D95C84" }, // DICOT pink
+  { name: "Carol Fountain",     hex: "#7B68EE", email: "cfountain@dicotexas.com" }, // purple
+  { name: "Giselle Cartagena",  hex: "#E8833A", email: "gcartagena@dicotexas.com" }, // orange
+  { name: "Irene Sanchez",      hex: "#C9A24D", email: "irene.sanchez@dielp.com" }, // desert yellow
+  { name: "Larry Thomas",       hex: "#63bcbc", email: "lthomas@dicotexas.com" }, // DICOT teal
+  { name: "Tyler Hare",         hex: "#D95C84", email: "thare@dicotexas.com" }, // DICOT pink
 ];
+function empEmail(name) {
+  const e = EMPLOYEES.find(x => x.name === name);
+  return e ? e.email : "";
+}
 
 // Alphabetical order — colors walk an evenly spaced 30° hue arc
 const CATEGORIES = [
@@ -3495,6 +3572,8 @@ let projects = [];       // one row per project: ProjectID, ProjectName, Categor
 let ticketTemplates = []; // shared library: TemplateID, Name, Description, TitlePattern, Category, Priority, Assignee, ProjectID, Steps, ...
 let bigProjects = [];   // real Projects: ProjectID, Title, FolderID, Status, Owner, Notes, CreatedBy, CreatedDate
 let projectPhases = []; // milestones: PhaseID, ProjectID, Name, Status, Owner, DueDate, SortOrder
+let hires = [];         // Hiring board: HireID, Candidate, Position, StartDate, Status, HiringManager, Notes, CreatedBy, CreatedDate
+let hireApprovals = []; // ApprovalID, HireID, Name, Status, Approver, SortOrder
 let collapsedProjects = new Set(); // ProjectIDs whose phase list is folded away
 let comments = [];      // ticket comment thread: CommentID, TicketID, Author, Body, CreatedAt
 let attachments = [];   // uploaded files: AttachmentID, ParentType, ParentID, FileName, FileURL, FileID, UploadedBy, UploadedDate
@@ -3677,6 +3756,7 @@ function init() {
 
   document.getElementById("bpCategory").innerHTML = CATEGORIES.map(c => `<option value="${c.key}">${c.key}</option>`).join("");
   document.getElementById("newBigProjectBtn").addEventListener("click", createBigProject);
+  document.getElementById("newHireBtn").addEventListener("click", createHire);
   document.getElementById("collapseAllProjects").addEventListener("click", () => {
     bigProjects.forEach(p => collapsedProjects.add(p.ProjectID));
     renderBigProjects();
@@ -4176,38 +4256,78 @@ function renderCatPicker() {
 
 let selectedProjectIdForTask = "";
 
+// Which folder we're currently browsing inside. null = the top level.
+let calFolderDrillId = null;
+
 function updateProjectSelect() {
   const wrap = document.getElementById("fProjectTiles");
-  const openProjects = projects.filter(p => p.Category === selectedCategory && p.Status !== "Completed");
+  const inCategory = projects.filter(p => p.Category === selectedCategory && p.Status !== "Completed");
 
-  // The "sits inside" picker isn't limited to the current category — a
-  // candidate under Hiring might well be categorised differently.
   const parentSel = document.getElementById("fProjectParent");
   if (parentSel) {
     const keep = parentSel.value;
     parentSel.innerHTML = `<option value="">— top level —</option>` + projectOptionsHtml(keep);
   }
 
-  if (!openProjects.some(p => p.ProjectID === selectedProjectIdForTask)) {
+  if (!inCategory.some(p => p.ProjectID === selectedProjectIdForTask)) {
     selectedProjectIdForTask = "";
   }
 
-  if (!openProjects.length) {
+  if (!inCategory.length) {
     wrap.innerHTML = `<div class="empty-state" style="padding:6px 0;">No open folders in this category yet.</div>`;
     return;
   }
 
-  wrap.innerHTML = openProjects.map(p => {
-    // A bare "John Doe" tile is useless if three reqs have one. Show the
-    // bucket it lives in, and the full path on hover.
-    const parent = projectById(parentIdOf(p));
-    const label = parent ? `${parent.ProjectName} › ${p.ProjectName}` : p.ProjectName;
+  // Only show the folders sitting at the level we're browsing — top-level by
+  // default — so a category with dozens of nested reqs isn't a wall of tiles.
+  // Drilling in shows that folder's children; a back link climbs out.
+  const atLevel = inCategory.filter(p => (parentIdOf(p) || null) === calFolderDrillId);
+
+  let html = "";
+  if (calFolderDrillId) {
+    const current = projectById(calFolderDrillId);
+    const upTo = current ? (parentIdOf(current) || null) : null;
+    html += `<button type="button" class="project-tile folder-back" data-drill-up="${upTo || ""}">‹ ${current ? current.ProjectName : "Back"}</button>`;
+  }
+
+  html += atLevel.map(p => {
+    const kids = inCategory.filter(c => (parentIdOf(c) || null) === p.ProjectID);
+    const isSel = p.ProjectID === selectedProjectIdForTask;
+    if (kids.length) {
+      // A folder with children: the tile drills in; a small dot picks the
+      // folder itself (for logging against the parent, not a child).
+      return `
+        <div class="project-tile-wrap">
+          <button type="button" class="project-tile has-kids" data-drill-into="${p.ProjectID}" data-active="${isSel}" title="${projectPath(p.ProjectID)}">
+            ${p.ProjectName} <span class="folder-count">${kids.length} ›</span>
+          </button>
+          <button type="button" class="folder-pick-self" data-pick-self="${p.ProjectID}" data-active="${isSel}" title="Log against ${p.ProjectName} itself">•</button>
+        </div>`;
+    }
     return `
-    <button type="button" class="project-tile" data-project-id="${p.ProjectID}" data-active="${p.ProjectID === selectedProjectIdForTask}" title="${projectPath(p.ProjectID)}">${label}</button>
-  `;
+      <button type="button" class="project-tile" data-project-id="${p.ProjectID}" data-active="${isSel}" title="${projectPath(p.ProjectID)}">${p.ProjectName}</button>`;
   }).join("");
 
-  wrap.querySelectorAll(".project-tile").forEach(btn => {
+  wrap.innerHTML = html || `<div class="empty-state" style="padding:6px 0;">Empty folder.</div>`;
+
+  const back = wrap.querySelector(".folder-back");
+  if (back) back.addEventListener("click", () => {
+    calFolderDrillId = back.dataset.drillUp || null;
+    updateProjectSelect();
+  });
+
+  wrap.querySelectorAll("[data-drill-into]").forEach(btn => {
+    btn.addEventListener("click", () => { calFolderDrillId = btn.dataset.drillInto; updateProjectSelect(); });
+  });
+  wrap.querySelectorAll("[data-pick-self]").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      const pid = btn.dataset.pickSelf;
+      selectedProjectIdForTask = selectedProjectIdForTask === pid ? "" : pid;
+      updateProjectSelect();
+    });
+  });
+  wrap.querySelectorAll(".project-tile[data-project-id]").forEach(btn => {
     btn.addEventListener("click", () => {
       const pid = btn.dataset.projectId;
       selectedProjectIdForTask = selectedProjectIdForTask === pid ? "" : pid;
@@ -4229,6 +4349,7 @@ function updateCatReadout() {
   const sel = document.getElementById("catReadoutSelect");
   sel.addEventListener("change", e => {
     selectedCategory = e.target.value;
+    calFolderDrillId = null; // start at the top level for the new category
     // Refreshes tasks, favorites, projects and the tint for the new category —
     // everything on the card that depends on which category you're in.
     renderCatPicker();
@@ -4537,7 +4658,7 @@ async function loadTasksAndEvents() {
   const [
     loadedProjects, loadedTasks, loadedEvents, loadedTodos,
     loadedTickets, loadedAttachments, loadedComments, loadedTemplates,
-    loadedBigProjects, loadedPhases,
+    loadedBigProjects, loadedPhases, loadedHires, loadedApprovals,
   ] = await Promise.all([
     fetchSheet("projects"),
     fetchSheet("tasks"),
@@ -4549,6 +4670,8 @@ async function loadTasksAndEvents() {
     fetchSheet("templates"),
     fetchSheet("bigprojects"),
     fetchSheet("phases"),
+    fetchSheet("hires"),
+    fetchSheet("hireapprovals"),
   ]);
 
   // Only overwrite what actually came back, so a hiccup on one sheet doesn't
@@ -4563,6 +4686,8 @@ async function loadTasksAndEvents() {
   if (loadedTemplates) ticketTemplates = loadedTemplates;
   if (loadedBigProjects) bigProjects = loadedBigProjects;
   if (loadedPhases) projectPhases = loadedPhases;
+  if (loadedHires) hires = loadedHires;
+  if (loadedApprovals) hireApprovals = loadedApprovals;
 
   reportMissingSheets({
     Projects: loadedProjects, Tasks: loadedTasks, TaskEvents: loadedEvents,
@@ -5128,6 +5253,7 @@ function renderAll() {
   safeRender("Recurring Items", renderToDos);
   safeRender("Tickets", renderTickets);
   safeRender("Projects", renderBigProjects);
+  safeRender("Hiring", renderHiring);
   if (typeof renderBossView === "function" && isBossAuthed()) safeRender("Maintenance", renderBossView);
   reportRenderFailures();
 }
@@ -5282,6 +5408,7 @@ function renderCalendar() {
 }
 
 function openEntryModal(dateStr, hour, minute) {
+  calFolderDrillId = null; // always start folder browsing at the top
   const d = dateStr ? new Date(dateStr + "T00:00:00") : calendarDate;
   setDateFromObj(d);
   if (hour !== undefined && minute !== undefined) {
@@ -6300,18 +6427,12 @@ function renderGroupedTasks(taskList, containerId, emptyMessage) {
     return;
   }
 
-  const byProject = {};
-  taskList.forEach(t => {
-    const key = t.ProjectID || "";
-    if (!byProject[key]) byProject[key] = [];
-    byProject[key].push(t);
-  });
-
-  projects.forEach(p => {
-    container.appendChild(buildProjectGroup(p, byProject[p.ProjectID] || []));
-  });
-
-  container.appendChild(buildProjectGroup(null, byProject[""] || []));
+  // Flat list instead of folder-grouped — the folder buckets got too busy.
+  // Each card still shows its folder as a small label, so nothing's lost.
+  taskList
+    .slice()
+    .sort((a, b) => (a.TaskName || "").localeCompare(b.TaskName || ""))
+    .forEach(t => container.appendChild(buildTaskCard(t)));
 }
 
 async function reassignTaskProject(taskId, projectId) {
@@ -7780,6 +7901,194 @@ async function postAction(payload) {
       body: JSON.stringify(payload),
     });
   } catch (err) {}
+}
+
+/* ============================================================
+   HIRING BOARD — reqs / new hires and their approval checklist.
+   The point is showing Larry (and hiring managers) what's waiting
+   on their sign-off. Separate from the ticket board; only touches
+   the ticket system via recurring items.
+   ============================================================ */
+const APPROVAL_STATUSES = ["Not started", "Waiting", "Done"];
+// The default checklist a new hire starts with, and who each item waits on.
+const DEFAULT_APPROVALS = [
+  { name: "New Hire Form", approver: "Larry Thomas" },
+  { name: "Offer Letter Approval", approver: "Larry Thomas" },
+  { name: "Signed Application", approver: "" },
+];
+
+function approvalsFor(hireId) {
+  return hireApprovals
+    .filter(a => String(a.HireID) === String(hireId))
+    .sort((a, b) => (Number(a.SortOrder) || 0) - (Number(b.SortOrder) || 0));
+}
+
+function hireProgress(hireId) {
+  const items = approvalsFor(hireId);
+  const done = items.filter(a => a.Status === "Done").length;
+  const waiting = items.filter(a => a.Status === "Waiting").length;
+  return { done, waiting, total: items.length };
+}
+
+function renderHiring() {
+  const host = document.getElementById("hireList");
+  if (!host) return;
+
+  const active = hires.filter(h => h.Status !== "Archived");
+  if (!active.length) {
+    host.innerHTML = `<div class="ticket-col-empty" style="padding:24px 4px;">No hires yet. Add a requisition or new hire to track its approvals.</div>`;
+    return;
+  }
+
+  host.innerHTML = active.map(h => {
+    const prog = hireProgress(h.HireID);
+    const items = approvalsFor(h.HireID);
+    const waitingOnSomething = prog.waiting > 0;
+
+    return `
+      <div class="hire-card ${waitingOnSomething ? "hire-card-waiting" : ""}" data-hire-id="${h.HireID}">
+        <div class="hire-head">
+          <div style="min-width:0;">
+            <div class="hire-name">${h.Candidate || "(unnamed)"}</div>
+            <div class="hire-sub">${[h.Position, h.StartDate ? "Starts " + h.StartDate : ""].filter(Boolean).join(" · ")}</div>
+          </div>
+          <div class="hire-head-right">
+            ${waitingOnSomething ? `<span class="hire-flag">${prog.waiting} waiting</span>` : ""}
+            <select class="hire-status" data-hire-id="${h.HireID}">
+              ${["Open", "In progress", "Hired", "On hold", "Archived"].map(st => `<option value="${st}" ${st === (h.Status || "Open") ? "selected" : ""}>${st}</option>`).join("")}
+            </select>
+          </div>
+        </div>
+
+        <div class="hire-approvals">
+          ${items.map(a => {
+            const st = a.Status || "Not started";
+            return `
+              <div class="approval-row approval-${st.toLowerCase().replace(" ", "-")}" data-approval-id="${a.ApprovalID}">
+                <button type="button" class="approval-check" data-approval-id="${a.ApprovalID}" title="Cycle status">${st === "Done" ? "✓" : st === "Waiting" ? "…" : ""}</button>
+                <div class="approval-body">
+                  <div class="approval-name">${a.Name || ""}</div>
+                  ${a.Approver ? `<div class="approval-approver">${st === "Waiting" ? "Waiting on " : ""}${a.Approver}</div>` : ""}
+                </div>
+                <span class="approval-state ${st === "Waiting" ? "approval-state-waiting" : ""}">${st}</span>
+                <button type="button" class="approval-edit" data-approval-id="${a.ApprovalID}" title="Edit">✎</button>
+              </div>`;
+          }).join("")}
+        </div>
+
+        <div class="hire-actions">
+          <button type="button" class="phase-add-btn hire-add-approval" data-hire-id="${h.HireID}">+ Add approval item</button>
+          <button type="button" class="big-proj-del hire-del" data-hire-id="${h.HireID}">Delete</button>
+        </div>
+      </div>`;
+  }).join("");
+
+  host.querySelectorAll(".hire-status").forEach(sel => {
+    sel.addEventListener("change", () => updateHire(sel.dataset.hireId, { status: sel.value }));
+  });
+  host.querySelectorAll(".approval-check").forEach(btn => {
+    btn.addEventListener("click", () => cycleApproval(btn.dataset.approvalId));
+  });
+  host.querySelectorAll(".approval-edit").forEach(btn => {
+    btn.addEventListener("click", () => editApproval(btn.dataset.approvalId));
+  });
+  host.querySelectorAll(".hire-add-approval").forEach(btn => {
+    btn.addEventListener("click", () => addApproval(btn.dataset.hireId));
+  });
+  host.querySelectorAll(".hire-del").forEach(btn => {
+    btn.addEventListener("click", () => deleteHire(btn.dataset.hireId));
+  });
+}
+
+// Cycling an approval to "Waiting" is what emails the approver.
+async function cycleApproval(approvalId) {
+  const a = hireApprovals.find(x => x.ApprovalID === approvalId);
+  if (!a) return;
+  const idx = APPROVAL_STATUSES.indexOf(a.Status || "Not started");
+  const next = APPROVAL_STATUSES[(idx + 1) % APPROVAL_STATUSES.length];
+  a.Status = next;
+  renderHiring();
+
+  const hire = hires.find(h => String(h.HireID) === String(a.HireID));
+  const notify = next === "Waiting" && !!a.Approver;
+  await postAction({
+    action: "updateApproval", approvalId, status: next,
+    notifyApprover: notify, approverEmail: notify ? empEmail(a.Approver) : "",
+    approverName: a.Approver || "", candidate: hire ? hire.Candidate : "",
+    itemName: a.Name || "", siteUrl: getSiteBasePath(),
+  });
+}
+
+async function addApproval(hireId, name, approver, silent) {
+  const itemName = name !== undefined ? name : prompt("Approval item name:", "");
+  if (itemName === null || !String(itemName).trim()) return;
+  const approvalId = "ap" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const sortOrder = String(approvalsFor(hireId).length);
+  hireApprovals.push({ ApprovalID: approvalId, HireID: hireId, Name: String(itemName).trim(), Status: "Not started", Approver: approver || "", SortOrder: sortOrder });
+  if (!silent) renderHiring();
+  await postAction({ action: "createApproval", approvalId, hireId, name: String(itemName).trim(), status: "Not started", approver: approver || "", sortOrder });
+}
+
+async function editApproval(approvalId) {
+  const a = hireApprovals.find(x => x.ApprovalID === approvalId);
+  if (!a) return;
+  const name = prompt("Item name:", a.Name || "");
+  if (name === null) return;
+  const who = prompt(`Who approves this? (${EMPLOYEES.map(e => e.name.split(" ")[0]).join(", ")}, or blank)`, a.Approver || "");
+  if (who === null) return;
+  const matched = EMPLOYEES.find(e => String(who).trim() && e.name.toLowerCase().startsWith(String(who).trim().toLowerCase()));
+  a.Name = name.trim() || a.Name;
+  a.Approver = matched ? matched.name : "";
+  renderHiring();
+  await postAction({ action: "updateApproval", approvalId, name: a.Name, approver: a.Approver });
+}
+
+async function updateHire(hireId, changes) {
+  const h = hires.find(x => x.HireID === hireId);
+  if (h) {
+    if (changes.status !== undefined) h.Status = changes.status;
+    if (changes.candidate !== undefined) h.Candidate = changes.candidate;
+    if (changes.position !== undefined) h.Position = changes.position;
+    if (changes.startDate !== undefined) h.StartDate = changes.startDate;
+  }
+  renderHiring();
+  await postAction(Object.assign({ action: "updateHire", hireId }, changes));
+}
+
+async function deleteHire(hireId) {
+  const h = hires.find(x => x.HireID === hireId);
+  if (!h) return;
+  if (!confirm(`Delete ${h.Candidate || "this hire"} and its approval items? This can't be undone.`)) return;
+  hires = hires.filter(x => x.HireID !== hireId);
+  hireApprovals = hireApprovals.filter(a => String(a.HireID) !== String(hireId));
+  renderHiring();
+  await postAction({ action: "deleteHire", hireId });
+}
+
+async function createHire() {
+  const candidate = prompt("Candidate name:", "");
+  if (candidate === null || !candidate.trim()) return;
+  const position = prompt("Position / role:", "") || "";
+  const startDate = prompt("Start date (YYYY-MM-DD), or blank:", "") || "";
+
+  const hireId = "hr" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const createdDate = dateToStr(new Date());
+  const hire = { HireID: hireId, Candidate: candidate.trim(), Position: position.trim(), StartDate: startDate.trim(), Status: "Open", HiringManager: "", Notes: "", CreatedBy: selectedEmployee, CreatedDate: createdDate };
+  hires.push(hire);
+  renderHiring();
+
+  await postAction({
+    action: "createHire", hireId, candidate: candidate.trim(), position: position.trim(),
+    startDate: startDate.trim(), status: "Open", hiringManager: "", notes: "",
+    createdBy: selectedEmployee, createdDate,
+  });
+
+  // Seed the standard approval checklist.
+  for (let i = 0; i < DEFAULT_APPROVALS.length; i++) {
+    await addApproval(hireId, DEFAULT_APPROVALS[i].name, DEFAULT_APPROVALS[i].approver, true);
+    await new Promise(r => setTimeout(r, 12));
+  }
+  renderHiring();
 }
 
 function renderTickets() {
@@ -9754,8 +10063,7 @@ function buildTaskCard(t) {
         <span style="color:${color}">${t.TaskName || ""}</span>
         <span class="task-card-sep">—</span>
         <span style="color:${statusTagColor(t.Status)}">${t.Status || ""}</span>
-        <span class="task-card-sep">—</span>
-        <span class="task-card-cat-name">${t.Category || ""}</span>
+        ${t.ProjectID && folderName(t.ProjectID) ? `<span class="task-card-folder">${folderName(t.ProjectID)}</span>` : ""}
       </div>
       <div class="task-card-hrs">${hours.toFixed(2)} <small>hrs</small></div>
     </div>
